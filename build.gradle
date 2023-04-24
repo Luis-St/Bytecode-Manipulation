@@ -27,6 +27,7 @@ dependencies {
 }
 
 tasks.register("run", JavaExec) {
+	dependsOn project(":agent").build
 	group = "run"
 	classpath = sourceSets.main.runtimeClasspath
 	getMainClass().set("net.luis.main.Main")

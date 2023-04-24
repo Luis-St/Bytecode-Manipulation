@@ -2,16 +2,15 @@ package net.luis.agent;
 
 import java.lang.instrument.Instrumentation;
 
+/**
+ *
+ * @author Luis
+ *
+ */
+
 public class Agent {
 	
-	private static Instrumentation instrumentation;
-	
-	public static void premain(String agentArgs, Instrumentation inst) {
+	public static void premain(String args, Instrumentation inst) {
 		System.out.println("Agent.premain() called");
-		instrumentation = inst;
-	}
-	
-	public static long sizeOf(Object object) {
-		return instrumentation.getObjectSize(object);
 	}
 }
