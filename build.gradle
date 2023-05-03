@@ -12,6 +12,7 @@ repositories {
 dependencies {
 	// Modules
 	compileOnly project(":agent")
+	implementation project(":override")
 	// Local
 	implementation "net.luis:LUtils:${LUtils}" // Utility
 	// ASM

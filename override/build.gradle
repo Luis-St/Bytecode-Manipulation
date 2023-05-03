@@ -1,17 +1,15 @@
 plugins {
-	id "java"
+    id "java"
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 	maven {
 		url uri("${rootDir}/maven/repositories")
 	}
 }
 
 dependencies {
-	// Modules
-	implementation project(":override")
 	// Local
 	implementation "net.luis:LUtils:${LUtils}" // Utility
 	// ASM
@@ -26,11 +24,6 @@ dependencies {
 	implementation "org.jetbrains:annotations:${JetBrainsAnnotations}" // Annotations
 }
 
-jar {
-	duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-	manifest {
-		attributes([
-		     "Premain-Class": "net.luis.agent.Agent"
-		])
-	}
+test {
+    useJUnitPlatform()
 }
