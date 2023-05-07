@@ -34,3 +34,12 @@ tasks.register("run", JavaExec) {
 	getMainClass().set("net.luis.main.Main")
 	jvmArgs("-javaagent:${projectDir}/agent/build/libs/agent.jar")
 }
+
+jar {
+	manifest {
+		attributes(
+				"Can-Redefine-Classes": "true",
+				"Can-Retransform-Classes": "true"
+		)
+	}
+}

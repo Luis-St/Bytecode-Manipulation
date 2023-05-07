@@ -19,5 +19,4 @@ public interface INumber {
 	default double sqrt() {
 		return Math.sqrt(self().doubleValue());
 	}
-	
 }

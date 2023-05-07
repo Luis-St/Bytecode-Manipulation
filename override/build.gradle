@@ -23,7 +23,3 @@ dependencies {
 	// Other
 	implementation "org.jetbrains:annotations:${JetBrainsAnnotations}" // Annotations
 }
-
-test {
-    useJUnitPlatform()
-}
