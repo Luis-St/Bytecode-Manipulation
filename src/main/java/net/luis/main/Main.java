@@ -1,9 +1,7 @@
 package net.luis.main;
 
-import net.luis.agent.Agent;
-import net.luis.override.INumber;
-
-import java.util.List;
+import net.luis.overrides.ITestInterface;
+import net.luis.utils.logging.LoggerConfiguration;
 
 /**
  *
@@ -13,16 +11,14 @@ import java.util.List;
 
 public class Main {
 	
-	public static void main(String[] args) throws ClassNotFoundException {
+	public static void main(String[] args) {
 		System.out.println("Hello World!");
 		
-		Main.class.getClassLoader().loadClass("java.lang.Number");
-		Number number = Integer.valueOf(10);
-		System.out.println(number);
-		if (number instanceof INumber iNumber) {
-			System.out.println("Number is an instance of INumber");
-			System.out.println(iNumber.pow(2));
-			System.out.println(iNumber.sqrt());
+		LoggerConfiguration configuration = new LoggerConfiguration("*");
+		if (configuration instanceof ITestInterface test) {
+			System.out.println("LoggerConfiguration is an instance of ITestInterface");
+			System.out.println(test.pow(2));
+			System.out.println(test.sqrt());
 		}
 	}
 }
