@@ -12,7 +12,7 @@ import java.security.ProtectionDomain;
  *
  */
 
-public class InterfaceClassTransformer implements ClassFileTransformer {
+public class InterfaceInjectionTransformer implements ClassFileTransformer {
 	
 	@Override
 	public byte @Nullable [] transform(ClassLoader loader, String name, Class<?> clazz, ProtectionDomain domain, byte[] buffer) throws IllegalClassFormatException {
