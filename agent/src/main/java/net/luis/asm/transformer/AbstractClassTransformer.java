@@ -17,7 +17,7 @@ import java.security.ProtectionDomain;
 public abstract class AbstractClassTransformer implements ClassFileTransformer {
 	
 	@Override
-	public byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String name, @NotNull Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
+	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String name, @NotNull Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
 		ClassReader reader = new ClassReader(buffer);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 		ClassVisitor visitor = this.createVisitor(name, clazz, reader, writer);
