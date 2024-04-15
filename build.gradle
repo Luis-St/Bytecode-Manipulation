@@ -30,6 +30,6 @@ tasks.register("run", JavaExec) {
 	dependsOn project(":agent").build
 	group = "run"
 	classpath = sourceSets.main.runtimeClasspath
-	getMainClass().set("net.luis.main.Main")
-	jvmArgs("-javaagent:${projectDir}/agent/build/libs/agent.jar", "--enable-preview")
+	getMainClass().set("net.luis.Main")
+	jvmArgs("-javaagent:${projectDir}/agent/build/libs/agent.jar")
 }
