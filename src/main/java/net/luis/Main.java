@@ -1,6 +1,8 @@
 package net.luis;
 
+import net.luis.annotation.Test;
 import net.luis.utils.logging.LoggerConfiguration;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  *
@@ -8,6 +10,16 @@ import net.luis.utils.logging.LoggerConfiguration;
  *
  */
 
+@Test(
+	testInt = -1,
+	testString = "Hello World!",
+	testBoolean = true,
+	testDouble = 0.0,
+	testClass = Main.class,
+	testIntArray = {1, 2, 3},
+	testStringArray = {"Hello", "World", "!"},
+	testClassArray = {Main.class}
+)
 public class Main {
 	
 	public static void main(String[] args) {
