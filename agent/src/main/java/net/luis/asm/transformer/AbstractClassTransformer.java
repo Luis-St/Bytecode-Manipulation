@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 /**

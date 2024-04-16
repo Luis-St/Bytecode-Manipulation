@@ -23,8 +23,6 @@ public abstract class ConditionBasedClassTransformer<T> implements ClassFileTran
 	@Override
 	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String name, @NotNull Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
 		
-		
-		
 		return null;
 	}
 	

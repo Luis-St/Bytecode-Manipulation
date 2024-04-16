@@ -21,8 +21,5 @@ public class Main {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
 		}
 		
-		
-		
-		
 	}
 }

@@ -1,7 +1,6 @@
 package net.luis.asm;
 
 import com.google.common.collect.Lists;
-import net.luis.annotation.InterfaceInjection;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 

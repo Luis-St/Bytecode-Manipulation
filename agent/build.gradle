@@ -28,9 +28,9 @@ jar {
 	duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 	manifest {
 		attributes([
-				"Premain-Class" : "net.luis.agent.Agent",
-				"Can-Redefine-Classes" : "true",
-				"Can-Retransform-Classes": "true"
+			"Premain-Class": "net.luis.agent.Agent",
+			"Can-Redefine-Classes": "true",
+			"Can-Retransform-Classes": "true"
 		])
 	}
 }

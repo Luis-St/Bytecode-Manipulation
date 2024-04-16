@@ -2,12 +2,12 @@ package net.luis.asm;
 
 import org.objectweb.asm.*;
 
-public class AnnotationBasedClassVisitor extends ClassVisitor {
+public class LoggerFieldVisitor extends ClassVisitor {
 	
 	private final String clazz;
 	private boolean loggerAbsent = true;
 	
-	public AnnotationBasedClassVisitor(ClassWriter writer, String clazz) {
+	public LoggerFieldVisitor(ClassWriter writer, String clazz) {
 		super(Opcodes.ASM9, writer);
 		this.clazz = clazz;
 	}
@@ -47,7 +47,7 @@ public class AnnotationBasedClassVisitor extends ClassVisitor {
 			@Override
 			public void visitCode() {
 				if (this.hasLoggingAnnotation) {
-					this.mv.visitFieldInsn(Opcodes.GETSTATIC, AnnotationBasedClassVisitor.this.clazz, "LOGGER", "Lorg/apache/logging/log4j/Logger;");
+					this.mv.visitFieldInsn(Opcodes.GETSTATIC, LoggerFieldVisitor.this.clazz, "LOGGER", "Lorg/apache/logging/log4j/Logger;");
 					this.mv.visitLdcInsn(this.loggingMessage);
 					this.mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, "org/apache/logging/log4j/Logger", "info", "(Ljava/lang/String;)V", true);
 				}
