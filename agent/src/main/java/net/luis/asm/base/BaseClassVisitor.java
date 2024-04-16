@@ -4,7 +4,9 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
+ *
  * @author Luis-St
+ *
  */
 
 public abstract class BaseClassVisitor extends ClassVisitor {

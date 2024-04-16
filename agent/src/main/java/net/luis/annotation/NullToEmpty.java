@@ -1,4 +1,9 @@
 package net.luis.annotation;
 
-public @interface NullToEmpty {
-}
+/**
+ *
+ * @author Luis-St
+ *
+ */
+
+public @interface NullToEmpty {}

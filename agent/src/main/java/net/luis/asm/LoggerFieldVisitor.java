@@ -2,6 +2,12 @@ package net.luis.asm;
 
 import org.objectweb.asm.*;
 
+/**
+ *
+ * @author Luis-St
+ *
+ */
+
 public class LoggerFieldVisitor extends ClassVisitor {
 	
 	private final String clazz;
