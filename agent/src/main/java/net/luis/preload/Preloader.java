@@ -11,7 +11,7 @@ import java.util.List;
 public class Preloader {
 	
 	private final List<String> classes = ClassPathScanner.getClasses();
-	private final AnnotationScanner scanner = new AnnotationScanner();
+	private final ClassFileScanner scanner = new ClassFileScanner();
 	
 	public void preload() {
 		System.out.println("Preloading");

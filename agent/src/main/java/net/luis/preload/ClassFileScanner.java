@@ -1,7 +1,6 @@
 package net.luis.preload;
 
-import net.luis.asm.base.BaseAnnotationVisitor;
-import net.luis.asm.base.BaseClassVisitor;
+import net.luis.asm.base.*;
 import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
@@ -15,7 +14,7 @@ import java.util.function.BiConsumer;
  *
  */
 
-public class AnnotationScanner {
+public class ClassFileScanner {
 	
 	private byte[] readClass(String clazz) {
 		String path = clazz.replace('.', '/') + ".class";
@@ -42,64 +41,47 @@ public class AnnotationScanner {
 	public void scan(String clazz) {
 		System.out.println("Scanning " + clazz);
 		ClassReader reader = new ClassReader(this.readClass(clazz));
-		ClassVisitor visitor = new ClassVisitor();
+		ClassVisitor visitor = new Visitor();
 		reader.accept(visitor, 0);
-		System.out.println("Annotation scan data for " + clazz + ": " + visitor.getScanData().size());
 	}
 	
-	//region Class visitor for scanning annotations
-	private static class ClassVisitor extends BaseClassVisitor {
+	private static class Visitor extends BaseClassVisitor {
 		
-		private final Map<String, Object> scanData = new HashMap<>();
+		private final Map<String, Map<String, Object>> classAnnotations = new HashMap<>();
+		private final Map<String, Map<String, Object>> fieldAnnotations = new HashMap<>();
+		private final Map<String, Map<String, Object>> methodAnnotations = new HashMap<>();
 		
-		public Map<String, Object> getScanData() {
-			return this.scanData;
+		@Override
+		public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+			Map<String, Object> values = new HashMap<>();
+			this.classAnnotations.put(annotationDescriptor, values);
+			return new AnnotationScanner(values::put);
 		}
 		
 		@Override
-		public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-			return new AnnotationVisitor(Opcodes.ASM9, super.visitAnnotation(descriptor, visible)) {
+		public FieldVisitor visitField(int access, String name, String fieldDescriptor, String signature, Object value) {
+			Map<String, Object> values = new HashMap<>();
+			this.fieldAnnotations.put(name, values);
+			return new BaseFieldVisitor() {
 				
 				@Override
-				public void visit(String parameter, Object value) {
-					ClassVisitor.this.scanData.put(parameter, value);
-				}
-				
-				@Override
-				public AnnotationVisitor visitArray(String parameter) {
-					List<Object> values = new ArrayList<>();
-					ClassVisitor.this.scanData.put(parameter, values);
-					return new AnnotationVisitor(Opcodes.ASM9) {
-						
-						@Override
-						public void visit(String name, Object value) {
-							values.add(value);
-						}
-					};
+				public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+					return new AnnotationScanner(values::put);
 				}
 			};
 		}
 		
 		@Override
-		public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-			
-			
-			
-			
-			
-			
-			
-			return super.visitField(access, name, descriptor, signature, value);
-		}
-		
-		@Override
-		public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-			
-			
-			
-			
-			
-			return super.visitMethod(access, name, descriptor, signature, exceptions);
+		public MethodVisitor visitMethod(int access, String name, String methodDescriptor, String signature, String[] exceptions) {
+			Map<String, Object> values = new HashMap<>();
+			this.methodAnnotations.put(name, values);
+			return new BaseMethodVisitor() {
+				
+				@Override
+				public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+					return new AnnotationScanner(values::put);
+				}
+			};
 		}
 		
 		@Override
@@ -108,11 +90,11 @@ public class AnnotationScanner {
 		}
 	}
 	
-	private static class AnnotationVisitor extends BaseAnnotationVisitor {
+	private static class AnnotationScanner extends BaseAnnotationVisitor {
 		
 		private final BiConsumer<String, Object> consumer;
 		
-		private AnnotationVisitor(BiConsumer<String, Object> consumer) {
+		private AnnotationScanner(BiConsumer<String, Object> consumer) {
 			this.consumer = consumer;
 		}
 		
@@ -133,7 +115,5 @@ public class AnnotationScanner {
 				}
 			};
 		}
-		
 	}
-	//endregion
 }
