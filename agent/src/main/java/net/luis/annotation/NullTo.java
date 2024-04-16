@@ -8,6 +8,6 @@ import java.lang.annotation.*;
  *
  */
 
-@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface NullToEmpty {}
+@Target({ ElementType.PARAMETER, ElementType.RECORD_COMPONENT })
+public @interface NullTo {}

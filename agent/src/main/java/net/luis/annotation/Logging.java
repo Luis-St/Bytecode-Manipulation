@@ -1,12 +1,12 @@
 package net.luis.annotation;
 
+import java.lang.annotation.*;
+
 /**
  *
  * @author Luis-St
  *
  */
 
-public @interface Logging {
-	
-	String value();
-}
+@Retention(RetentionPolicy.CLASS)
+public @interface Logging {}
