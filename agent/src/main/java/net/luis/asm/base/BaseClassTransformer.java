@@ -1,4 +1,4 @@
-package net.luis.asm.transformer;
+package net.luis.asm.base;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +13,7 @@ import java.security.ProtectionDomain;
  *
  */
 
-public abstract class AbstractClassTransformer implements ClassFileTransformer {
+public abstract class BaseClassTransformer implements ClassFileTransformer {
 	
 	@Override
 	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String name, @NotNull Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
