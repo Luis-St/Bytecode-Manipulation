@@ -16,13 +16,18 @@ import java.util.function.BiConsumer;
 
 public class ClassFileScanner {
 	
+	public Map<String, Map<String, Object>> scanClassAnnotations(String clazz) {
+		ClassAnnotationScanner visitor = new ClassAnnotationScanner();
+		this.scan(clazz, visitor);
+		return visitor.getAnnotations();
+	}
+	
 	private byte[] readClass(String clazz) {
 		String path = clazz.replace('.', '/') + ".class";
 		InputStream stream = ClassLoader.getSystemResourceAsStream(path);
 		if (stream == null) {
 			throw new IllegalStateException("Class not found in classpath: " + clazz);
 		}
-		System.out.println("Reading class file: " + clazz);
 		try (ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
 			int data;
 			while (true) {
@@ -38,58 +43,28 @@ public class ClassFileScanner {
 		}
 	}
 	
-	public void scan(String clazz) {
-		System.out.println("Scanning " + clazz);
+	private void scan(String clazz, ClassVisitor visitor) {
 		ClassReader reader = new ClassReader(this.readClass(clazz));
-		ClassVisitor visitor = new Visitor();
 		reader.accept(visitor, 0);
 	}
 	
-	private static class Visitor extends BaseClassVisitor {
+	private static class ClassAnnotationScanner extends BaseClassVisitor {
 		
-		private final Map<String, Map<String, Object>> classAnnotations = new HashMap<>();
-		private final Map<String, Map<String, Object>> fieldAnnotations = new HashMap<>();
-		private final Map<String, Map<String, Object>> methodAnnotations = new HashMap<>();
+		private final Map<String, Map<String, Object>> annotations = new HashMap<>();
 		
 		@Override
 		public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
 			Map<String, Object> values = new HashMap<>();
-			this.classAnnotations.put(annotationDescriptor, values);
+			this.annotations.put(annotationDescriptor, values);
 			return new AnnotationScanner(values::put);
 		}
 		
-		@Override
-		public FieldVisitor visitField(int access, String name, String fieldDescriptor, String signature, Object value) {
-			Map<String, Object> values = new HashMap<>();
-			this.fieldAnnotations.put(name, values);
-			return new BaseFieldVisitor() {
-				
-				@Override
-				public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
-					return new AnnotationScanner(values::put);
-				}
-			};
-		}
-		
-		@Override
-		public MethodVisitor visitMethod(int access, String name, String methodDescriptor, String signature, String[] exceptions) {
-			Map<String, Object> values = new HashMap<>();
-			this.methodAnnotations.put(name, values);
-			return new BaseMethodVisitor() {
-				
-				@Override
-				public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
-					return new AnnotationScanner(values::put);
-				}
-			};
-		}
-		
-		@Override
-		public void visitAttribute(Attribute attribute) {
-			super.visitAttribute(attribute);
+		public Map<String, Map<String, Object>> getAnnotations() {
+			return this.annotations;
 		}
 	}
 	
+	//region Annotation scanner
 	private static class AnnotationScanner extends BaseAnnotationVisitor {
 		
 		private final BiConsumer<String, Object> consumer;
@@ -116,4 +91,5 @@ public class ClassFileScanner {
 			};
 		}
 	}
+	//endregion
 }
