@@ -26,11 +26,11 @@ public class PreloadContext {
 		return this.classAnnotations;
 	}
 	
-	public List<AnnotationData> getClassAnnotation(String clazz) {
+	public List<AnnotationData> getClassAnnotations(String clazz) {
 		return this.classAnnotations.getOrDefault(clazz, new ArrayList<>());
 	}
 	
-	public AnnotationData getAnnotation(String clazz, String annotation) {
-		return this.getClassAnnotation(clazz).stream().filter(data -> data.name().equals(annotation)).findFirst().orElse(null);
+	public AnnotationData getClassAnnotation(String clazz, String annotationDescriptor) {
+		return this.getClassAnnotations(clazz).stream().filter(data -> data.descriptor().equals(annotationDescriptor)).findFirst().orElse(null);
 	}
 }

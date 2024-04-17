@@ -59,7 +59,7 @@ public class ClassFileScanner {
 		@Override
 		public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
 			Map<String, Object> values = new HashMap<>();
-			AnnotationData data = new AnnotationData(descriptor.substring(descriptor.lastIndexOf("/") + 1, descriptor.length() - 1), descriptor, values);
+			AnnotationData data = new AnnotationData(descriptor, values);
 			this.annotations.add(data);
 			return new AnnotationScanner(values::put);
 		}
