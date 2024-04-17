@@ -1,5 +1,6 @@
 package net.luis.preload;
 
+import net.luis.asm.ASMHelper;
 import net.luis.asm.base.*;
 import org.objectweb.asm.*;
 
@@ -7,6 +8,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  *
@@ -16,13 +19,18 @@ import java.util.function.BiConsumer;
 
 public class ClassFileScanner {
 	
-	public Map<String, Map<String, Object>> scanClassAnnotations(String clazz) {
+	public static Map<String, Map<String, Object>> scanClassAnnotations(String clazz) {
 		ClassAnnotationScanner visitor = new ClassAnnotationScanner();
-		this.scan(clazz, visitor);
+		scan(clazz, visitor);
 		return visitor.getAnnotations();
 	}
 	
-	private byte[] readClass(String clazz) {
+	private static void scan(String clazz, ClassVisitor visitor) {
+		ClassReader reader = new ClassReader(readClass(clazz));
+		reader.accept(visitor, 0);
+	}
+	
+	private static byte[] readClass(String clazz) {
 		String path = clazz.replace('.', '/') + ".class";
 		InputStream stream = ClassLoader.getSystemResourceAsStream(path);
 		if (stream == null) {
@@ -41,11 +49,6 @@ public class ClassFileScanner {
 		} catch (Exception e) {
 			throw new IllegalStateException("Failed to read class file: " + clazz, e);
 		}
-	}
-	
-	private void scan(String clazz, ClassVisitor visitor) {
-		ClassReader reader = new ClassReader(this.readClass(clazz));
-		reader.accept(visitor, 0);
 	}
 	
 	private static class ClassAnnotationScanner extends BaseClassVisitor {
@@ -75,7 +78,17 @@ public class ClassFileScanner {
 		
 		@Override
 		public void visit(String parameter, Object value) {
-			this.consumer.accept(parameter, value);
+			switch (value) {
+				case boolean[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
+				case byte[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
+				case short[] a -> this.consumer.accept(parameter,ASMHelper.asList(a));
+				case int[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
+				case long[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
+				case float[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
+				case double[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
+				case char[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
+				default -> this.consumer.accept(parameter, value);
+			}
 		}
 		
 		@Override
@@ -88,7 +101,17 @@ public class ClassFileScanner {
 				public void visit(String name, Object value) {
 					values.add(value);
 				}
+				
+				@Override
+				public void visitEnum(String name, String descriptor, String value) {
+					values.add(value);
+				}
 			};
+		}
+		
+		@Override
+		public void visitEnum(String name, String descriptor, String value) {
+			this.consumer.accept(name, value);
 		}
 	}
 	//endregion

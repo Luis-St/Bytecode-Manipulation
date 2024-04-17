@@ -1,6 +1,6 @@
 package net.luis.preload;
 
-import java.util.List;
+import java.util.*;
 
 /**
  *
@@ -10,14 +10,13 @@ import java.util.List;
 
 public class Preloader {
 	
-	private final List<String> classes = ClassPathScanner.getClasses();
-	private final ClassFileScanner scanner = new ClassFileScanner();
-	
-	public void preload() {
+	public static PreloadContext preload() {
 		System.out.println("Preloading");
-		this.scanner.scan("net.luis.Main");
-		
-		
-		
+		List<String> classes = ClassPathScanner.getClasses();
+		Map<String, Map<String, Object>> classAnnotations = new HashMap<>();
+		for (String clazz : classes) {
+			classAnnotations.putAll(ClassFileScanner.scanClassAnnotations(clazz));
+		}
+		return PreloadContext.create(classes, classAnnotations);
 	}
 }

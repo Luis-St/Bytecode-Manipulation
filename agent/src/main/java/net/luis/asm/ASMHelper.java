@@ -1,0 +1,41 @@
+package net.luis.asm;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+public class ASMHelper {
+	
+	public static List<Boolean> asList(boolean[] array) {
+		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
+	}
+	
+	public static List<Byte> asList(byte[] array) {
+		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
+	}
+	
+	public static List<Short> asList(short[] array) {
+		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
+	}
+	
+	public static List<Integer> asList(int[] array) {
+		return Arrays.stream(array).boxed().collect(Collectors.toList());
+	}
+	
+	public static List<Long> asList(long[] array) {
+		return Arrays.stream(array).boxed().collect(Collectors.toList());
+	}
+	
+	public static List<Float> asList(float[] array) {
+		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
+	}
+	
+	public static List<Double> asList(double[] array) {
+		return Arrays.stream(array).boxed().collect(Collectors.toList());
+	}
+	
+	public static List<Character> asList(char[] array) {
+		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
+	}
+}

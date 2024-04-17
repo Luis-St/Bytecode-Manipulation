@@ -1,10 +1,12 @@
 package net.luis.agent;
 
 import net.luis.asm.AnnotationScanTransformer;
+import net.luis.preload.PreloadContext;
 import net.luis.preload.Preloader;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.util.Map;
 
 /**
  *
@@ -20,7 +22,10 @@ public class Agent {
 	}
 	
 	static {
-		Preloader preloader = new Preloader();
-		preloader.preload();
+		PreloadContext context = Preloader.preload();
+		
+		for (Map.Entry<String, Map<String, Object>> entry : context.getClassAnnotations().entrySet()) {
+			System.out.println(entry.getKey() + " -> " + entry.getValue());
+		}
 	}
 }
