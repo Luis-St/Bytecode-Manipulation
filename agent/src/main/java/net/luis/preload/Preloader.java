@@ -1,5 +1,7 @@
 package net.luis.preload;
 
+import net.luis.preload.data.AnnotationData;
+
 import java.util.*;
 
 /**
@@ -13,9 +15,13 @@ public class Preloader {
 	public static PreloadContext preload() {
 		System.out.println("Preloading");
 		List<String> classes = ClassPathScanner.getClasses();
-		Map<String, Map<String, Object>> classAnnotations = new HashMap<>();
+		Map<String, List<AnnotationData>> classAnnotations = new HashMap<>();
 		for (String clazz : classes) {
-			classAnnotations.putAll(ClassFileScanner.scanClassAnnotations(clazz));
+			List<AnnotationData> annotations = ClassFileScanner.scanClassAnnotations(clazz);
+			if (annotations.isEmpty()) {
+				continue;
+			}
+			classAnnotations.put(clazz, annotations);
 		}
 		return PreloadContext.create(classes, classAnnotations);
 	}

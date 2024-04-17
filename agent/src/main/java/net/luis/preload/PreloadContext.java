@@ -1,19 +1,20 @@
 package net.luis.preload;
 
-import java.util.List;
-import java.util.Map;
+import net.luis.preload.data.AnnotationData;
+
+import java.util.*;
 
 public class PreloadContext {
 	
 	private final List<String> classes;
-	private final Map<String, Map<String, Object>> classAnnotations;
+	private final Map<String, List<AnnotationData>> classAnnotations;
 	
-	private PreloadContext(List<String> classes, Map<String, Map<String, Object>> classAnnotations) {
+	private PreloadContext(List<String> classes, Map<String, List<AnnotationData>> classAnnotations) {
 		this.classes = classes;
 		this.classAnnotations = classAnnotations;
 	}
 	
-	public static PreloadContext create(List<String> classes, Map<String, Map<String, Object>> classAnnotations) {
+	public static PreloadContext create(List<String> classes, Map<String, List<AnnotationData>> classAnnotations) {
 		return new PreloadContext(classes, classAnnotations);
 	}
 	
@@ -21,11 +22,15 @@ public class PreloadContext {
 		return this.classes;
 	}
 	
-	public Map<String, Map<String, Object>> getClassAnnotations() {
+	public Map<String, List<AnnotationData>> getClassAnnotations() {
 		return this.classAnnotations;
 	}
 	
-	public Map<String, Object> getClassAnnotation(String clazz) {
-		return this.classAnnotations.get(clazz);
+	public List<AnnotationData> getClassAnnotation(String clazz) {
+		return this.classAnnotations.getOrDefault(clazz, new ArrayList<>());
+	}
+	
+	public AnnotationData getAnnotation(String clazz, String annotation) {
+		return this.getClassAnnotation(clazz).stream().filter(data -> data.name().equals(annotation)).findFirst().orElse(null);
 	}
 }

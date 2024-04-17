@@ -2,6 +2,7 @@ package net.luis.preload;
 
 import net.luis.asm.ASMHelper;
 import net.luis.asm.base.*;
+import net.luis.preload.data.AnnotationData;
 import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
@@ -19,7 +20,7 @@ import java.util.stream.IntStream;
 
 public class ClassFileScanner {
 	
-	public static Map<String, Map<String, Object>> scanClassAnnotations(String clazz) {
+	public static List<AnnotationData> scanClassAnnotations(String clazz) {
 		ClassAnnotationScanner visitor = new ClassAnnotationScanner();
 		scan(clazz, visitor);
 		return visitor.getAnnotations();
@@ -53,16 +54,17 @@ public class ClassFileScanner {
 	
 	private static class ClassAnnotationScanner extends BaseClassVisitor {
 		
-		private final Map<String, Map<String, Object>> annotations = new HashMap<>();
+		private final List<AnnotationData> annotations = new ArrayList<>();
 		
 		@Override
-		public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+		public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
 			Map<String, Object> values = new HashMap<>();
-			this.annotations.put(annotationDescriptor, values);
+			AnnotationData data = new AnnotationData(descriptor.substring(descriptor.lastIndexOf("/") + 1, descriptor.length() - 1), descriptor, values);
+			this.annotations.add(data);
 			return new AnnotationScanner(values::put);
 		}
 		
-		public Map<String, Map<String, Object>> getAnnotations() {
+		public List<AnnotationData>  getAnnotations() {
 			return this.annotations;
 		}
 	}
