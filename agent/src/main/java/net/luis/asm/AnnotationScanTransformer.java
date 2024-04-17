@@ -1,6 +1,5 @@
 package net.luis.asm;
 
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -18,7 +17,7 @@ public class AnnotationScanTransformer implements ClassFileTransformer {
 	private final Map<String, Map<String, Object>> scanData = new HashMap<>();
 	
 	@Override
-	public byte @Nullable [] transform(ClassLoader loader, String name, Class<?> clazz, ProtectionDomain domain, byte[] buffer) {
+	public byte[] transform(ClassLoader loader, String name, Class<?> clazz, ProtectionDomain domain, byte[] buffer) {
 		ClassReader reader = new ClassReader(buffer);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 		AnnotationScanner scanner = new AnnotationScanner(writer);

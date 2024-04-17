@@ -1,12 +1,11 @@
 package net.luis.asm;
 
-import com.google.common.collect.Lists;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -26,7 +25,7 @@ public class InterfaceInjectionTransformer implements ClassFileTransformer {
 	}
 	
 	@Override
-	public byte @Nullable [] transform(ClassLoader loader, String name, Class<?> clazz, ProtectionDomain domain, byte[] buffer) throws IllegalClassFormatException {
+	public byte[] transform(ClassLoader loader, String name, Class<?> clazz, ProtectionDomain domain, byte[] buffer) throws IllegalClassFormatException {
 		System.out.println("Transforming: " + name);
 		if (clazz != null) {
 			System.out.println("Skipping: " + clazz);
@@ -40,7 +39,7 @@ public class InterfaceInjectionTransformer implements ClassFileTransformer {
 				
 				if (InterfaceInjectionTransformer.this.targets.contains(name)) {
 					System.out.println("Target class: " + name);
-					List<String> list = Lists.newArrayList(interfaces);
+					List<String> list = Arrays.asList(interfaces);
 					if (!list.contains(InterfaceInjectionTransformer.this.iface)) {
 						list.add(InterfaceInjectionTransformer.this.iface);
 						System.out.println("Added interface: " + InterfaceInjectionTransformer.this.iface);

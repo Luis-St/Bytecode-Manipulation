@@ -10,18 +10,8 @@ repositories {
 }
 
 dependencies {
-	// Maven
-	implementation "net.luis:LUtils:${LUtils}" // Utility
 	// ASM
 	implementation "org.ow2.asm:asm:${ASM}"
-	// Google
-	implementation "com.google.guava:guava:${GoogleGuava}" // Utility
-	// Apache
-	implementation "org.apache.logging.log4j:log4j-api:${Log4jAPI}" // Logging
-	implementation "org.apache.logging.log4j:log4j-core:${Log4jCore}" // Logging
-	implementation "org.apache.commons:commons-lang3:${ApacheLang}" // Utility
-	// Other
-	implementation "org.jetbrains:annotations:${JetBrainsAnnotations}" // Annotations
 }
 
 jar {

@@ -1,7 +1,5 @@
 package net.luis.asm.base;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -16,7 +14,7 @@ import java.security.ProtectionDomain;
 public abstract class BaseClassTransformer implements ClassFileTransformer {
 	
 	@Override
-	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String name, @NotNull Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
+	public final byte[] transform(ClassLoader loader, String name, Class<?> clazz, ProtectionDomain domain, byte[] buffer) {
 		ClassReader reader = new ClassReader(buffer);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 		ClassVisitor visitor = this.createVisitor(name, clazz, reader, writer);
@@ -24,5 +22,5 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		return writer.toByteArray();
 	}
 	
-	public abstract ClassVisitor createVisitor(@NotNull String name, @NotNull Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer);
+	public abstract ClassVisitor createVisitor(String name, Class<?> clazz, ClassReader reader, ClassWriter writer);
 }
