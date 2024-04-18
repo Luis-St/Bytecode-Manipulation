@@ -4,6 +4,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ *
+ * @author Luis-St
+ *
+ */
+
 public class ASMHelper {
 	
 	//region Factory helper methods

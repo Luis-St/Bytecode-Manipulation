@@ -4,6 +4,12 @@ import net.luis.preload.data.AnnotationData;
 
 import java.util.*;
 
+/**
+ *
+ * @author Luis-St
+ *
+ */
+
 public class PreloadContext {
 	
 	private final List<String> classes;
