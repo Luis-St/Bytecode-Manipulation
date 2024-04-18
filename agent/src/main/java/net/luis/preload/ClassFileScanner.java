@@ -1,7 +1,8 @@
 package net.luis.preload;
 
 import net.luis.asm.ASMHelper;
-import net.luis.asm.base.*;
+import net.luis.asm.base.visitor.BaseAnnotationVisitor;
+import net.luis.asm.base.visitor.BaseClassVisitor;
 import net.luis.preload.data.AnnotationData;
 import org.objectweb.asm.*;
 
@@ -9,8 +10,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  *

@@ -1,4 +1,4 @@
-package net.luis.asm.base;
+package net.luis.asm.base.visitor;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Opcodes;
