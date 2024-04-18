@@ -27,7 +27,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 		Map<String, List<String>> targets = new HashMap<>();
 		for (Map.Entry<String, List<AnnotationData>> entry : context.getClassAnnotations().entrySet()) {
 			for (AnnotationData data : entry.getValue()) {
-				if ("Lnet/luis/annotation/InterfaceInjection;".equals(data.descriptor())) {
+				if ("Lnet/luis/annotation/InterfaceInjection;".equals(data.type().getDescriptor())) {
 					List<Type> types = data.get("targets");
 					for (Type target : types) {
 						targets.computeIfAbsent(target.getClassName().replace(".", "/"), k -> new ArrayList<>()).add(entry.getKey());

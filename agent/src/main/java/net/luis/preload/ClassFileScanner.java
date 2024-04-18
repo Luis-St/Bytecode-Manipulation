@@ -1,15 +1,13 @@
 package net.luis.preload;
 
 import net.luis.asm.ASMHelper;
-import net.luis.asm.base.visitor.BaseAnnotationVisitor;
-import net.luis.asm.base.visitor.BaseClassVisitor;
 import net.luis.preload.data.AnnotationData;
+import net.luis.preload.scanner.ClassScanner;
 import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.List;
 
 /**
  *
@@ -19,22 +17,21 @@ import java.util.function.BiConsumer;
 
 public class ClassFileScanner {
 	
-	public static List<AnnotationData> scanClassAnnotations(String clazz) {
-		ClassAnnotationScanner visitor = new ClassAnnotationScanner();
-		scan(clazz, visitor);
-		return visitor.getAnnotations();
+	public static List<AnnotationData> scanClassAnnotations(Type type) {
+		scan(type, new ClassScanner());
+		return ASMHelper.newList();
 	}
 	
-	private static void scan(String clazz, ClassVisitor visitor) {
-		ClassReader reader = new ClassReader(readClass(clazz));
+	private static void scan(Type type, ClassVisitor visitor) {
+		ClassReader reader = new ClassReader(readClass(type));
 		reader.accept(visitor, 0);
 	}
 	
-	private static byte[] readClass(String clazz) {
-		String path = clazz.replace('.', '/') + ".class";
+	private static byte[] readClass(Type type) {
+		String path = type.getInternalName() + ".class";
 		InputStream stream = ClassLoader.getSystemResourceAsStream(path);
 		if (stream == null) {
-			throw new IllegalStateException("Class not found in classpath: " + clazz);
+			throw new IllegalStateException("Class not found in classpath: " + type.getClassName());
 		}
 		try (ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
 			int data;
@@ -47,73 +44,7 @@ public class ClassFileScanner {
 			}
 			return buffer.toByteArray();
 		} catch (Exception e) {
-			throw new IllegalStateException("Failed to read class file: " + clazz, e);
+			throw new IllegalStateException("Failed to read class file: " + type.getClassName(), e);
 		}
 	}
-	
-	private static class ClassAnnotationScanner extends BaseClassVisitor {
-		
-		private final List<AnnotationData> annotations = new ArrayList<>();
-		
-		@Override
-		public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-			Map<String, Object> values = new HashMap<>();
-			AnnotationData data = new AnnotationData(descriptor, values);
-			this.annotations.add(data);
-			return new AnnotationScanner(values::put);
-		}
-		
-		public List<AnnotationData>  getAnnotations() {
-			return this.annotations;
-		}
-	}
-	
-	//region Annotation scanner
-	private static class AnnotationScanner extends BaseAnnotationVisitor {
-		
-		private final BiConsumer<String, Object> consumer;
-		
-		private AnnotationScanner(BiConsumer<String, Object> consumer) {
-			this.consumer = consumer;
-		}
-		
-		@Override
-		public void visit(String parameter, Object value) {
-			switch (value) {
-				case boolean[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-				case byte[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-				case short[] a -> this.consumer.accept(parameter,ASMHelper.asList(a));
-				case int[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-				case long[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-				case float[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-				case double[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-				case char[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-				default -> this.consumer.accept(parameter, value);
-			}
-		}
-		
-		@Override
-		public AnnotationVisitor visitArray(String parameter) {
-			List<Object> values = new ArrayList<>();
-			this.consumer.accept(parameter, values);
-			return new BaseAnnotationVisitor() {
-				
-				@Override
-				public void visit(String name, Object value) {
-					values.add(value);
-				}
-				
-				@Override
-				public void visitEnum(String name, String descriptor, String value) {
-					values.add(value);
-				}
-			};
-		}
-		
-		@Override
-		public void visitEnum(String name, String descriptor, String value) {
-			this.consumer.accept(name, value);
-		}
-	}
-	//endregion
 }

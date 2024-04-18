@@ -37,6 +37,6 @@ public class PreloadContext {
 	}
 	
 	public AnnotationData getClassAnnotation(String clazz, String annotationDescriptor) {
-		return this.getClassAnnotations(clazz).stream().filter(data -> data.descriptor().equals(annotationDescriptor)).findFirst().orElse(null);
+		return this.getClassAnnotations(clazz).stream().filter(data -> data.type().getDescriptor().equals(annotationDescriptor)).findFirst().orElse(null);
 	}
 }

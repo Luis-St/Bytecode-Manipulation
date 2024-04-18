@@ -1,14 +1,16 @@
 package net.luis.preload.data;
 
+import org.objectweb.asm.Type;
+
 import java.util.Map;
 
-public record AnnotationData(String descriptor, Map<String, Object> values) {
 /**
  *
  * @author Luis-St
  *
  */
 
+public record AnnotationData(Type type, Map<String, Object> values) {
 	
 	@SuppressWarnings("unchecked")
 	public <X> X get(String key) {
