@@ -6,9 +6,6 @@ import net.luis.preload.PreloadContext;
 import net.luis.preload.data.AnnotationData;
 import org.objectweb.asm.*;
 
-import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
-import java.security.ProtectionDomain;
 import java.util.*;
 
 /**
@@ -38,7 +35,6 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 				}
 			}
 		}
-		targets.forEach((k, v) -> System.out.println(k + " -> " + v));
 		return new InterfaceInjectionTransformer(targets);
 	}
 	
