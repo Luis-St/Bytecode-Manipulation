@@ -8,7 +8,6 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -48,18 +47,11 @@ public class InterfaceInjectionTransformer implements ClassFileTransformer {
 			
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-				System.out.println(Arrays.toString(interfaces));
 				if (targets.containsKey(name)) {
-					System.out.println("Target class: " + name);
-					List<String> list = Arrays.asList(interfaces);
-					System.out.println("Interfaces: " + list);
+					List<String> list = new ArrayList<>(Arrays.asList(interfaces));
 					for (String iface : targets.get(name)) {
 						iface = iface.replace(".", "/");
-						System.out.println("Injecting interface: " + iface);
-						if (!list.contains(iface)) {
-							list.add(iface);
-							System.out.println("Added interface: " + iface);
-						}
+						list.add(iface);
 					}
 					interfaces = list.toArray(String[]::new);
 				}
