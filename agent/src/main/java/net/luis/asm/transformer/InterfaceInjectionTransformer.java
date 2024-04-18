@@ -1,5 +1,7 @@
 package net.luis.asm.transformer;
 
+import net.luis.asm.ASMHelper;
+import net.luis.asm.base.BaseClassTransformer;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.data.AnnotationData;
 import org.objectweb.asm.*;
@@ -15,7 +17,8 @@ import java.util.*;
  *
  */
 
-public class InterfaceInjectionTransformer implements ClassFileTransformer {
+@SuppressWarnings("UnqualifiedFieldAccess")
+public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	private final Map<String, List<String>> targets;
 	
@@ -40,15 +43,13 @@ public class InterfaceInjectionTransformer implements ClassFileTransformer {
 	}
 	
 	@Override
-	public byte[] transform(ClassLoader loader, String name, Class<?> clazz, ProtectionDomain domain, byte[] buffer) throws IllegalClassFormatException {
-		ClassReader reader = new ClassReader(buffer);
-		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
-		ClassVisitor visitor = new ClassVisitor(Opcodes.ASM9, writer) {
+	protected ClassVisitor visit(String className, Class<?> clazz, ClassReader reader, ClassWriter writer) {
+		return new ClassVisitor(Opcodes.ASM9, writer) {
 			
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 				if (targets.containsKey(name)) {
-					List<String> list = new ArrayList<>(Arrays.asList(interfaces));
+					Set<String> list = ASMHelper.newSet(interfaces);
 					for (String iface : targets.get(name)) {
 						iface = iface.replace(".", "/");
 						list.add(iface);
@@ -58,7 +59,5 @@ public class InterfaceInjectionTransformer implements ClassFileTransformer {
 				super.visit(version, access, name, signature, superName, interfaces);
 			}
 		};
-		reader.accept(visitor, ClassReader.EXPAND_FRAMES);
-		return writer.toByteArray();
 	}
 }

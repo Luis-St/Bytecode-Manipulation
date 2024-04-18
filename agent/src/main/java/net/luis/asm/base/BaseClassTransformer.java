@@ -14,13 +14,13 @@ import java.security.ProtectionDomain;
 public abstract class BaseClassTransformer implements ClassFileTransformer {
 	
 	@Override
-	public final byte[] transform(ClassLoader loader, String name, Class<?> clazz, ProtectionDomain domain, byte[] buffer) {
+	public final byte[] transform(ClassLoader loader, String className, Class<?> clazz, ProtectionDomain domain, byte[] buffer) {
 		ClassReader reader = new ClassReader(buffer);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
-		ClassVisitor visitor = this.createVisitor(name, clazz, reader, writer);
+		ClassVisitor visitor = this.visit(className, clazz, reader, writer);
 		reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 		return writer.toByteArray();
 	}
 	
-	public abstract ClassVisitor createVisitor(String name, Class<?> clazz, ClassReader reader, ClassWriter writer);
+	protected abstract ClassVisitor visit(String className, Class<?> clazz, ClassReader reader, ClassWriter writer);
 }
