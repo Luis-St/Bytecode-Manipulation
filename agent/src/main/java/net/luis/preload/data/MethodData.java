@@ -13,4 +13,4 @@ import java.util.List;
  *
  */
 
-public record MethodScanData(String name, Type type, TypeAccess access, List<TypeModifier> modifiers, List<AnnotationScanData> annotations, List<ParameterScanData> parameters, List<Type> exceptions) {}
+public record MethodData(String name, Type type, TypeAccess access, List<TypeModifier> modifiers, List<AnnotationData> annotations, List<ParameterScanData> parameters, List<Type> exceptions) {}

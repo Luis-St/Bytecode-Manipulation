@@ -1,6 +1,6 @@
 package net.luis.preload;
 
-import net.luis.preload.data.AnnotationScanData;
+import net.luis.preload.data.AnnotationData;
 
 import java.util.*;
 
@@ -13,14 +13,14 @@ import java.util.*;
 public class PreloadContext {
 	
 	private final List<String> classes;
-	private final Map<String, List<AnnotationScanData>> classAnnotations;
+	private final Map<String, List<AnnotationData>> classAnnotations;
 	
-	private PreloadContext(List<String> classes, Map<String, List<AnnotationScanData>> classAnnotations) {
+	private PreloadContext(List<String> classes, Map<String, List<AnnotationData>> classAnnotations) {
 		this.classes = classes;
 		this.classAnnotations = classAnnotations;
 	}
 	
-	public static PreloadContext create(List<String> classes, Map<String, List<AnnotationScanData>> classAnnotations) {
+	public static PreloadContext create(List<String> classes, Map<String, List<AnnotationData>> classAnnotations) {
 		return new PreloadContext(classes, classAnnotations);
 	}
 	
@@ -28,15 +28,15 @@ public class PreloadContext {
 		return this.classes;
 	}
 	
-	public Map<String, List<AnnotationScanData>> getClassAnnotations() {
+	public Map<String, List<AnnotationData>> getClassAnnotations() {
 		return this.classAnnotations;
 	}
 	
-	public List<AnnotationScanData> getClassAnnotations(String clazz) {
+	public List<AnnotationData> getClassAnnotations(String clazz) {
 		return this.classAnnotations.getOrDefault(clazz, new ArrayList<>());
 	}
 	
-	public AnnotationScanData getClassAnnotation(String clazz, String annotationDescriptor) {
+	public AnnotationData getClassAnnotation(String clazz, String annotationDescriptor) {
 		return this.getClassAnnotations(clazz).stream().filter(data -> data.type().getDescriptor().equals(annotationDescriptor)).findFirst().orElse(null);
 	}
 }

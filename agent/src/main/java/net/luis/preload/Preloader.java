@@ -1,6 +1,6 @@
 package net.luis.preload;
 
-import net.luis.preload.data.AnnotationScanData;
+import net.luis.preload.data.AnnotationData;
 import org.objectweb.asm.Type;
 
 import java.util.*;
@@ -16,7 +16,7 @@ public class Preloader {
 	public static PreloadContext preload() {
 		System.out.println("Preloading");
 		List<String> classes = ClassPathScanner.getClasses();
-		Map<String, List<AnnotationScanData>> classAnnotations = new HashMap<>();
+		Map<String, List<AnnotationData>> classAnnotations = new HashMap<>();
 		
 		
 		ClassFileScanner.scanClassAnnotations(Type.getType("Lnet/luis/AnnotationExample;"));

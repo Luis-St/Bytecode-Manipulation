@@ -10,7 +10,7 @@ import java.util.Map;
  *
  */
 
-public record AnnotationScanData(Type type, Map<String, Object> values) {
+public record AnnotationData(Type type, Map<String, Object> values) {
 	
 	@SuppressWarnings("unchecked")
 	public <X> X get(String key) {

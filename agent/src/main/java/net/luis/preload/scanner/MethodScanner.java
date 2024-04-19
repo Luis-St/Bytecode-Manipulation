@@ -16,13 +16,13 @@ import java.util.function.Consumer;
 
 public class MethodScanner extends BaseMethodVisitor {
 	
-	private final Consumer<AnnotationScanData> annotationConsumer;
+	private final Consumer<AnnotationData> annotationConsumer;
 	private final Consumer<ParameterScanData> parameterConsumer;
 	private final List<Map.Entry<String, List<TypeModifier>>> parameters = new ArrayList<>();
-	private final Map<Integer, List<AnnotationScanData>> parameterAnnotations = new HashMap<>();
+	private final Map<Integer, List<AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
-	public MethodScanner(Consumer<AnnotationScanData> annotationConsumer, Consumer<ParameterScanData> parameterConsumer) {
+	public MethodScanner(Consumer<AnnotationData> annotationConsumer, Consumer<ParameterScanData> parameterConsumer) {
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;
 	}
@@ -30,7 +30,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	@Override
 	public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
-		this.annotationConsumer.accept(new AnnotationScanData(Type.getType(descriptor), values));
+		this.annotationConsumer.accept(new AnnotationData(Type.getType(descriptor), values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -50,7 +50,7 @@ public class MethodScanner extends BaseMethodVisitor {
 		//System.out.println("Parameter index: " + parameter);
 		//System.out.println("  Type: " + Type.getType(descriptor));
 		Map<String, Object> values = new HashMap<>();
-		this.parameterAnnotations.computeIfAbsent(parameter, p -> new ArrayList<>()).add(new AnnotationScanData(Type.getType(descriptor), values));
+		this.parameterAnnotations.computeIfAbsent(parameter, p -> new ArrayList<>()).add(new AnnotationData(Type.getType(descriptor), values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -58,7 +58,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	public void visitEnd() {
 		for (int i = 0; i < this.parameters.size(); i++) {
 			Map.Entry<String, List<TypeModifier>> entry =  this.parameters.get(i);
-			List<AnnotationScanData> annotations = this.parameterAnnotations.getOrDefault(i, Collections.emptyList());
+			List<AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, Collections.emptyList());
 			this.parameterConsumer.accept(new ParameterScanData(entry.getKey(), i, entry.getValue(), annotations));
 		}
 	}

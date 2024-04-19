@@ -18,15 +18,15 @@ import java.util.stream.Collectors;
 
 public class ClassScanner extends BaseClassVisitor {
 	
-	private final List<AnnotationScanData> classAnnotations = new ArrayList<>();
-	private final List<RecordComponentScanData> recordComponents = new ArrayList<>();
-	private final List<FieldScanData> fields = new ArrayList<>();
-	private final List<MethodScanData> methods = new ArrayList<>();
+	private final List<AnnotationData> classAnnotations = new ArrayList<>();
+	private final List<RecordComponentData> recordComponents = new ArrayList<>();
+	private final List<FieldData> fields = new ArrayList<>();
+	private final List<MethodData> methods = new ArrayList<>();
 	
 	@Override
 	public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
-		AnnotationScanData data = new AnnotationScanData(Type.getType(descriptor), values);
+		AnnotationData data = new AnnotationData(Type.getType(descriptor), values);
 		this.classAnnotations.add(data);
 		return new AnnotationScanner(values::put);
 	}
@@ -45,9 +45,9 @@ public class ClassScanner extends BaseClassVisitor {
 		//}
 	}
 	
-	private AnnotationVisitor createAnnotationScanner(String descriptor, Consumer<AnnotationScanData> action) {
+	private AnnotationVisitor createAnnotationScanner(String descriptor, Consumer<AnnotationData> action) {
 		Map<String, Object> values = new HashMap<>();
-		action.accept(new AnnotationScanData(Type.getType(descriptor), values));
+		action.accept(new AnnotationData(Type.getType(descriptor), values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -57,8 +57,8 @@ public class ClassScanner extends BaseClassVisitor {
 		//System.out.println("Record Component: " + name);
 		//System.out.println("  Type: " + Type.getType(recordDescriptor));
 		//System.out.println("  Signature: " + signature);
-		List<AnnotationScanData> componentAnnotations = new ArrayList<>();
-		this.recordComponents.add(new RecordComponentScanData(name, Type.getType(recordDescriptor), signature, componentAnnotations));
+		List<AnnotationData> componentAnnotations = new ArrayList<>();
+		this.recordComponents.add(new RecordComponentData(name, Type.getType(recordDescriptor), signature, componentAnnotations));
 		return new BaseRecordComponentVisitor() {
 			@Override
 			public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
@@ -76,8 +76,8 @@ public class ClassScanner extends BaseClassVisitor {
 		//System.out.println("  Modifiers: " + TypeModifier.fromFieldAccess(access));
 		//System.out.println("  Signature: " + signature);
 		//System.out.println("  Initial value: " + initialValue);
-		List<AnnotationScanData> fieldAnnotations = new ArrayList<>();
-		this.fields.add(new FieldScanData(name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
+		List<AnnotationData> fieldAnnotations = new ArrayList<>();
+		this.fields.add(new FieldData(name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
 		return new BaseFieldVisitor() {
 			
 			@Override
@@ -98,10 +98,10 @@ public class ClassScanner extends BaseClassVisitor {
 		//if (exceptions != null) {
 		//	System.out.println("  Exceptions: " + Arrays.stream(exceptions).map(iface -> "L" + iface + ";").map(Type::getType).collect(Collectors.toList()));
 		//}
-		List<AnnotationScanData> methodAnnotations = new ArrayList<>();
+		List<AnnotationData> methodAnnotations = new ArrayList<>();
 		List<ParameterScanData> methodParameters = new ArrayList<>();
 		List<Type> methodExceptions = Optional.ofNullable(exceptions).stream().flatMap(Arrays::stream).map(iface -> "L" + iface + ";").map(Type::getType).collect(Collectors.toList());
-		this.methods.add(new MethodScanData(name, Type.getType(descriptor), TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions));
+		this.methods.add(new MethodData(name, Type.getType(descriptor), TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions));
 		return new MethodScanner(methodAnnotations::add, methodParameters::add);
 	}
 }
