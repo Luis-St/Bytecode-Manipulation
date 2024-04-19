@@ -12,4 +12,4 @@ import java.util.List;
  *
  */
 
-public record FieldScanData(String name, Type type,  /*Nullable*/ String signature, TypeAccess access, List<TypeModifier> modifiers, List<AnnotationScanData> annotations, Object initialValue) {}
+public record FieldScanData(String name, Type type, /*Nullable*/ String signature, TypeAccess access, List<TypeModifier> modifiers, List<AnnotationScanData> annotations, /*Nullable*/ Object initialValue) {}

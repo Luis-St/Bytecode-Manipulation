@@ -1,12 +1,13 @@
 package net.luis.preload.scanner;
 
-import net.luis.asm.base.visitor.BaseClassVisitor;
+import net.luis.asm.base.visitor.*;
 import net.luis.preload.data.*;
 import net.luis.preload.data.type.TypeAccess;
 import net.luis.preload.data.type.TypeModifier;
 import org.objectweb.asm.*;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -44,29 +45,46 @@ public class ClassScanner extends BaseClassVisitor {
 		//}
 	}
 	
-	@Override
-	public RecordComponentVisitor visitRecordComponent(String name, String descriptor, String signature) {
-		//System.out.println();
-		//System.out.println("Record Component: " + name);
-		//System.out.println("  Type: " + Type.getType(descriptor));
-		//System.out.println("  Signature: " + signature);
-		List<AnnotationScanData> componentAnnotations = new ArrayList<>();
-		this.recordComponents.add(new RecordComponentScanData(name, Type.getType(descriptor), signature, componentAnnotations));
-		return new RecordComponentScanner(componentAnnotations::add);
+	private AnnotationVisitor createAnnotationScanner(String descriptor, Consumer<AnnotationScanData> action) {
+		Map<String, Object> values = new HashMap<>();
+		action.accept(new AnnotationScanData(Type.getType(descriptor), values));
+		return new AnnotationScanner(values::put);
 	}
 	
 	@Override
-	public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object initialValue) {
+	public RecordComponentVisitor visitRecordComponent(String name, String recordDescriptor, String signature) {
+		//System.out.println();
+		//System.out.println("Record Component: " + name);
+		//System.out.println("  Type: " + Type.getType(recordDescriptor));
+		//System.out.println("  Signature: " + signature);
+		List<AnnotationScanData> componentAnnotations = new ArrayList<>();
+		this.recordComponents.add(new RecordComponentScanData(name, Type.getType(recordDescriptor), signature, componentAnnotations));
+		return new BaseRecordComponentVisitor() {
+			@Override
+			public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+				return ClassScanner.this.createAnnotationScanner(annotationDescriptor, componentAnnotations::add);
+			}
+		};
+	}
+	
+	@Override
+	public FieldVisitor visitField(int access, String name, String fieldDescriptor, String signature, Object initialValue) {
 		//System.out.println();
 		//System.out.println("Field: " + name);
-		//System.out.println("  Type: " + Type.getType(descriptor));
+		//System.out.println("  Type: " + Type.getType(fieldDescriptor));
 		//System.out.println("  Access: " + TypeAccess.fromAccess(access));
 		//System.out.println("  Modifiers: " + TypeModifier.fromFieldAccess(access));
 		//System.out.println("  Signature: " + signature);
 		//System.out.println("  Initial value: " + initialValue);
 		List<AnnotationScanData> fieldAnnotations = new ArrayList<>();
-		this.fields.add(new FieldScanData(name, Type.getType(descriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
-		return new FieldScanner(fieldAnnotations::add);
+		this.fields.add(new FieldScanData(name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
+		return new BaseFieldVisitor() {
+			
+			@Override
+			public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+				return ClassScanner.this.createAnnotationScanner(annotationDescriptor, fieldAnnotations::add);
+			}
+		};
 	}
 	
 	@Override
