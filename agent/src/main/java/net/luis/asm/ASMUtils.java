@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
  *
  */
 
-public class ASMHelper {
+public class ASMUtils {
 	
 	@SafeVarargs
 	public static <T> List<T> newArrayList(T... elements) {

@@ -1,6 +1,5 @@
 package net.luis.preload.scanner;
 
-import net.luis.asm.ASMHelper;
 import net.luis.asm.base.visitor.BaseMethodVisitor;
 import net.luis.preload.data.*;
 import org.objectweb.asm.*;

@@ -1,6 +1,5 @@
 package net.luis.preload;
 
-import net.luis.asm.ASMHelper;
 import net.luis.preload.data.AnnotationScanData;
 import net.luis.preload.scanner.ClassScanner;
 import org.objectweb.asm.*;

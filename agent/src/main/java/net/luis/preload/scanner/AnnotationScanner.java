@@ -1,6 +1,6 @@
 package net.luis.preload.scanner;
 
-import net.luis.asm.ASMHelper;
+import net.luis.asm.ASMUtils;
 import net.luis.asm.base.visitor.BaseAnnotationVisitor;
 import org.objectweb.asm.AnnotationVisitor;
 
@@ -25,14 +25,14 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	@Override
 	public void visit(String parameter, Object value) {
 		switch (value) {
-			case boolean[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-			case byte[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-			case short[] a -> this.consumer.accept(parameter,ASMHelper.asList(a));
-			case int[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-			case long[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-			case float[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-			case double[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
-			case char[] a -> this.consumer.accept(parameter, ASMHelper.asList(a));
+			case boolean[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
+			case byte[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
+			case short[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
+			case int[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
+			case long[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
+			case float[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
+			case double[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
+			case char[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
 			default -> this.consumer.accept(parameter, value);
 		}
 	}
