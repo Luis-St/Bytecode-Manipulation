@@ -1,7 +1,7 @@
 package net.luis.preload.data;
 
-import net.luis.preload.data.type.TypeAccess;
-import net.luis.preload.data.type.TypeModifier;
+import net.luis.preload.type.TypeAccess;
+import net.luis.preload.type.TypeModifier;
 import org.objectweb.asm.Type;
 
 import java.util.List;

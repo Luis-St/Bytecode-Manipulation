@@ -1,7 +1,7 @@
 package net.luis.preload.scanner;
 
 import net.luis.preload.data.AnnotationData;
-import net.luis.preload.data.type.TypeModifier;
+import net.luis.preload.type.TypeModifier;
 
 import java.util.List;
 
