@@ -2,6 +2,7 @@ package net.luis.preload.scanner;
 
 import net.luis.asm.ASMHelper;
 import net.luis.asm.base.visitor.BaseClassVisitor;
+import net.luis.asm.base.visitor.BaseRecordComponentVisitor;
 import net.luis.preload.data.*;
 import org.objectweb.asm.*;
 
@@ -39,7 +40,19 @@ public class ClassScanner extends BaseClassVisitor {
 	
 	@Override
 	public RecordComponentVisitor visitRecordComponent(String name, String descriptor, String signature) {
-		return new RecordComponentScanner();
+		System.out.println();
+		System.out.println("Record Component: " + name);
+		System.out.println("  Type: " + Type.getType(descriptor));
+		System.out.println("  Signature: " + signature);
+		return new BaseRecordComponentVisitor() {
+			@Override
+			public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+				Map<String, Object> values = new HashMap<>();
+				AnnotationData data = new AnnotationData(Type.getType(descriptor), values);
+				System.out.println("  Annotation: " + descriptor);
+				return new AnnotationScanner(values::put);
+			}
+		};
 	}
 	
 	@Override
