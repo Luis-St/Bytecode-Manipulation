@@ -1,5 +1,6 @@
 package net.luis.preload.data;
 
+import net.luis.preload.data.type.*;
 import org.objectweb.asm.Type;
 
 import java.util.List;

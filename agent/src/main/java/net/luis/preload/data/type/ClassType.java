@@ -1,4 +1,4 @@
-package net.luis.preload.data;
+package net.luis.preload.data.type;
 
 import org.objectweb.asm.Opcodes;
 

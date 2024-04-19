@@ -2,6 +2,8 @@ package net.luis.preload.scanner;
 
 import net.luis.asm.base.visitor.BaseClassVisitor;
 import net.luis.preload.data.*;
+import net.luis.preload.data.type.TypeAccess;
+import net.luis.preload.data.type.TypeModifier;
 import org.objectweb.asm.*;
 
 import java.util.*;
