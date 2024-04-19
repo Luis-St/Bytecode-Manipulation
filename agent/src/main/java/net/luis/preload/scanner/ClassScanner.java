@@ -2,11 +2,11 @@ package net.luis.preload.scanner;
 
 import net.luis.asm.ASMHelper;
 import net.luis.asm.base.visitor.BaseClassVisitor;
-import net.luis.asm.base.visitor.BaseRecordComponentVisitor;
 import net.luis.preload.data.*;
 import org.objectweb.asm.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -16,9 +16,10 @@ import java.util.*;
 
 public class ClassScanner extends BaseClassVisitor {
 	
-	private final List<AnnotationScanData> classAnnotations = ASMHelper.newList();
-	private final List<RecordComponentScanData> recordComponents = ASMHelper.newList();
-	private final List<FieldScanData> fields = ASMHelper.newList();
+	private final List<AnnotationScanData> classAnnotations = new ArrayList<>();
+	private final List<RecordComponentScanData> recordComponents = new ArrayList<>();
+	private final List<FieldScanData> fields = new ArrayList<>();
+	private final List<MethodScanData> methods = new ArrayList<>();
 	
 	@Override
 	public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
@@ -46,8 +47,8 @@ public class ClassScanner extends BaseClassVisitor {
 		//System.out.println("Record Component: " + name);
 		//System.out.println("  Type: " + Type.getType(descriptor));
 		//System.out.println("  Signature: " + signature);
-		List<AnnotationScanData> componentAnnotations = ASMHelper.newList();
-		this.recordComponents.add(new RecordComponentScanData(Type.getType(descriptor), name, signature, componentAnnotations));
+		List<AnnotationScanData> componentAnnotations = new ArrayList<>();
+		this.recordComponents.add(new RecordComponentScanData(name, Type.getType(descriptor), signature, componentAnnotations));
 		return new RecordComponentScanner(componentAnnotations::add);
 	}
 	
@@ -60,8 +61,8 @@ public class ClassScanner extends BaseClassVisitor {
 		//System.out.println("  Modifiers: " + TypeModifier.fromFieldAccess(access));
 		//System.out.println("  Signature: " + signature);
 		//System.out.println("  Initial value: " + initialValue);
-		List<AnnotationScanData> fieldAnnotations = ASMHelper.newList();
-		this.fields.add(new FieldScanData(Type.getType(descriptor), name, signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
+		List<AnnotationScanData> fieldAnnotations = new ArrayList<>();
+		this.fields.add(new FieldScanData(name, Type.getType(descriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
 		return new FieldScanner(fieldAnnotations::add);
 	}
 	

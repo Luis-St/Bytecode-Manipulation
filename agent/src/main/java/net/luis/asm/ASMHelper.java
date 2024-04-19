@@ -12,33 +12,15 @@ import java.util.stream.IntStream;
 
 public class ASMHelper {
 	
-	//region Factory helper methods
-	public static <T> List<T> newList() {
-		return new ArrayList<>();
-	}
-	
 	@SafeVarargs
-	public static <T> List<T> newList(T... elements) {
-		List<T> list = newList();
-		list.addAll(Arrays.asList(elements));
-		return list;
-	}
-	
-	public static <T> Set<T> newSet() {
-		return new HashSet<>();
+	public static <T> List<T> newArrayList(T... elements) {
+		return new ArrayList<>(Arrays.asList(elements));
 	}
 	
 	@SafeVarargs
 	public static <T> Set<T> newSet(T... elements) {
-		Set<T> set = newSet();
-		set.addAll(Arrays.asList(elements));
-		return set;
+		return new HashSet<>(Arrays.asList(elements));
 	}
-	
-	public static <K, V> Map<K, V> newMap() {
-		return new HashMap<>();
-	}
-	//endregion
 	
 	//region Array to list
 	public static List<Boolean> asList(boolean[] array) {

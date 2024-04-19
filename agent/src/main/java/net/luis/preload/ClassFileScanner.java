@@ -7,6 +7,7 @@ import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public class ClassFileScanner {
 	
 	public static List<AnnotationScanData> scanClassAnnotations(Type type) {
 		scan(type, new ClassScanner());
-		return ASMHelper.newList();
+		return new ArrayList<>();
 	}
 	
 	private static void scan(Type type, ClassVisitor visitor) {

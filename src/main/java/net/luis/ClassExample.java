@@ -21,7 +21,7 @@ public abstract class ClassExample extends AbstractList<String> implements List<
 		return this.name;
 	}
 	
-	public void setName(String name) {
+	public void setName(String name) throws IllegalArgumentException {
 		this.name = name;
 	}
 	

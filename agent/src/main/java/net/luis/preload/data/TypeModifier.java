@@ -3,6 +3,7 @@ package net.luis.preload.data;
 import net.luis.asm.ASMHelper;
 import org.objectweb.asm.Opcodes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,7 +69,7 @@ public enum TypeModifier {
 	}
 	
 	public static List<TypeModifier> fromAccess(int access) {
-		List<TypeModifier> modifiers = ASMHelper.newList();
+		List<TypeModifier> modifiers = new ArrayList<>();
 		for (TypeModifier modifier : values()) {
 			if ((access & modifier.value) != 0) {
 				modifiers.add(modifier);

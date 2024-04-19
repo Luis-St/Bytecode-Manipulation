@@ -45,7 +45,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 				if (targets.containsKey(name)) {
-					Set<String> list = ASMHelper.newSet(interfaces);
+					Set<String> list = interfaces == null ? new HashSet<>() : ASMHelper.newSet(interfaces);
 					for (String iface : targets.get(name)) {
 						iface = iface.replace(".", "/");
 						list.add(iface);
