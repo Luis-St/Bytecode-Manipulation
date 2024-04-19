@@ -19,13 +19,12 @@ public class Preloader {
 		Map<String, List<AnnotationData>> classAnnotations = new HashMap<>();
 		
 		
-		ClassFileScanner.scanClassAnnotations(Type.getType("Lnet/luis/AnnotationExample;"));
-		ClassFileScanner.scanClassAnnotations(Type.getType("Lnet/luis/ClassExample;"));
-		ClassFileScanner.scanClassAnnotations(Type.getType("Lnet/luis/EnumExample;"));
-		ClassFileScanner.scanClassAnnotations(Type.getType("Lnet/luis/InterfaceExample;"));
-		ClassFileScanner.scanClassAnnotations(Type.getType("Lnet/luis/RecordExample;"));
-		
-		ClassFileScanner.scanClassAnnotations(Type.getType("Lnet/luis/Main;"));
+		ClassFileScanner.scanClass(Type.getType("Lnet/luis/AnnotationExample;"));
+		ClassFileScanner.scanClass(Type.getType("Lnet/luis/ClassExample;"));
+		ClassFileScanner.scanClass(Type.getType("Lnet/luis/EnumExample;"));
+		ClassFileScanner.scanClass(Type.getType("Lnet/luis/InterfaceExample;"));
+		ClassFileScanner.scanClass(Type.getType("Lnet/luis/RecordExample;"));
+		ClassFileScanner.scanClass(Type.getType("Lnet/luis/Main;"));
 		
 		/*for (String clazz : classes) {
 			List<AnnotationData> annotations = ClassFileScanner.scanClassAnnotations(clazz);

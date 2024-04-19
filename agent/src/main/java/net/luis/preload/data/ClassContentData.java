@@ -8,4 +8,4 @@ import java.util.List;
  *
  */
 
-public record ClassContentData(List<AnnotationData> annotations, List<FieldData> fields, List<MethodData> methods) {}
+public record ClassContentData(List<AnnotationData> annotations, List<RecordComponentData> recordComponents, List<FieldData> fields, List<MethodData> methods) {}

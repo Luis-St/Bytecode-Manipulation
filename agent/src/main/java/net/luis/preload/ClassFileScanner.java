@@ -1,13 +1,12 @@
 package net.luis.preload;
 
-import net.luis.preload.data.AnnotationData;
+import net.luis.preload.data.*;
 import net.luis.preload.scanner.ClassScanner;
 import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Function;
 
 /**
  *
@@ -17,14 +16,18 @@ import java.util.List;
 
 public class ClassFileScanner {
 	
-	public static List<AnnotationData> scanClassAnnotations(Type type) {
-		scan(type, new ClassScanner());
-		return new ArrayList<>();
+	public static ClassData scanClass(Type type) {
+		return scanClass(type, new ClassScanner(), ClassScanner::getClassData);
 	}
 	
-	private static void scan(Type type, ClassVisitor visitor) {
+	public static ClassContentData scanContentClass(Type type) {
+		return scanClass(type, new ClassScanner(), ClassScanner::getContentData);
+	}
+	
+	private static <T extends ClassVisitor, X> X scanClass(Type type, T visitor, Function<T, X> result) {
 		ClassReader reader = new ClassReader(readClass(type));
 		reader.accept(visitor, 0);
+		return result.apply(visitor);
 	}
 	
 	private static byte[] readClass(Type type) {

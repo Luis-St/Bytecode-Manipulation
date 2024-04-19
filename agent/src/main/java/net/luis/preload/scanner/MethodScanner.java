@@ -40,15 +40,15 @@ public class MethodScanner extends BaseMethodVisitor {
 			name = "arg" + this.parameterIndex;
 		}
 		this.parameterIndex++;
-		//System.out.println("Parameter name: " + name);
-		//System.out.println("  Modifier: " + TypeModifier.fromParameterAccess(access));
+		/*System.out.println("Parameter name: " + name);
+		System.out.println("  Modifier: " + TypeModifier.fromParameterAccess(access));*/
 		this.parameters.add(Map.entry(name, TypeModifier.fromParameterAccess(access)));
 	}
 	
 	@Override
 	public AnnotationVisitor visitParameterAnnotation(int parameter, String descriptor, boolean visible) {
-		//System.out.println("Parameter index: " + parameter);
-		//System.out.println("  Type: " + Type.getType(descriptor));
+		/*System.out.println("Parameter index: " + parameter);
+		System.out.println("  Type: " + Type.getType(descriptor));*/
 		Map<String, Object> values = new HashMap<>();
 		this.parameterAnnotations.computeIfAbsent(parameter, p -> new ArrayList<>()).add(new AnnotationData(Type.getType(descriptor), values));
 		return new AnnotationScanner(values::put);

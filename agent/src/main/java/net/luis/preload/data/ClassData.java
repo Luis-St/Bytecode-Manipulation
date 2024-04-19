@@ -11,4 +11,4 @@ import java.util.List;
  *
  */
 
-public record ClassData(String name, Type type, /*Nullable*/ String signature, TypeAccess access, ClassType classType, List<TypeModifier> modifiers, Type superType, List<Type> interfaces, ClassContentData content) {}
+public record ClassData(Type type, /*Nullable*/ String signature, TypeAccess access, ClassType classType, List<TypeModifier> modifiers, Type superType, List<Type> interfaces, ClassContentData content) {}
