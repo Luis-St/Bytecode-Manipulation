@@ -38,7 +38,9 @@ public class ClassScanner extends BaseClassVisitor {
 		//System.out.println("  Modifiers: " + TypeModifier.fromClassAccess(access));
 		//System.out.println("  Signature: " + signature);
 		//System.out.println("  Super: " + Type.getType("L" + superName + ";"));
-		//System.out.println("  Interfaces: " + Arrays.stream(interfaces).map(iface -> "L" + iface + ";").map(Type::getType).toList());
+		//if (interfaces != null) {
+		//	System.out.println("  Interfaces: " + Arrays.stream(interfaces).map(iface -> "L" + iface + ";").map(Type::getType).collect(Collectors.toList()));
+		//}
 	}
 	
 	@Override
@@ -68,6 +70,19 @@ public class ClassScanner extends BaseClassVisitor {
 	
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-		return new MethodScanner();
+		//System.out.println();
+		//System.out.println("Method: " + name);
+		//System.out.println("  Type: " + Type.getType(descriptor));
+		//System.out.println("  Access: " + TypeAccess.fromAccess(access));
+		//System.out.println("  Modifiers: " + TypeModifier.fromMethodAccess(access));
+		//System.out.println("  Signature: " + signature);
+		//if (exceptions != null) {
+		//	System.out.println("  Exceptions: " + Arrays.stream(exceptions).map(iface -> "L" + iface + ";").map(Type::getType).collect(Collectors.toList()));
+		//}
+		List<AnnotationScanData> methodAnnotations = new ArrayList<>();
+		List<ParameterScanData> methodParameters = new ArrayList<>();
+		List<Type> methodExceptions = Optional.ofNullable(exceptions).stream().flatMap(Arrays::stream).map(iface -> "L" + iface + ";").map(Type::getType).collect(Collectors.toList());
+		this.methods.add(new MethodScanData(name, Type.getType(descriptor), TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions));
+		return new MethodScanner(methodAnnotations::add, methodParameters::add);
 	}
 }

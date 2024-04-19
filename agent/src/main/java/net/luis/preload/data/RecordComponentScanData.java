@@ -10,4 +10,4 @@ import java.util.List;
  *
  */
 
-public record RecordComponentScanData(Type type, String name, /*Nullable*/ String signature, List<AnnotationScanData> annotations) {}
+public record RecordComponentScanData(String name, Type type,  /*Nullable*/ String signature, List<AnnotationScanData> annotations) {}
