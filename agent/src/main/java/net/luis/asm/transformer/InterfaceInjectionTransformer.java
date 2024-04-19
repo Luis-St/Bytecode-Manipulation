@@ -3,7 +3,7 @@ package net.luis.asm.transformer;
 import net.luis.asm.ASMHelper;
 import net.luis.asm.base.BaseClassTransformer;
 import net.luis.preload.PreloadContext;
-import net.luis.preload.data.AnnotationData;
+import net.luis.preload.data.AnnotationScanData;
 import org.objectweb.asm.*;
 
 import java.util.*;
@@ -25,8 +25,8 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	public static InterfaceInjectionTransformer create(PreloadContext context) {
 		Map<String, List<String>> targets = new HashMap<>();
-		for (Map.Entry<String, List<AnnotationData>> entry : context.getClassAnnotations().entrySet()) {
-			for (AnnotationData data : entry.getValue()) {
+		for (Map.Entry<String, List<AnnotationScanData>> entry : context.getClassAnnotations().entrySet()) {
+			for (AnnotationScanData data : entry.getValue()) {
 				if ("Lnet/luis/annotation/InterfaceInjection;".equals(data.type().getDescriptor())) {
 					List<Type> types = data.get("targets");
 					for (Type target : types) {

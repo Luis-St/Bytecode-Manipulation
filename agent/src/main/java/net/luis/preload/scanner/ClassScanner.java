@@ -16,12 +16,12 @@ import java.util.*;
 
 public class ClassScanner extends BaseClassVisitor {
 	
-	private final List<AnnotationData> classAnnotations = ASMHelper.newList();
+	private final List<AnnotationScanData> classAnnotations = ASMHelper.newList();
 	
 	@Override
 	public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
-		AnnotationData data = new AnnotationData(Type.getType(descriptor), values);
+		AnnotationScanData data = new AnnotationScanData(Type.getType(descriptor), values);
 		this.classAnnotations.add(data);
 		return new AnnotationScanner(values::put);
 	}
@@ -48,7 +48,7 @@ public class ClassScanner extends BaseClassVisitor {
 			@Override
 			public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
 				Map<String, Object> values = new HashMap<>();
-				AnnotationData data = new AnnotationData(Type.getType(descriptor), values);
+				AnnotationScanData data = new AnnotationScanData(Type.getType(descriptor), values);
 				System.out.println("  Annotation: " + descriptor);
 				return new AnnotationScanner(values::put);
 			}

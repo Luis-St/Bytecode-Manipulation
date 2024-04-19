@@ -1,7 +1,7 @@
 package net.luis.preload;
 
 import net.luis.asm.ASMHelper;
-import net.luis.preload.data.AnnotationData;
+import net.luis.preload.data.AnnotationScanData;
 import net.luis.preload.scanner.ClassScanner;
 import org.objectweb.asm.*;
 
@@ -17,7 +17,7 @@ import java.util.List;
 
 public class ClassFileScanner {
 	
-	public static List<AnnotationData> scanClassAnnotations(Type type) {
+	public static List<AnnotationScanData> scanClassAnnotations(Type type) {
 		scan(type, new ClassScanner());
 		return ASMHelper.newList();
 	}

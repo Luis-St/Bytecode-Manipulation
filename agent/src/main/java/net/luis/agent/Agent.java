@@ -1,15 +1,10 @@
 package net.luis.agent;
 
-import net.luis.annotation.InterfaceInjection;
-import net.luis.asm.transformer.InterfaceInjectionTransformer;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.Preloader;
-import net.luis.preload.data.AnnotationData;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
