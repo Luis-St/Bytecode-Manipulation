@@ -54,7 +54,9 @@ public class ClassScanner extends BaseClassVisitor {
 		this.access = TypeAccess.fromAccess(access);
 		this.classType = ClassType.fromAccess(access);
 		this.modifiers.addAll(TypeModifier.fromClassAccess(access));
-		this.superType = Type.getObjectType(superName);
+		if (superName != null) {
+			this.superType = Type.getObjectType(superName);
+		}
 		if (interfaces != null) {
 			this.interfaces.addAll(Arrays.stream(interfaces).map(Type::getObjectType).toList());
 		}
