@@ -2,7 +2,8 @@ package net.luis.preload.scanner;
 
 import net.luis.asm.base.visitor.*;
 import net.luis.preload.data.*;
-import net.luis.preload.type.*;
+import net.luis.preload.type.TypeAccess;
+import net.luis.preload.type.TypeModifier;
 import org.objectweb.asm.*;
 
 import java.util.*;
@@ -15,52 +16,11 @@ import java.util.stream.Collectors;
  *
  */
 
-public class ClassScanner extends BaseClassVisitor {
+public class ClassContentScanner extends BaseClassVisitor {
 	
-	private final List<AnnotationData> classAnnotations = new ArrayList<>();
 	private final List<RecordComponentData> recordComponents = new ArrayList<>();
 	private final List<FieldData> fields = new ArrayList<>();
 	private final List<MethodData> methods = new ArrayList<>();
-	private final List<TypeModifier> modifiers = new ArrayList<>();
-	private final List<Type> interfaces = new ArrayList<>();
-	private Type type;
-	private String signature;
-	private TypeAccess access;
-	private ClassType classType;
-	private Type superType;
-	
-	@Override
-	public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-		Map<String, Object> values = new HashMap<>();
-		AnnotationData data = new AnnotationData(Type.getType(descriptor), values);
-		this.classAnnotations.add(data);
-		return new AnnotationScanner(values::put);
-	}
-	
-	@Override
-	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-		/*System.out.println();
-		System.out.println("Class: " + name);
-		System.out.println("  Type: " + ClassType.fromAccess(access));
-		System.out.println("  Access: " + TypeAccess.fromAccess(access));
-		System.out.println("  Modifiers: " + TypeModifier.fromClassAccess(access));
-		System.out.println("  Signature: " + signature);
-		System.out.println("  Super: " + Type.getObjectType( superName));
-		if (interfaces != null) {
-			System.out.println("  Interfaces: " + Arrays.stream(interfaces).map(Type::getObjectType).toList());
-		}*/
-		this.type = Type.getObjectType(name);
-		this.signature = signature;
-		this.access = TypeAccess.fromAccess(access);
-		this.classType = ClassType.fromAccess(access);
-		this.modifiers.addAll(TypeModifier.fromClassAccess(access));
-		if (superName != null) {
-			this.superType = Type.getObjectType(superName);
-		}
-		if (interfaces != null) {
-			this.interfaces.addAll(Arrays.stream(interfaces).map(Type::getObjectType).toList());
-		}
-	}
 	
 	private AnnotationVisitor createAnnotationScanner(String descriptor, Consumer<AnnotationData> action) {
 		Map<String, Object> values = new HashMap<>();
@@ -79,7 +39,7 @@ public class ClassScanner extends BaseClassVisitor {
 		return new BaseRecordComponentVisitor() {
 			@Override
 			public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
-				return ClassScanner.this.createAnnotationScanner(annotationDescriptor, componentAnnotations::add);
+				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, componentAnnotations::add);
 			}
 		};
 	}
@@ -99,7 +59,7 @@ public class ClassScanner extends BaseClassVisitor {
 			
 			@Override
 			public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
-				return ClassScanner.this.createAnnotationScanner(annotationDescriptor, fieldAnnotations::add);
+				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, fieldAnnotations::add);
 			}
 		};
 	}
@@ -122,11 +82,7 @@ public class ClassScanner extends BaseClassVisitor {
 		return new MethodScanner(methodAnnotations::add, methodParameters::add);
 	}
 	
-	public ClassData getClassData() {
-		return new ClassData(this.type, this.signature, this.access, this.classType, this.modifiers, this.superType, this.interfaces, this.getContentData());
-	}
-	
-	public ClassContentData getContentData() {
-		return new ClassContentData(this.classAnnotations, this.recordComponents, this.fields, this.methods);
+	public ClassContent getClassContent() {
+		return new ClassContent(this.recordComponents, this.fields, this.methods);
 	}
 }

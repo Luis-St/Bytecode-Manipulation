@@ -1,6 +1,7 @@
 package net.luis.asm;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,6 +21,10 @@ public class ASMUtils {
 	@SafeVarargs
 	public static <T> Set<T> newSet(T... elements) {
 		return new HashSet<>(Arrays.asList(elements));
+	}
+	
+	public static <T> Supplier<T> memorize(Supplier<T> supplier) {
+		return new MemorizedSupplier<>(supplier);
 	}
 	
 	//region Array to list
@@ -53,6 +58,26 @@ public class ASMUtils {
 	
 	public static List<Character> asList(char[] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
+	}
+	//endregion
+	
+	//region Internal
+	private static class MemorizedSupplier<T> implements Supplier<T> {
+		
+		private final Supplier<T> supplier;
+		private T value;
+		
+		private MemorizedSupplier(Supplier<T> supplier) {
+			this.supplier = supplier;
+		}
+		
+		@Override
+		public T get() {
+			if (this.value == null) {
+				this.value = this.supplier.get();
+			}
+			return this.value;
+		}
 	}
 	//endregion
 }

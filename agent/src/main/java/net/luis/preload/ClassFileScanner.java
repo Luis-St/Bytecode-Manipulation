@@ -1,7 +1,8 @@
 package net.luis.preload;
 
 import net.luis.preload.data.*;
-import net.luis.preload.scanner.ClassScanner;
+import net.luis.preload.scanner.ClassContentScanner;
+import net.luis.preload.scanner.ClassInfoScanner;
 import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
@@ -16,12 +17,12 @@ import java.util.function.Function;
 
 public class ClassFileScanner {
 	
-	public static ClassData scanClass(Type type) {
-		return scanClass(type, new ClassScanner(), ClassScanner::getClassData);
+	public static ClassInfo scanClassInfo(Type type) {
+		return scanClass(type, new ClassInfoScanner(), ClassInfoScanner::getClassInfo);
 	}
 	
-	public static ClassContentData scanContentClass(Type type) {
-		return scanClass(type, new ClassScanner(), ClassScanner::getContentData);
+	public static ClassContent scanClassContent(Type type) {
+		return scanClass(type, new ClassContentScanner(), ClassContentScanner::getClassContent);
 	}
 	
 	private static <T extends ClassVisitor, X> X scanClass(Type type, T visitor, Function<T, X> result) {

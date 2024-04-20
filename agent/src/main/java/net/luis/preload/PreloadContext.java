@@ -1,8 +1,11 @@
 package net.luis.preload;
 
-import net.luis.preload.data.AnnotationData;
+import net.luis.asm.ASMUtils;
+import net.luis.preload.data.*;
+import org.objectweb.asm.Type;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  *
@@ -12,31 +15,25 @@ import java.util.*;
 
 public class PreloadContext {
 	
-	private final List<String> classes;
-	private final Map<String, List<AnnotationData>> classAnnotations;
+	private final Map<Type, Supplier<ClassInfo>> classes;
 	
-	private PreloadContext(List<String> classes, Map<String, List<AnnotationData>> classAnnotations) {
-		this.classes = classes;
-		this.classAnnotations = classAnnotations;
+	private PreloadContext(List<Type> classes) {
+		this.classes = classes.stream().collect(HashMap::new, (map, type) -> map.put(type, ASMUtils.memorize(() -> ClassFileScanner.scanClassInfo(type))), HashMap::putAll);
 	}
 	
 	public static PreloadContext create() {
 		return new PreloadContext(ClassPathScanner.getClasses());
 	}
 	
-	public List<String> getClasses() {
-		return this.classes;
+	public List<Type> getClasses() {
+		return this.classes.keySet().stream().toList();
 	}
 	
-	public Map<String, List<AnnotationData>> getClassAnnotations() {
-		return this.classAnnotations;
+	public ClassInfo getClassInfo(Type type) {
+		return this.classes.get(type).get();
 	}
 	
-	public List<AnnotationData> getClassAnnotations(String clazz) {
-		return this.classAnnotations.getOrDefault(clazz, new ArrayList<>());
-	}
-	
-	public AnnotationData getClassAnnotation(String clazz, String annotationDescriptor) {
-		return this.getClassAnnotations(clazz).stream().filter(data -> data.type().getDescriptor().equals(annotationDescriptor)).findFirst().orElse(null);
+	public ClassContent getClassContent(Type type) {
+		return this.getClassInfo(type).getClassContent();
 	}
 }
