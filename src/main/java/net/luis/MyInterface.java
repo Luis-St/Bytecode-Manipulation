@@ -1,8 +1,8 @@
 package net.luis;
 
-import net.luis.annotation.InterfaceInjection;
+import net.luis.annotation.InjectInterface;
 import net.luis.utils.logging.LoggerConfiguration;
 
-@InterfaceInjection(targets = LoggerConfiguration.class)
+@InjectInterface(targets = LoggerConfiguration.class)
 public interface MyInterface {
 }
