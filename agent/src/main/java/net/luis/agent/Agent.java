@@ -1,7 +1,6 @@
 package net.luis.agent;
 
 import net.luis.preload.PreloadContext;
-import net.luis.preload.Preloader;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
@@ -14,7 +13,7 @@ import java.lang.instrument.UnmodifiableClassException;
 
 public class Agent {
 	
-	private static final PreloadContext CONTEXT = Preloader.preload();
+	private static final PreloadContext CONTEXT = PreloadContext.create();
 	
 	public static void premain(String agentArgs, Instrumentation inst) throws UnmodifiableClassException {
 		System.out.println("Agent loaded");
@@ -23,13 +22,4 @@ public class Agent {
 		System.out.println(targets);*/
 	}
 	
-/*	static {
-		for (Map.Entry<String, List<AnnotationData>> entry : CONTEXT.getClassAnnotations().entrySet()) {
-			System.out.println(entry.getKey());
-			for (AnnotationData data : entry.getValue()) {
-				System.out.println("  " + data.descriptor());
-				data.values().forEach((key, value) -> System.out.println("    " + key + " = " + value));
-			}
-		}
-	}*/
 }

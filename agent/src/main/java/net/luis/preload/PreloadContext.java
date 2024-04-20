@@ -20,8 +20,8 @@ public class PreloadContext {
 		this.classAnnotations = classAnnotations;
 	}
 	
-	public static PreloadContext create(List<String> classes, Map<String, List<AnnotationData>> classAnnotations) {
-		return new PreloadContext(classes, classAnnotations);
+	public static PreloadContext create() {
+		return new PreloadContext(ClassPathScanner.getClasses());
 	}
 	
 	public List<String> getClasses() {

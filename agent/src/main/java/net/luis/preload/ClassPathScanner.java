@@ -1,5 +1,7 @@
 package net.luis.preload;
 
+import org.objectweb.asm.Type;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.*;
@@ -14,8 +16,8 @@ import java.util.jar.JarFile;
 
 public class ClassPathScanner {
 	
-	public static List<String> getClasses() {
-		List<String> classes = new ArrayList<>();
+	public static List<Type> getClasses() {
+		List<Type> classes = new ArrayList<>();
 		for (File file : getClassPathFiles()) {
 			if (file.isDirectory()) {
 				classes.addAll(getClassesFromDirectory(file));
@@ -26,16 +28,15 @@ public class ClassPathScanner {
 		return classes;
 	}
 	
-	private static List<String> getClassesFromJar(File file) {
-		List<String> classes = new ArrayList<>();
+	private static List<Type> getClassesFromJar(File file) {
+		List<Type> classes = new ArrayList<>();
 		if (file.exists() && file.canRead()) {
 			try (JarFile jar = new JarFile(file)) {
 				Enumeration<JarEntry> enumeration = jar.entries();
 				while (enumeration.hasMoreElements()) {
 					JarEntry entry = enumeration.nextElement();
 					if (entry.getName().endsWith(".class")) {
-						String className = convertToClass(entry.getName());
-						classes.add(className);
+						classes.add(Type.getObjectType(convertToClass(entry.getName())));
 					}
 				}
 			} catch (Exception ignored) {}
@@ -43,14 +44,14 @@ public class ClassPathScanner {
 		return classes;
 	}
 	
-	private static List<String> getClassesFromDirectory(File directory) {
-		List<String> classes = new ArrayList<>();
+	private static List<Type> getClassesFromDirectory(File directory) {
+		List<Type> classes = new ArrayList<>();
 		for (File file : listFiles(directory, (dir, name) -> name.endsWith(".jar"))) {
 			classes.addAll(getClassesFromJar(file));
 		}
 		for (File classfile : listFiles(directory, (dir, name) -> name.endsWith(".class"))) {
 			String className = convertToClass(classfile.getAbsolutePath().substring(directory.getAbsolutePath().length() + 1));
-			classes.add(className);
+			classes.add(Type.getObjectType(className));
 		}
 		return classes;
 	}
@@ -80,6 +81,6 @@ public class ClassPathScanner {
 	}
 	
 	private static String convertToClass(String fileName) {
-		return fileName.substring(0, fileName.length() - 6).replace("/", ".").replace("\\", ".");
+		return fileName.substring(0, fileName.length() - 6).replace("\\", "/");
 	}
 }
