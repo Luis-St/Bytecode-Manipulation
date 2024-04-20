@@ -12,9 +12,4 @@ import java.util.List;
  *
  */
 
-public record ClassInfo(Type type, /*Nullable*/ String signature, TypeAccess access, ClassType classType, List<TypeModifier> modifiers, Type superType, List<Type> interfaces, List<AnnotationData> annotations) {
-
-	public ClassContent getClassContent() {
-		return ClassFileScanner.scanClassContent(this.type);
-	}
-}
+public record ClassInfo(Type type, String signature, TypeAccess access, ClassType classType, List<TypeModifier> modifiers, /*Nullable*/ Type superType, List<Type> interfaces, List<AnnotationData> annotations) {}

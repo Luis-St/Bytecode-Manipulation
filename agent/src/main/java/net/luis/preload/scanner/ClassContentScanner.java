@@ -35,7 +35,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		System.out.println("  Type: " + Type.getType(recordDescriptor));
 		System.out.println("  Signature: " + signature);*/
 		List<AnnotationData> componentAnnotations = new ArrayList<>();
-		this.recordComponents.add(new RecordComponentData(name, Type.getType(recordDescriptor), signature, componentAnnotations));
+		this.recordComponents.add(new RecordComponentData(name, Type.getType(recordDescriptor), signature == null ? "" : signature, componentAnnotations));
 		return new BaseRecordComponentVisitor() {
 			@Override
 			public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
@@ -54,7 +54,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		System.out.println("  Signature: " + signature);
 		System.out.println("  Initial value: " + initialValue);*/
 		List<AnnotationData> fieldAnnotations = new ArrayList<>();
-		this.fields.add(new FieldData(name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
+		this.fields.add(new FieldData(name, Type.getType(fieldDescriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
 		return new BaseFieldVisitor() {
 			
 			@Override
@@ -78,7 +78,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		List<AnnotationData> methodAnnotations = new ArrayList<>();
 		List<ParameterData> methodParameters = new ArrayList<>();
 		List<Type> methodExceptions = Optional.ofNullable(exceptions).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
-		this.methods.add(new MethodData(name, Type.getType(descriptor), TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions));
+		this.methods.add(new MethodData(name, Type.getType(descriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions));
 		return new MethodScanner(methodAnnotations::add, methodParameters::add);
 	}
 	
