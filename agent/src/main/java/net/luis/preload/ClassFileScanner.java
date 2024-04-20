@@ -7,6 +7,7 @@ import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -17,6 +18,13 @@ import java.util.function.Function;
 
 public class ClassFileScanner {
 	
+	public static Map.Entry<ClassInfo, ClassContent> scanClass(Type type) {
+		byte[] data = readClass(type);
+		ClassInfo info = scanClass(data, type, new ClassInfoScanner(), ClassInfoScanner::getClassInfo);
+		ClassContent content = scanClass(data, type, new ClassContentScanner(), ClassContentScanner::getClassContent);
+		return Map.entry(info, content);
+	}
+	
 	public static ClassInfo scanClassInfo(Type type) {
 		return scanClass(type, new ClassInfoScanner(), ClassInfoScanner::getClassInfo);
 	}
@@ -25,11 +33,17 @@ public class ClassFileScanner {
 		return scanClass(type, new ClassContentScanner(), ClassContentScanner::getClassContent);
 	}
 	
+	//region Helper methods
 	private static <T extends ClassVisitor, X> X scanClass(Type type, T visitor, Function<T, X> result) {
-		ClassReader reader = new ClassReader(readClass(type));
+		return scanClass(readClass(type), type, visitor, result);
+	}
+	
+	private static <T extends ClassVisitor, X> X scanClass(byte[] data, Type type, T visitor, Function<T, X> result) {
+		ClassReader reader = new ClassReader(data);
 		reader.accept(visitor, 0);
 		return result.apply(visitor);
 	}
+	//endregion
 	
 	private static byte[] readClass(Type type) {
 		String path = type.getInternalName() + ".class";

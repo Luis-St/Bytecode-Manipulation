@@ -13,7 +13,7 @@ import java.lang.instrument.UnmodifiableClassException;
 
 public class Agent {
 	
-	private static final PreloadContext CONTEXT = PreloadContext.create();
+	private static final PreloadContext CONTEXT = new PreloadContext();
 	
 	public static void premain(String agentArgs, Instrumentation inst) throws UnmodifiableClassException {
 		System.out.println("Agent loaded");

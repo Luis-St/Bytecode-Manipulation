@@ -16,4 +16,12 @@ public record AnnotationData(Type type, Map<String, Object> values) {
 	public <X> X get(String key) {
 		return (X) this.values.get(key);
 	}
+	
+	public boolean has(String key) {
+		return this.values.containsKey(key);
+	}
+	
+	public <T> boolean has(String key, Class<T> type) {
+		return this.values.containsKey(key) && type.isInstance(this.values.get(key));
+	}
 }
