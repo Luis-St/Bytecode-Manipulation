@@ -4,8 +4,6 @@ import net.luis.asm.base.visitor.BaseClassVisitor;
 import net.luis.preload.data.AnnotationData;
 import net.luis.preload.data.ClassInfo;
 import net.luis.preload.type.*;
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Type;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -39,32 +37,43 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	}
 	
 	@Override
-		System.out.println();
-		System.out.println("Class: " + name);
-		System.out.println("  Type: " + ClassType.fromAccess(access));
-		System.out.println("  Access: " + TypeAccess.fromAccess(access));
-		System.out.println("  Modifiers: " + TypeModifier.fromClassAccess(access));
-		System.out.println("  Signature: " + signature);
-		if (superName != null) {
-			System.out.println("  Super: " + Type.getObjectType(superName));
+	public ModuleVisitor visitModule(String name, int access, String version) {
+/*		System.out.println();
+		System.out.println("Module: " + name);*/
+		this.name = name;
+		this.type = Type.getType("Lmodule-info;");
+		this.access = TypeAccess.PUBLIC;
+		return super.visitModule(name, access, version);
+	}
+	
+	@Override
 	public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
+		ClassType type = ClassType.fromAccess(access);
+		if (this.classType == ClassType.MODULE || type == ClassType.MODULE) {
+			return;
 		}
-		if (interfaces != null) {
-			System.out.println("  Interfaces: " + Arrays.stream(interfaces).map(Type::getObjectType).toList());
+		Objects.requireNonNull(superClass, "Super class is null");
+		Objects.requireNonNull(interfaces, "Interfaces are null");
+		if (this.name == null) {
+			int index = name.lastIndexOf('/');
+			this.name = index == -1 ? name : name.substring(index + 1);
 		}
-		int index = name.lastIndexOf('/');
-		this.name = index == -1 ? name : name.substring(index + 1);
 		this.type = Type.getObjectType(name);
 		this.signature = signature;
 		this.access = TypeAccess.fromAccess(access);
 		this.classType = ClassType.fromAccess(access);
 		this.modifiers.addAll(TypeModifier.fromClassAccess(access));
-		if (superName != null) {
-			this.superType = Type.getObjectType(superName);
-		}
-		if (interfaces != null) {
-			this.interfaces.addAll(Arrays.stream(interfaces).map(Type::getObjectType).toList());
-		}
+		this.superType = Type.getObjectType(superClass);
+		this.interfaces.addAll(Arrays.stream(interfaces).map(Type::getObjectType).toList());
+/*		System.out.println();
+		System.out.println("Class: " + this.name);
+		System.out.println("  Type: " + this.type);
+		System.out.println("  Class type: " + this.classType);
+		System.out.println("  Access: " + this.access);
+		System.out.println("  Modifiers: " + this.modifiers);
+		System.out.println("  Signature: " + this.signature);
+		System.out.println("  Super: " + this.superType);
+		System.out.println("  Interfaces: " + this.interfaces);*/
 	}
 	
 	public @NotNull ClassInfo getClassInfo() {

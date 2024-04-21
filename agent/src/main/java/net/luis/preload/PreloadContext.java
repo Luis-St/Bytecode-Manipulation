@@ -44,7 +44,7 @@ public class PreloadContext {
 	}
 	
 	public Map<Type, Map.Entry<ClassInfo, ClassContent>> getClassData() {
-		return this.getClasses().stream().collect(Collectors.toMap(Function.identity(), type -> Map.entry(this.getClassInfo(type), this.getClassContent(type))));
+		return this.getClasses().stream().filter(type -> !type.getDescriptor().contains("module-info")).collect(Collectors.toMap(Function.identity(), type -> Map.entry(this.getClassInfo(type), this.getClassContent(type))));
 	}
 	
 	public @NotNull ClassDataStream stream() {

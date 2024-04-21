@@ -15,10 +15,12 @@ import java.lang.instrument.UnmodifiableClassException;
 
 public class Agent {
 	
-	/*private static final PreloadContext CONTEXT = new PreloadContext();*/
+	private static final PreloadContext CONTEXT = new PreloadContext();
 	
 	public static void premain(String agentArgs, Instrumentation inst) throws UnmodifiableClassException {
 		System.out.println("Agent loaded");
+		
+		CONTEXT.getClassData();
 		
 		ClassFileScanner.scanClass(Type.getType("Lnet/luis/AnnotationExample;"));
 		ClassFileScanner.scanClass(Type.getType("Lnet/luis/ClassExample;"));
