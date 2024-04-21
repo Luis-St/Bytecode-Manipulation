@@ -3,6 +3,8 @@ package net.luis.preload.scanner;
 import net.luis.asm.base.visitor.BaseMethodVisitor;
 import net.luis.preload.data.*;
 import net.luis.preload.type.TypeModifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.util.*;
@@ -23,21 +25,21 @@ public class MethodScanner extends BaseMethodVisitor {
 	private final Map<Integer, List<AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
-	public MethodScanner(Type[] parameterTypes, Consumer<AnnotationData> annotationConsumer, Consumer<ParameterData> parameterConsumer) {
+	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull Consumer<AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer) {
 		this.parameterTypes = parameterTypes;
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;
 	}
 	
 	@Override
-	public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
 		this.annotationConsumer.accept(new AnnotationData(Type.getType(descriptor), values));
 		return new AnnotationScanner(values::put);
 	}
 	
 	@Override
-	public void visitParameter(String name, int access) {
+	public void visitParameter(@Nullable String name, int access) {
 		if (name == null) {
 			name = "arg" + this.parameterIndex;
 		}
@@ -48,7 +50,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	}
 	
 	@Override
-	public AnnotationVisitor visitParameterAnnotation(int parameter, String descriptor, boolean visible) {
+	public @NotNull AnnotationVisitor visitParameterAnnotation(int parameter, @NotNull String descriptor, boolean visible) {
 		/*System.out.println("Parameter index: " + parameter);
 		System.out.println("  Type: " + Type.getType(descriptor));*/
 		Map<String, Object> values = new HashMap<>();

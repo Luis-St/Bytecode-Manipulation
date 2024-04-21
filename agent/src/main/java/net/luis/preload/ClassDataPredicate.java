@@ -3,6 +3,8 @@ package net.luis.preload;
 import net.luis.preload.data.ClassContent;
 import net.luis.preload.data.ClassInfo;
 import net.luis.preload.type.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.util.function.BiPredicate;
@@ -15,30 +17,30 @@ import java.util.function.BiPredicate;
 
 public interface ClassDataPredicate extends BiPredicate<ClassInfo, ClassContent> {
 	
-	static ClassDataPredicate ofType(ClassType type) {
+	static @NotNull ClassDataPredicate ofType(@Nullable ClassType type) {
 		return (info, content) -> info.classType() == type;
 	}
 	
-	static ClassDataPredicate ofAccess(TypeAccess access) {
+	static @NotNull ClassDataPredicate ofAccess(@Nullable TypeAccess access) {
 		return (info, content) -> info.access() == access;
 	}
 	
-	static ClassDataPredicate withModifier(TypeModifier modifier) {
+	static @NotNull ClassDataPredicate withModifier(@Nullable TypeModifier modifier) {
 		return (info, content) -> info.modifiers().contains(modifier);
 	}
 	
-	static ClassDataPredicate extendsClass(Type type) {
+	static @NotNull ClassDataPredicate extendsClass(@Nullable Type type) {
 		return (info, content) -> info.superType() != null && info.superType().equals(type);
 	}
 	
-	static ClassDataPredicate implementsInterface(Type type) {
+	static @NotNull ClassDataPredicate implementsInterface(@Nullable Type type) {
 		return (info, content) -> info.interfaces().contains(type);
 	}
 	
-	static ClassDataPredicate annotatedWith(Type type) {
+	static @NotNull ClassDataPredicate annotatedWith(@Nullable Type type) {
 		return (info, content) -> info.annotations().stream().anyMatch(annotation -> annotation.type().equals(type));
 	}
 	
 	@Override
-	boolean test(ClassInfo info, ClassContent content);
+	boolean test(@NotNull ClassInfo info, @NotNull ClassContent content);
 }

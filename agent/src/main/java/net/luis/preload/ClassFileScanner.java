@@ -3,6 +3,7 @@ package net.luis.preload;
 import net.luis.preload.data.*;
 import net.luis.preload.scanner.ClassContentScanner;
 import net.luis.preload.scanner.ClassInfoScanner;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
@@ -18,34 +19,34 @@ import java.util.function.Function;
 
 public class ClassFileScanner {
 	
-	public static Map.Entry<ClassInfo, ClassContent> scanClass(Type type) {
+	public static @NotNull Map.Entry<ClassInfo, ClassContent> scanClass(@NotNull Type type) {
 		byte[] data = readClass(type);
 		ClassInfo info = scanClass(data, type, new ClassInfoScanner(), ClassInfoScanner::getClassInfo);
 		ClassContent content = scanClass(data, type, new ClassContentScanner(), ClassContentScanner::getClassContent);
 		return Map.entry(info, content);
 	}
 	
-	public static ClassInfo scanClassInfo(Type type) {
+	public static @NotNull ClassInfo scanClassInfo(@NotNull Type type) {
 		return scanClass(type, new ClassInfoScanner(), ClassInfoScanner::getClassInfo);
 	}
 	
-	public static ClassContent scanClassContent(Type type) {
+	public static @NotNull ClassContent scanClassContent(@NotNull Type type) {
 		return scanClass(type, new ClassContentScanner(), ClassContentScanner::getClassContent);
 	}
 	
 	//region Helper methods
-	private static <T extends ClassVisitor, X> X scanClass(Type type, T visitor, Function<T, X> result) {
+	private static <T extends ClassVisitor, X> @NotNull X scanClass(@NotNull Type type, @NotNull T visitor, @NotNull Function<T, X> result) {
 		return scanClass(readClass(type), type, visitor, result);
 	}
 	
-	private static <T extends ClassVisitor, X> X scanClass(byte[] data, Type type, T visitor, Function<T, X> result) {
+	private static <T extends ClassVisitor, X> @NotNull X scanClass(byte @NotNull [] data, Type type, @NotNull T visitor, @NotNull Function<T, X> result) {
 		ClassReader reader = new ClassReader(data);
 		reader.accept(visitor, 0);
 		return result.apply(visitor);
 	}
 	//endregion
 	
-	private static byte[] readClass(Type type) {
+	private static byte @NotNull [] readClass(@NotNull Type type) {
 		String path = type.getInternalName() + ".class";
 		InputStream stream = ClassLoader.getSystemResourceAsStream(path);
 		if (stream == null) {

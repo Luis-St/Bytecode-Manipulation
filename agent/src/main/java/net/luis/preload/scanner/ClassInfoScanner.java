@@ -6,6 +6,9 @@ import net.luis.preload.data.ClassInfo;
 import net.luis.preload.type.*;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Type;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.*;
 
 import java.util.*;
 
@@ -28,7 +31,7 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	private Type superType;
 	
 	@Override
-	public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
 		AnnotationData data = new AnnotationData(Type.getType(descriptor), values);
 		this.classAnnotations.add(data);
@@ -36,7 +39,6 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	}
 	
 	@Override
-	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 		System.out.println();
 		System.out.println("Class: " + name);
 		System.out.println("  Type: " + ClassType.fromAccess(access));
@@ -45,6 +47,7 @@ public class ClassInfoScanner extends BaseClassVisitor {
 		System.out.println("  Signature: " + signature);
 		if (superName != null) {
 			System.out.println("  Super: " + Type.getObjectType(superName));
+	public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 		}
 		if (interfaces != null) {
 			System.out.println("  Interfaces: " + Arrays.stream(interfaces).map(Type::getObjectType).toList());
@@ -64,7 +67,7 @@ public class ClassInfoScanner extends BaseClassVisitor {
 		}
 	}
 	
-	public ClassInfo getClassInfo() {
+	public @NotNull ClassInfo getClassInfo() {
 		return new ClassInfo(this.name, this.type, this.signature, this.access, this.classType, this.modifiers, this.superType, this.interfaces, this.classAnnotations);
 	}
 }

@@ -2,8 +2,11 @@ package net.luis.asm.transformer;
 
 import net.luis.asm.ASMUtils;
 import net.luis.asm.base.BaseClassTransformer;
+import net.luis.asm.base.visitor.BaseClassVisitor;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.data.AnnotationData;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.util.*;
@@ -39,8 +42,8 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	}
 	
 	@Override
-	protected ClassVisitor visit(String className, Class<?> clazz, ClassReader reader, ClassWriter writer) {
-		return new ClassVisitor(Opcodes.ASM9, writer) {
+	protected ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+		return new BaseClassVisitor(writer) {
 			
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {

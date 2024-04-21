@@ -1,6 +1,8 @@
 package net.luis.preload.data;
 
 import net.luis.preload.type.TypeModifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.util.List;
@@ -13,13 +15,13 @@ import java.util.List;
 
 public interface ASMData {
 	
-	String name();
+	@NotNull String name();
 	
-	Type type();
+	@NotNull Type type();
 	
-	String signature();
+	@Nullable String signature();
 	
-	List<TypeModifier> modifiers();
+	@NotNull List<TypeModifier> modifiers();
 	
-	List<AnnotationData> annotations();
+	@NotNull List<AnnotationData> annotations();
 }

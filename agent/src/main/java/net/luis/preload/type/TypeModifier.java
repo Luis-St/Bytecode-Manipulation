@@ -1,5 +1,6 @@
 package net.luis.preload.type;
 
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Opcodes;
 
 import java.util.ArrayList;
@@ -47,27 +48,27 @@ public enum TypeModifier {
 		this.module = module;
 	}
 	
-	public static List<TypeModifier> fromClassAccess(int access) {
+	public static @NotNull List<TypeModifier> fromClassAccess(int access) {
 		return fromAccess(access).stream().filter(TypeModifier::allowedOnClass).collect(Collectors.toList());
 	}
 	
-	public static List<TypeModifier> fromFieldAccess(int access) {
+	public static @NotNull List<TypeModifier> fromFieldAccess(int access) {
 		return fromAccess(access).stream().filter(TypeModifier::allowedOnField).collect(Collectors.toList());
 	}
 	
-	public static List<TypeModifier> fromMethodAccess(int access) {
+	public static @NotNull List<TypeModifier> fromMethodAccess(int access) {
 		return fromAccess(access).stream().filter(TypeModifier::allowedOnMethod).collect(Collectors.toList());
 	}
 	
-	public static List<TypeModifier> fromParameterAccess(int access) {
+	public static @NotNull List<TypeModifier> fromParameterAccess(int access) {
 		return fromAccess(access).stream().filter(TypeModifier::allowedOnParameter).collect(Collectors.toList());
 	}
 	
-	public static List<TypeModifier> fromModuleAccess(int access) {
+	public static @NotNull List<TypeModifier> fromModuleAccess(int access) {
 		return fromAccess(access).stream().filter(TypeModifier::allowedOnModule).collect(Collectors.toList());
 	}
 	
-	public static List<TypeModifier> fromAccess(int access) {
+	public static @NotNull List<TypeModifier> fromAccess(int access) {
 		List<TypeModifier> modifiers = new ArrayList<>();
 		for (TypeModifier modifier : values()) {
 			if ((access & modifier.value) != 0) {

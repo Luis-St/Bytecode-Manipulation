@@ -1,5 +1,7 @@
 package net.luis.preload;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.io.File;
@@ -16,7 +18,7 @@ import java.util.jar.JarFile;
 
 public class ClassPathScanner {
 	
-	public static List<Type> getClasses() {
+	public static @NotNull List<Type> getClasses() {
 		List<Type> classes = new ArrayList<>();
 		for (File file : getClassPathFiles()) {
 			if (file.isDirectory()) {
@@ -28,7 +30,7 @@ public class ClassPathScanner {
 		return classes;
 	}
 	
-	private static List<Type> getClassesFromJar(File file) {
+	private static @NotNull List<Type> getClassesFromJar(@NotNull File file) {
 		List<Type> classes = new ArrayList<>();
 		if (file.exists() && file.canRead()) {
 			try (JarFile jar = new JarFile(file)) {
@@ -44,7 +46,7 @@ public class ClassPathScanner {
 		return classes;
 	}
 	
-	private static List<Type> getClassesFromDirectory(File directory) {
+	private static @NotNull List<Type> getClassesFromDirectory(@NotNull File directory) {
 		List<Type> classes = new ArrayList<>();
 		for (File file : listFiles(directory, (dir, name) -> name.endsWith(".jar"))) {
 			classes.addAll(getClassesFromJar(file));
@@ -56,7 +58,7 @@ public class ClassPathScanner {
 		return classes;
 	}
 	
-	private static List<File> listFiles(File directory, FilenameFilter filter) {
+	private static @NotNull List<File> listFiles(@NotNull File directory, @Nullable FilenameFilter filter) {
 		List<File> files = new ArrayList<>();
 		for (File entry : Objects.requireNonNull(directory.listFiles())) {
 			if (filter == null || filter.accept(directory, entry.getName())) {
@@ -69,7 +71,7 @@ public class ClassPathScanner {
 		return files;
 	}
 	
-	private static List<File> getClassPathFiles() {
+	private static @NotNull List<File> getClassPathFiles() {
 		List<File> files = new ArrayList<>();
 		String classPath = System.getProperty("java.class.path");
 		if (classPath != null) {
@@ -80,7 +82,7 @@ public class ClassPathScanner {
 		return files;
 	}
 	
-	private static String convertToClass(String fileName) {
+	private static @NotNull String convertToClass(@NotNull String fileName) {
 		return fileName.substring(0, fileName.length() - 6).replace("\\", "/");
 	}
 }

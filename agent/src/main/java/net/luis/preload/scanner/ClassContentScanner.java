@@ -4,6 +4,8 @@ import net.luis.asm.base.visitor.*;
 import net.luis.preload.data.*;
 import net.luis.preload.type.TypeAccess;
 import net.luis.preload.type.TypeModifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.util.*;
@@ -22,14 +24,14 @@ public class ClassContentScanner extends BaseClassVisitor {
 	private final List<FieldData> fields = new ArrayList<>();
 	private final List<MethodData> methods = new ArrayList<>();
 	
-	private AnnotationVisitor createAnnotationScanner(String descriptor, Consumer<AnnotationData> action) {
+	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, @NotNull Consumer<AnnotationData> action) {
 		Map<String, Object> values = new HashMap<>();
 		action.accept(new AnnotationData(Type.getType(descriptor), values));
 		return new AnnotationScanner(values::put);
 	}
 	
 	@Override
-	public RecordComponentVisitor visitRecordComponent(String name, String recordDescriptor, String signature) {
+	public @NotNull RecordComponentVisitor visitRecordComponent(@NotNull String name, @NotNull String recordDescriptor, @Nullable String signature) {
 		/*System.out.println();
 		System.out.println("Record Component: " + name);
 		System.out.println("  Type: " + Type.getType(recordDescriptor));
@@ -38,14 +40,14 @@ public class ClassContentScanner extends BaseClassVisitor {
 		this.recordComponents.add(new RecordComponentData(name, Type.getType(recordDescriptor), signature == null ? "" : signature, componentAnnotations));
 		return new BaseRecordComponentVisitor() {
 			@Override
-			public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
 				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, componentAnnotations::add);
 			}
 		};
 	}
 	
 	@Override
-	public FieldVisitor visitField(int access, String name, String fieldDescriptor, String signature, Object initialValue) {
+	public @NotNull FieldVisitor visitField(int access, @NotNull String name, @NotNull String fieldDescriptor, @Nullable String signature, @Nullable Object initialValue) {
 		/*System.out.println();
 		System.out.println("Field: " + name);
 		System.out.println("  Type: " + Type.getType(fieldDescriptor));
@@ -58,14 +60,14 @@ public class ClassContentScanner extends BaseClassVisitor {
 		return new BaseFieldVisitor() {
 			
 			@Override
-			public AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
 				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, fieldAnnotations::add);
 			}
 		};
 	}
 	
 	@Override
-	public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 		/*System.out.println();
 		System.out.println("Method: " + name);
 		System.out.println("  Type: " + Type.getType(descriptor));
@@ -83,7 +85,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		return new MethodScanner(Type.getArgumentTypes(descriptor), methodAnnotations::add, methodParameters::add);
 	}
 	
-	public ClassContent getClassContent() {
+	public @NotNull ClassContent getClassContent() {
 		return new ClassContent(this.recordComponents, this.fields, this.methods);
 	}
 }

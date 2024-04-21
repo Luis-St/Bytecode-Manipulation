@@ -12,6 +12,8 @@ repositories {
 dependencies {
 	// ASM
 	implementation "org.ow2.asm:asm:${ASM}"
+	// Other
+	implementation "org.jetbrains:annotations:${JetBrainsAnnotations}" // Annotations
 }
 
 jar {

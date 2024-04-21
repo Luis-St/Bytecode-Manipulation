@@ -1,5 +1,6 @@
 package net.luis.preload.type;
 
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -23,7 +24,7 @@ public enum ClassType {
 		this.value = value;
 	}
 	
-	public static ClassType fromAccess(int access) {
+	public static @NotNull ClassType fromAccess(int access) {
 		for (ClassType type : values()) {
 			if (type == CLASS) {
 				continue;

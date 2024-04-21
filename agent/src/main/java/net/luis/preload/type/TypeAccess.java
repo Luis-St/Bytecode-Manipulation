@@ -1,5 +1,6 @@
 package net.luis.preload.type;
 
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -21,7 +22,7 @@ public enum TypeAccess {
 		this.value = value;
 	}
 	
-	public static TypeAccess fromAccess(int access) {
+	public static @NotNull TypeAccess fromAccess(int access) {
 		for (TypeAccess typeAccess : values()) {
 			if (typeAccess == PACKAGE) {
 				continue;

@@ -3,6 +3,7 @@ package net.luis.preload;
 import net.luis.asm.ASMUtils;
 import net.luis.preload.data.ClassContent;
 import net.luis.preload.data.ClassInfo;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
 import java.util.*;
@@ -22,23 +23,23 @@ public class PreloadContext {
 	private final Map<Type, ClassInfo> infoCache = new HashMap<>();
 	private final Map<Type, ClassContent> contentCache = new HashMap<>();
 	
-	public List<Type> getClasses() {
+	public @NotNull List<Type> getClasses() {
 		return this.classes;
 	}
 	
-	public ClassInfo getClassInfo(Type type) {
+	public @NotNull ClassInfo getClassInfo(@NotNull Type type) {
 		return this.infoCache.computeIfAbsent(type, ClassFileScanner::scanClassInfo);
 	}
 	
-	public ClassContent getClassContent(Type type) {
+	public @NotNull ClassContent getClassContent(@NotNull Type type) {
 		return this.contentCache.computeIfAbsent(type, ClassFileScanner::scanClassContent);
 	}
 	
-	public List<ClassInfo> getClassInfos() {
+	public @NotNull List<ClassInfo> getClassInfos() {
 		return this.getClasses().stream().map(this::getClassInfo).toList();
 	}
 	
-	public List<ClassContent> getClassContents() {
+	public @NotNull List<ClassContent> getClassContents() {
 		return this.getClasses().stream().map(this::getClassContent).toList();
 	}
 	
@@ -46,7 +47,7 @@ public class PreloadContext {
 		return this.getClasses().stream().collect(Collectors.toMap(Function.identity(), type -> Map.entry(this.getClassInfo(type), this.getClassContent(type))));
 	}
 	
-	public ClassDataStream stream() {
+	public @NotNull ClassDataStream stream() {
 		return new ClassDataStream(this.getClassData().values().stream());
 	}
 }

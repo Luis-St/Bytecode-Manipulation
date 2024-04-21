@@ -1,5 +1,7 @@
 package net.luis.preload.data;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 /**
@@ -8,4 +10,4 @@ import java.util.List;
  *
  */
 
-public record ClassContent(List<RecordComponentData> recordComponents, List<FieldData> fields, List<MethodData> methods) {}
+public record ClassContent(@NotNull List<RecordComponentData> recordComponents, @NotNull List<FieldData> fields, @NotNull List<MethodData> methods) {}

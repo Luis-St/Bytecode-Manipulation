@@ -1,5 +1,6 @@
 package net.luis.preload.data;
 
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
  *
  */
 
-public record AnnotationData(Type type, Map<String, Object> values) {
+public record AnnotationData(@NotNull Type type, @NotNull Map<String, Object> values) {
 	
 	@SuppressWarnings("unchecked")
 	public <X> X get(String key) {

@@ -1,5 +1,7 @@
 package net.luis.asm;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -14,49 +16,49 @@ import java.util.stream.IntStream;
 public class ASMUtils {
 	
 	@SafeVarargs
-	public static <T> List<T> newArrayList(T... elements) {
+	public static <T> @NotNull List<T> newArrayList(T @NotNull ... elements) {
 		return new ArrayList<>(Arrays.asList(elements));
 	}
 	
 	@SafeVarargs
-	public static <T> Set<T> newSet(T... elements) {
+	public static <T> @NotNull Set<T> newSet(T@NotNull ... elements) {
 		return new HashSet<>(Arrays.asList(elements));
 	}
 	
-	public static <T> Supplier<T> memorize(Supplier<T> supplier) {
+	public static <T> @NotNull Supplier<T> memorize(@NotNull Supplier<T> supplier) {
 		return new MemorizedSupplier<>(supplier);
 	}
 	
 	//region Array to list
-	public static List<Boolean> asList(boolean[] array) {
+	public static @NotNull List<Boolean> asList(boolean @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
 	}
 	
-	public static List<Byte> asList(byte[] array) {
+	public static @NotNull List<Byte> asList(byte @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
 	}
 	
-	public static List<Short> asList(short[] array) {
+	public static @NotNull List<Short> asList(short @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
 	}
 	
-	public static List<Integer> asList(int[] array) {
+	public static @NotNull List<Integer> asList(int @NotNull [] array) {
 		return Arrays.stream(array).boxed().collect(Collectors.toList());
 	}
 	
-	public static List<Long> asList(long[] array) {
+	public static @NotNull List<Long> asList(long @NotNull [] array) {
 		return Arrays.stream(array).boxed().collect(Collectors.toList());
 	}
 	
-	public static List<Float> asList(float[] array) {
+	public static @NotNull List<Float> asList(float @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
 	}
 	
-	public static List<Double> asList(double[] array) {
+	public static @NotNull List<Double> asList(double @NotNull [] array) {
 		return Arrays.stream(array).boxed().collect(Collectors.toList());
 	}
 	
-	public static List<Character> asList(char[] array) {
+	public static @NotNull List<Character> asList(char @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
 	}
 	//endregion
@@ -67,7 +69,7 @@ public class ASMUtils {
 		private final Supplier<T> supplier;
 		private T value;
 		
-		private MemorizedSupplier(Supplier<T> supplier) {
+		private MemorizedSupplier(@NotNull Supplier<T> supplier) {
 			this.supplier = supplier;
 		}
 		

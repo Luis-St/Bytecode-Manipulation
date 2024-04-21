@@ -2,6 +2,8 @@ package net.luis.preload.scanner;
 
 import net.luis.asm.ASMUtils;
 import net.luis.asm.base.visitor.BaseAnnotationVisitor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.AnnotationVisitor;
 
 import java.util.ArrayList;
@@ -18,12 +20,12 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	
 	private final BiConsumer<String, Object> consumer;
 	
-	public AnnotationScanner(BiConsumer<String, Object> consumer) {
+	public AnnotationScanner(@NotNull BiConsumer<String, Object> consumer) {
 		this.consumer = consumer;
 	}
 	
 	@Override
-	public void visit(String parameter, Object value) {
+	public void visit(@NotNull String parameter, @NotNull Object value) {
 		switch (value) {
 			case boolean[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
 			case byte[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
@@ -38,23 +40,23 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	}
 	
 	@Override
-	public void visitEnum(String name, String descriptor, String value) {
+	public void visitEnum(@NotNull String name, @NotNull String descriptor, @NotNull String value) {
 		this.consumer.accept(name, value);
 	}
 	
 	@Override
-	public AnnotationVisitor visitArray(String parameter) {
+	public AnnotationVisitor visitArray(@NotNull String parameter) {
 		List<Object> values = new ArrayList<>();
 		this.consumer.accept(parameter, values);
 		return new BaseAnnotationVisitor() {
 			
 			@Override
-			public void visit(String name, Object value) {
+			public void visit(@Nullable String name, @NotNull Object value) {
 				values.add(value);
 			}
 			
 			@Override
-			public void visitEnum(String name, String descriptor, String value) {
+			public void visitEnum(@Nullable String name, @NotNull String descriptor, @NotNull String value) {
 				values.add(value);
 			}
 		};
