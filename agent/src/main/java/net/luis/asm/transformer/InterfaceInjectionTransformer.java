@@ -3,8 +3,10 @@ package net.luis.asm.transformer;
 import net.luis.asm.ASMUtils;
 import net.luis.asm.base.BaseClassTransformer;
 import net.luis.asm.base.visitor.BaseClassVisitor;
+import net.luis.preload.ClassDataPredicate;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.data.AnnotationData;
+import net.luis.preload.data.ClassInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -20,6 +22,8 @@ import java.util.*;
 @SuppressWarnings("UnqualifiedFieldAccess")
 public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
+	private static final Type INJECT_INTERFACE = Type.getType("Lnet/luis/annotation/InjectInterface;");
+	
 	private final Map<String, List<String>> targets;
 	
 	public InterfaceInjectionTransformer(Map<String, List<String>> targets) {
@@ -28,16 +32,18 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	public static InterfaceInjectionTransformer create(PreloadContext context) {
 		Map<String, List<String>> targets = new HashMap<>();
-		/*for (Map.Entry<String, List<AnnotationData>> entry : context.getClassAnnotations().entrySet()) {
-			for (AnnotationData data : entry.getValue()) {
-				if ("Lnet/luis/annotation/InjectInterface;".equals(data.type().getDescriptor())) {
+		
+		context.stream().filter(ClassDataPredicate.annotatedWith(INJECT_INTERFACE)).forEach((info, content) -> {
+			for (AnnotationData data : info.annotations()) {
+				if (INJECT_INTERFACE.equals(data.type())) {
 					List<Type> types = data.get("targets");
 					for (Type target : types) {
-						targets.computeIfAbsent(target.getClassName().replace(".", "/"), k -> new ArrayList<>()).add(entry.getKey());
+						targets.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
 					}
 				}
 			}
-		}*/
+		});
+		System.out.println(targets);
 		return new InterfaceInjectionTransformer(targets);
 	}
 	
@@ -48,12 +54,9 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 				if (targets.containsKey(name)) {
-					Set<String> list = interfaces == null ? new HashSet<>() : ASMUtils.newSet(interfaces);
-					for (String iface : targets.get(name)) {
-						iface = iface.replace(".", "/");
-						list.add(iface);
-					}
-					interfaces = list.toArray(String[]::new);
+					Set<String> newInterfaces = interfaces == null ? new HashSet<>() : ASMUtils.newSet(interfaces);
+					newInterfaces.addAll(targets.getOrDefault(name, new ArrayList<>()));
+					interfaces = newInterfaces.toArray(String[]::new);
 				}
 				super.visit(version, access, name, signature, superName, interfaces);
 			}

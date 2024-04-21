@@ -38,11 +38,12 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	
 	@Override
 	public ModuleVisitor visitModule(String name, int access, String version) {
-/*		System.out.println();
+		/*System.out.println();
 		System.out.println("Module: " + name);*/
 		this.name = name;
 		this.type = Type.getType("Lmodule-info;");
 		this.access = TypeAccess.PUBLIC;
+		this.classType = ClassType.MODULE;
 		return super.visitModule(name, access, version);
 	}
 	
@@ -54,18 +55,16 @@ public class ClassInfoScanner extends BaseClassVisitor {
 		}
 		Objects.requireNonNull(superClass, "Super class is null");
 		Objects.requireNonNull(interfaces, "Interfaces are null");
-		if (this.name == null) {
-			int index = name.lastIndexOf('/');
-			this.name = index == -1 ? name : name.substring(index + 1);
-		}
+		int index = name.lastIndexOf('/');
+		this.name = index == -1 ? name : name.substring(index + 1);
 		this.type = Type.getObjectType(name);
-		this.signature = signature;
 		this.access = TypeAccess.fromAccess(access);
 		this.classType = ClassType.fromAccess(access);
+		this.signature = signature;
 		this.modifiers.addAll(TypeModifier.fromClassAccess(access));
 		this.superType = Type.getObjectType(superClass);
 		this.interfaces.addAll(Arrays.stream(interfaces).map(Type::getObjectType).toList());
-/*		System.out.println();
+		/*System.out.println();
 		System.out.println("Class: " + this.name);
 		System.out.println("  Type: " + this.type);
 		System.out.println("  Class type: " + this.classType);
