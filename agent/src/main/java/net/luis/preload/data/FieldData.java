@@ -12,4 +12,4 @@ import java.util.List;
  *
  */
 
-public record FieldData(String name, Type type, String signature, TypeAccess access, List<TypeModifier> modifiers, List<AnnotationData> annotations, /*Nullable*/ Object initialValue) {}
+public record FieldData(String name, Type type, String signature, TypeAccess access, List<TypeModifier> modifiers, List<AnnotationData> annotations, /*Nullable*/ Object initialValue) implements ASMData {}

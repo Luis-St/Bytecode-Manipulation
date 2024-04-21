@@ -69,6 +69,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		/*System.out.println();
 		System.out.println("Method: " + name);
 		System.out.println("  Type: " + Type.getType(descriptor));
+		System.out.println("  Parameters: " + Arrays.toString(Type.getArgumentTypes(descriptor)));
 		System.out.println("  Access: " + TypeAccess.fromAccess(access));
 		System.out.println("  Modifiers: " + TypeModifier.fromMethodAccess(access));
 		System.out.println("  Signature: " + signature);
@@ -79,7 +80,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		List<ParameterData> methodParameters = new ArrayList<>();
 		List<Type> methodExceptions = Optional.ofNullable(exceptions).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
 		this.methods.add(new MethodData(name, Type.getType(descriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions));
-		return new MethodScanner(methodAnnotations::add, methodParameters::add);
+		return new MethodScanner(Type.getArgumentTypes(descriptor), methodAnnotations::add, methodParameters::add);
 	}
 	
 	public ClassContent getClassContent() {

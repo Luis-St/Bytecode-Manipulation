@@ -12,4 +12,4 @@ import java.util.List;
  *
  */
 
-public record ClassInfo(Type type, String signature, TypeAccess access, ClassType classType, List<TypeModifier> modifiers, /*Nullable*/ Type superType, List<Type> interfaces, List<AnnotationData> annotations) {}
+public record ClassInfo(String name, Type type, String signature, TypeAccess access, ClassType classType, List<TypeModifier> modifiers, /*Nullable*/ Type superType, List<Type> interfaces, List<AnnotationData> annotations) implements ASMData {}

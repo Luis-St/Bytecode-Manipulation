@@ -1,5 +1,6 @@
 package net.luis.preload.data;
 
+import net.luis.preload.type.TypeModifier;
 import org.objectweb.asm.Type;
 
 import java.util.List;
@@ -10,4 +11,10 @@ import java.util.List;
  *
  */
 
-public record RecordComponentData(String name, Type type, String signature, List<AnnotationData> annotations) {}
+public record RecordComponentData(String name, Type type, String signature, List<AnnotationData> annotations) implements ASMData {
+	
+	@Override
+	public List<TypeModifier> modifiers() {
+		return List.of();
+	}
+}

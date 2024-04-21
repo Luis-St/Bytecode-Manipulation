@@ -16,13 +16,15 @@ import java.util.function.Consumer;
 
 public class MethodScanner extends BaseMethodVisitor {
 	
+	private final Type[] parameterTypes;
 	private final Consumer<AnnotationData> annotationConsumer;
 	private final Consumer<ParameterData> parameterConsumer;
 	private final List<Map.Entry<String, List<TypeModifier>>> parameters = new ArrayList<>();
 	private final Map<Integer, List<AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
-	public MethodScanner(Consumer<AnnotationData> annotationConsumer, Consumer<ParameterData> parameterConsumer) {
+	public MethodScanner(Type[] parameterTypes, Consumer<AnnotationData> annotationConsumer, Consumer<ParameterData> parameterConsumer) {
+		this.parameterTypes = parameterTypes;
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;
 	}
@@ -59,7 +61,7 @@ public class MethodScanner extends BaseMethodVisitor {
 		for (int i = 0; i < this.parameters.size(); i++) {
 			Map.Entry<String, List<TypeModifier>> entry =  this.parameters.get(i);
 			List<AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, Collections.emptyList());
-			this.parameterConsumer.accept(new ParameterData(entry.getKey(), i, entry.getValue(), annotations));
+			this.parameterConsumer.accept(new ParameterData(entry.getKey(), this.parameterTypes[i],  i, entry.getValue(), annotations));
 		}
 	}
 }
