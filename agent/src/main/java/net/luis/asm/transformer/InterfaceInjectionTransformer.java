@@ -27,11 +27,11 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	private final Map<String, List<String>> targets;
 	
-	private InterfaceInjectionTransformer(Map<String, List<String>> targets) {
+	private InterfaceInjectionTransformer(@NotNull Map<String, List<String>> targets) {
 		this.targets = targets;
 	}
 	
-	public static InterfaceInjectionTransformer create(PreloadContext context) {
+	public static InterfaceInjectionTransformer create(@NotNull PreloadContext context) {
 		Map<String, List<String>> targets = new HashMap<>();
 		
 		context.stream().filter(ClassDataPredicate.annotatedWith(INJECT_INTERFACE)).forEach((info, content) -> {
@@ -53,13 +53,13 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 		return new BaseClassVisitor(writer) {
 			
 			@Override
-			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+			public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 				if (targets.containsKey(name)) {
 					Set<String> newInterfaces = interfaces == null ? new HashSet<>() : ASMUtils.newSet(interfaces);
 					newInterfaces.addAll(targets.getOrDefault(name, new ArrayList<>()));
 					interfaces = newInterfaces.toArray(String[]::new);
 				}
-				super.visit(version, access, name, signature, superName, interfaces);
+				super.visit(version, access, name, signature, superClass, interfaces);
 			}
 		};
 	}

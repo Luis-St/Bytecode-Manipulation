@@ -32,6 +32,5 @@ public final class Main {
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
 		}
-		
 	}
 }

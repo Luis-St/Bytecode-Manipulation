@@ -1,5 +1,7 @@
 package net.luis.annotation;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.annotation.*;
 
 /**
@@ -12,5 +14,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.CLASS)
 public @interface InjectInterface {
 	
-	Class<?>[] targets();
+	@NotNull Class<?>[] targets();
 }
