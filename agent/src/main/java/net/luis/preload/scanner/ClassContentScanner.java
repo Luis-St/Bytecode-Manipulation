@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -24,9 +25,10 @@ public class ClassContentScanner extends BaseClassVisitor {
 	private final List<FieldData> fields = new ArrayList<>();
 	private final List<MethodData> methods = new ArrayList<>();
 	
-	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, @NotNull Consumer<AnnotationData> action) {
+	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, @NotNull BiConsumer<Type, AnnotationData> action) {
 		Map<String, Object> values = new HashMap<>();
-		action.accept(new AnnotationData(Type.getType(descriptor), values));
+		Type type = Type.getType(descriptor);
+		action.accept(type, new AnnotationData(type, values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -36,12 +38,12 @@ public class ClassContentScanner extends BaseClassVisitor {
 		System.out.println("Record Component: " + name);
 		System.out.println("  Type: " + Type.getType(recordDescriptor));
 		System.out.println("  Signature: " + signature);*/
-		List<AnnotationData> componentAnnotations = new ArrayList<>();
+		Map<Type, AnnotationData> componentAnnotations = new HashMap<>();
 		this.recordComponents.add(new RecordComponentData(name, Type.getType(recordDescriptor), signature == null ? "" : signature, componentAnnotations));
 		return new BaseRecordComponentVisitor() {
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
-				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, componentAnnotations::add);
+				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, componentAnnotations::put);
 			}
 		};
 	}
@@ -55,13 +57,13 @@ public class ClassContentScanner extends BaseClassVisitor {
 		System.out.println("  Modifiers: " + TypeModifier.fromFieldAccess(access));
 		System.out.println("  Signature: " + signature);
 		System.out.println("  Initial value: " + initialValue);*/
-		List<AnnotationData> fieldAnnotations = new ArrayList<>();
+		Map<Type, AnnotationData> fieldAnnotations = new HashMap<>();
 		this.fields.add(new FieldData(name, Type.getType(fieldDescriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
 		return new BaseFieldVisitor() {
 			
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
-				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, fieldAnnotations::add);
+				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, fieldAnnotations::put);
 			}
 		};
 	}
@@ -78,11 +80,11 @@ public class ClassContentScanner extends BaseClassVisitor {
 		if (exceptions != null) {
 			System.out.println("  Exceptions: " + Arrays.stream(exceptions).map(Type::getObjectType).toList());
 		}*/
-		List<AnnotationData> methodAnnotations = new ArrayList<>();
+		Map<Type, AnnotationData> methodAnnotations = new HashMap<>();
 		List<ParameterData> methodParameters = new ArrayList<>();
 		List<Type> methodExceptions = Optional.ofNullable(exceptions).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
 		this.methods.add(new MethodData(name, Type.getType(descriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions));
-		return new MethodScanner(Type.getArgumentTypes(descriptor), methodAnnotations::add, methodParameters::add);
+		return new MethodScanner(Type.getArgumentTypes(descriptor), methodAnnotations::put, methodParameters::add);
 	}
 	
 	public @NotNull ClassContent getClassContent() {

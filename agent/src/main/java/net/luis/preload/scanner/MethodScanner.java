@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -19,13 +20,13 @@ import java.util.function.Consumer;
 public class MethodScanner extends BaseMethodVisitor {
 	
 	private final Type[] parameterTypes;
-	private final Consumer<AnnotationData> annotationConsumer;
+	private final BiConsumer<Type, AnnotationData> annotationConsumer;
 	private final Consumer<ParameterData> parameterConsumer;
 	private final List<Map.Entry<String, List<TypeModifier>>> parameters = new ArrayList<>();
-	private final Map<Integer, List<AnnotationData>> parameterAnnotations = new HashMap<>();
+	private final Map<Integer, Map<Type, AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
-	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull Consumer<AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer) {
+	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer) {
 		this.parameterTypes = parameterTypes;
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;
@@ -34,7 +35,8 @@ public class MethodScanner extends BaseMethodVisitor {
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
-		this.annotationConsumer.accept(new AnnotationData(Type.getType(descriptor), values));
+		Type type = Type.getType(descriptor);
+		this.annotationConsumer.accept(type, new AnnotationData(type, values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -54,7 +56,8 @@ public class MethodScanner extends BaseMethodVisitor {
 		/*System.out.println("Parameter index: " + parameter);
 		System.out.println("  Type: " + Type.getType(descriptor));*/
 		Map<String, Object> values = new HashMap<>();
-		this.parameterAnnotations.computeIfAbsent(parameter, p -> new ArrayList<>()).add(new AnnotationData(Type.getType(descriptor), values));
+		Type type = Type.getType(descriptor);
+		this.parameterAnnotations.computeIfAbsent(parameter, p -> new HashMap<>()).put(type, new AnnotationData(type, values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -62,7 +65,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	public void visitEnd() {
 		for (int i = 0; i < this.parameters.size(); i++) {
 			Map.Entry<String, List<TypeModifier>> entry =  this.parameters.get(i);
-			List<AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, Collections.emptyList());
+			Map<Type, AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, new HashMap<>());
 			this.parameterConsumer.accept(new ParameterData(entry.getKey(), this.parameterTypes[i],  i, entry.getValue(), annotations));
 		}
 	}

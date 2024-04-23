@@ -35,14 +35,24 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 		Map<String, List<String>> targets = new HashMap<>();
 		
 		context.stream().filter(ClassDataPredicate.annotatedWith(INJECT_INTERFACE)).forEach((info, content) -> {
-			for (AnnotationData data : info.annotations()) {
-				if (INJECT_INTERFACE.equals(data.type())) {
-					List<Type> types = data.get("targets");
-					for (Type target : types) {
-						targets.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
-					}
+			if (info.isAnnotatedWith(INJECT_INTERFACE)) {
+				List<Type> types = info.getAnnotation(INJECT_INTERFACE).get("targets");
+				for (Type target : types) {
+					targets.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
 				}
 			}
+			
+			
+			
+			
+//			for (AnnotationData data : info.annotations()) {
+//				if (INJECT_INTERFACE.equals(data.type())) {
+//					List<Type> types = data.get("targets");
+//					for (Type target : types) {
+//						targets.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
+//					}
+//				}
+//			}
 		});
 		System.out.println(targets);
 		return new InterfaceInjectionTransformer(targets);

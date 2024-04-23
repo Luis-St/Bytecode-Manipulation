@@ -14,9 +14,9 @@ import net.luis.utils.logging.LoggerConfiguration;
 	testBoolean = true,
 	testDouble = 0.0,
 	testClass = Main.class,
-	testIntArray = {1, 2, 3},
-	testStringArray = {"Hello", "World", "!"},
-	testClassArray = {Main.class},
+	testIntArray = { 1, 2, 3 },
+	testStringArray = { "Hello", "World", "!" },
+	testClassArray = { Main.class },
 	testAnnotation = @AnnotationExample("test")
 )
 public final class Main {
@@ -29,6 +29,7 @@ public final class Main {
 		if (logger instanceof MyInterface my) {
 			System.out.println("LoggerConfiguration is an instance of MyInterface!");
 			System.out.println(my.build().getName());
+			System.out.println(my.getLoggers());
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
 		}

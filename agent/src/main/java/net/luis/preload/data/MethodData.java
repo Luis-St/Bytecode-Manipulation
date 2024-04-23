@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -14,5 +15,5 @@ import java.util.List;
  *
  */
 
-public record MethodData(@NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull TypeAccess access, @NotNull List<TypeModifier> modifiers, @NotNull List<AnnotationData> annotations,
+public record MethodData(@NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull TypeAccess access, @NotNull List<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations,
 						 @NotNull List<ParameterData> parameters, @NotNull List<Type> exceptions) implements ASMData {}

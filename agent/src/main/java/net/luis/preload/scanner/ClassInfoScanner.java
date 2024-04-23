@@ -18,7 +18,7 @@ import java.util.*;
 
 public class ClassInfoScanner extends BaseClassVisitor {
 	
-	private final List<AnnotationData> classAnnotations = new ArrayList<>();
+	private final Map<Type, AnnotationData> classAnnotations = new HashMap<>();
 	private final List<TypeModifier> modifiers = new ArrayList<>();
 	private final List<Type> interfaces = new ArrayList<>();
 	private String name;
@@ -32,8 +32,9 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
 		/*System.out.println("Annotation: " + descriptor);*/
 		Map<String, Object> values = new HashMap<>();
-		AnnotationData data = new AnnotationData(Type.getType(descriptor), values);
-		this.classAnnotations.add(data);
+		Type type = Type.getType(descriptor);
+		AnnotationData data = new AnnotationData(type, values);
+		this.classAnnotations.put(type, data);
 		return new AnnotationScanner(values::put);
 	}
 	

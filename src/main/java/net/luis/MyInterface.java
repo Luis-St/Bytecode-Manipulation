@@ -15,4 +15,16 @@ public interface MyInterface {
 	
 	@Implemented
 	@NotNull Configuration build();
+	
+	@Accessor
+	List<String> getLoggers();
+	
+	@Accessor(target = "allowedTypes")
+	Set<LoggingType> getAllowedTypes();
+	
+	@Invoker
+	@NotNull String invokeGetPattern(@NotNull LoggingType type, @NotNull Level level);
+	
+	@Invoker(target = "getPattern")
+	@NotNull String getLoggingPattern(@NotNull LoggingType type, @NotNull Level level);
 }
