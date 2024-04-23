@@ -1,4 +1,4 @@
-package net.luis.annotation;
+package net.luis;
 
 /**
  *
@@ -23,4 +23,6 @@ public @interface Test {
 	String[] testStringArray() default {};
 	
 	Class<?>[] testClassArray() default {};
+	
+	AnnotationExample testAnnotation() default @AnnotationExample;
 }

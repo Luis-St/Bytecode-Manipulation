@@ -18,8 +18,9 @@ public class Agent {
 	
 	private static final PreloadContext CONTEXT = new PreloadContext();
 	
-	public static void premain(String agentArgs, Instrumentation inst) throws UnmodifiableClassException {
+	public static void premain(String agentArgs, Instrumentation inst) {
 		System.out.println("Agent loaded");
+		//ClassFileScanner.scanClass(Type.getType("Lnet/luis/Main;"));
 		inst.addTransformer(InterfaceInjectionTransformer.create(CONTEXT));
 	}
 }

@@ -2,12 +2,13 @@ package net.luis.preload.scanner;
 
 import net.luis.asm.ASMUtils;
 import net.luis.asm.base.visitor.BaseAnnotationVisitor;
+import net.luis.preload.data.AnnotationData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Type;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 /**
@@ -26,6 +27,8 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	
 	@Override
 	public void visit(@NotNull String parameter, @NotNull Object value) {
+		/*System.out.println("Parameter: " + parameter);
+		System.out.println("  Value: " + value);*/
 		switch (value) {
 			case boolean[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
 			case byte[] a -> this.consumer.accept(parameter, ASMUtils.asList(a));
@@ -60,5 +63,14 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 				values.add(value);
 			}
 		};
+	}
+	
+	@Override
+	public AnnotationVisitor visitAnnotation(String name, String descriptor) {
+		/*System.out.println("Nested annotation: " + name);
+		System.out.println("  Descriptor: " + descriptor);*/
+		Map<String, Object> values = new HashMap<>();
+		this.consumer.accept(name, new AnnotationData(Type.getType(descriptor), values));
+		return new AnnotationScanner(values::put);
 	}
 }

@@ -30,6 +30,7 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
+		/*System.out.println("Annotation: " + descriptor);*/
 		Map<String, Object> values = new HashMap<>();
 		AnnotationData data = new AnnotationData(Type.getType(descriptor), values);
 		this.classAnnotations.add(data);

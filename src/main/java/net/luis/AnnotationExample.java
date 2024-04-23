@@ -7,4 +7,6 @@ package net.luis;
  */
 
 public @interface AnnotationExample {
+	
+	String value() default "";
 }
