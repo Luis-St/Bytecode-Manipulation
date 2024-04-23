@@ -26,8 +26,9 @@ public final class Main {
 		
 		LoggerConfiguration logger = new LoggerConfiguration("*");
 		
-		if (logger instanceof MyInterface) {
+		if (logger instanceof MyInterface my) {
 			System.out.println("LoggerConfiguration is an instance of MyInterface!");
+			System.out.println(my.build().getName());
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
 		}

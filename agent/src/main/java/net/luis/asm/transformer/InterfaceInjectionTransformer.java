@@ -1,5 +1,6 @@
 package net.luis.asm.transformer;
 
+import net.luis.annotation.InjectInterface;
 import net.luis.asm.ASMUtils;
 import net.luis.asm.base.BaseClassTransformer;
 import net.luis.asm.base.visitor.BaseClassVisitor;
@@ -22,11 +23,11 @@ import java.util.*;
 @SuppressWarnings("UnqualifiedFieldAccess")
 public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
-	private static final Type INJECT_INTERFACE = Type.getType("Lnet/luis/annotation/InjectInterface;");
+	private static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
 	private final Map<String, List<String>> targets;
 	
-	public InterfaceInjectionTransformer(Map<String, List<String>> targets) {
+	private InterfaceInjectionTransformer(Map<String, List<String>> targets) {
 		this.targets = targets;
 	}
 	

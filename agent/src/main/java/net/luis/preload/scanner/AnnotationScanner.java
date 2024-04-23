@@ -48,7 +48,7 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	}
 	
 	@Override
-	public AnnotationVisitor visitArray(@NotNull String parameter) {
+	public @NotNull AnnotationVisitor visitArray(@NotNull String parameter) {
 		List<Object> values = new ArrayList<>();
 		this.consumer.accept(parameter, values);
 		return new BaseAnnotationVisitor() {
@@ -66,7 +66,7 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	}
 	
 	@Override
-	public AnnotationVisitor visitAnnotation(String name, String descriptor) {
+	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String name, @NotNull String descriptor) {
 		/*System.out.println("Nested annotation: " + name);
 		System.out.println("  Descriptor: " + descriptor);*/
 		Map<String, Object> values = new HashMap<>();
