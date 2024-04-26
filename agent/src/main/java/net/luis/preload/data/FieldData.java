@@ -4,8 +4,7 @@ import net.luis.preload.type.TypeAccess;
 import net.luis.preload.type.TypeModifier;
 import org.objectweb.asm.Type;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -13,4 +12,4 @@ import java.util.Map;
  *
  */
 
-public record FieldData(String name, Type type, String signature, TypeAccess access, List<TypeModifier> modifiers, Map<Type, AnnotationData> annotations, /*Nullable*/ Object initialValue) implements ASMData {}
+public record FieldData(String name, Type type, String signature, TypeAccess access, Set<TypeModifier> modifiers, Map<Type, AnnotationData> annotations, /*Nullable*/ Object initialValue) implements ASMData {}

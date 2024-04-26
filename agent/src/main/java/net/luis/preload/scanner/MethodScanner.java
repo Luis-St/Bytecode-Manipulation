@@ -22,7 +22,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	private final Type[] parameterTypes;
 	private final BiConsumer<Type, AnnotationData> annotationConsumer;
 	private final Consumer<ParameterData> parameterConsumer;
-	private final List<Map.Entry<String, List<TypeModifier>>> parameters = new ArrayList<>();
+	private final List<Map.Entry<String, Set<TypeModifier>>> parameters = new ArrayList<>();
 	private final Map<Integer, Map<Type, AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
@@ -64,7 +64,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	@Override
 	public void visitEnd() {
 		for (int i = 0; i < this.parameters.size(); i++) {
-			Map.Entry<String, List<TypeModifier>> entry =  this.parameters.get(i);
+			Map.Entry<String, Set<TypeModifier>> entry =  this.parameters.get(i);
 			Map<Type, AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, new HashMap<>());
 			this.parameterConsumer.accept(new ParameterData(entry.getKey(), this.parameterTypes[i],  i, entry.getValue(), annotations));
 		}

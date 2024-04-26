@@ -1,10 +1,10 @@
 package net.luis.preload.type;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 import org.objectweb.asm.Opcodes;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -48,34 +48,34 @@ public enum TypeModifier {
 		this.module = module;
 	}
 	
-	public static @NotNull List<TypeModifier> fromClassAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnClass).collect(Collectors.toList());
+	public static @Unmodifiable @NotNull Set<TypeModifier> fromClassAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnClass).collect(Collectors.toUnmodifiableSet());
 	}
 	
-	public static @NotNull List<TypeModifier> fromFieldAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnField).collect(Collectors.toList());
+	public static @Unmodifiable @NotNull Set<TypeModifier> fromFieldAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnField).collect(Collectors.toUnmodifiableSet());
 	}
 	
-	public static @NotNull List<TypeModifier> fromMethodAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnMethod).collect(Collectors.toList());
+	public static @Unmodifiable @NotNull Set<TypeModifier> fromMethodAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnMethod).collect(Collectors.toUnmodifiableSet());
 	}
 	
-	public static @NotNull List<TypeModifier> fromParameterAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnParameter).collect(Collectors.toList());
+	public static @Unmodifiable @NotNull Set<TypeModifier> fromParameterAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnParameter).collect(Collectors.toUnmodifiableSet());
 	}
 	
-	public static @NotNull List<TypeModifier> fromModuleAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnModule).collect(Collectors.toList());
+	public static @Unmodifiable @NotNull Set<TypeModifier> fromModuleAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnModule).collect(Collectors.toUnmodifiableSet());
 	}
 	
-	public static @NotNull List<TypeModifier> fromAccess(int access) {
-		List<TypeModifier> modifiers = new ArrayList<>();
+	public static @Unmodifiable @NotNull Set<TypeModifier> fromAccess(int access) {
+		Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
 		for (TypeModifier modifier : values()) {
 			if ((access & modifier.value) != 0) {
 				modifiers.add(modifier);
 			}
 		}
-		return modifiers;
+		return Set.copyOf(modifiers);
 	}
 	
 	public boolean allowedOnClass() {

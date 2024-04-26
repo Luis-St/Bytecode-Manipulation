@@ -5,8 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -14,5 +13,5 @@ import java.util.Map;
  *
  */
 
-public record ClassInfo(@NotNull String name, @NotNull Type type, String signature, @NotNull TypeAccess access, @NotNull ClassType classType, @NotNull List<TypeModifier> modifiers,
+public record ClassInfo(@NotNull String name, @NotNull Type type, String signature, @NotNull TypeAccess access, @NotNull ClassType classType, @NotNull Set<TypeModifier> modifiers,
 						@Nullable Type superType, @NotNull List<Type> interfaces, @NotNull Map<Type, AnnotationData> annotations) implements ASMData {}

@@ -5,8 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -14,7 +13,7 @@ import java.util.Map;
  *
  */
 
-public record ParameterData(@NotNull String name, @NotNull Type type, int index, @NotNull List<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations) implements ASMData {
+public record ParameterData(@NotNull String name, @NotNull Type type, int index, @NotNull Set<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations) implements ASMData {
 	
 	@Override
 	public @Nullable String signature() {

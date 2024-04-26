@@ -78,6 +78,6 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	}
 	
 	public @NotNull ClassInfo getClassInfo() {
-		return new ClassInfo(this.name, this.type, this.signature, this.access, this.classType, this.modifiers, this.superType, this.interfaces, this.classAnnotations);
+		return new ClassInfo(this.name, this.type, this.signature, this.access, this.classType, Set.copyOf(this.modifiers), this.superType, this.interfaces, this.classAnnotations);
 	}
 }

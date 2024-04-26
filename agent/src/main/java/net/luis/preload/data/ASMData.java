@@ -4,8 +4,7 @@ import net.luis.preload.type.TypeModifier;
 import org.jetbrains.annotations.*;
 import org.objectweb.asm.Type;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -21,20 +20,26 @@ public interface ASMData {
 	
 	@Nullable String signature();
 	
-	@NotNull List<TypeModifier> modifiers();
+	@Unmodifiable @NotNull Set<TypeModifier> modifiers();
 	
+	default boolean hasModifier(@NotNull TypeModifier modifier) {
+		return this.modifiers().contains(modifier);
+	}
+	
+	//region Annotations
 	@ApiStatus.Internal
-	@NotNull Map<Type, AnnotationData> annotations();
+	@Unmodifiable @NotNull Map<Type, AnnotationData> annotations();
 	
-	default @NotNull List<AnnotationData> getAnnotations() {
+	default @Unmodifiable @NotNull List<AnnotationData> getAnnotations() {
 		return List.copyOf(this.annotations().values());
 	}
 	
-	default boolean isAnnotatedWith(@NotNull Type type) {
-		return this.annotations().containsKey(type);
+	default boolean isAnnotatedWith(@Nullable Type type) {
+		return type != null && this.annotations().containsKey(type);
 	}
 	
 	default @NotNull AnnotationData getAnnotation(@NotNull Type type) {
 		return this.annotations().get(type);
 	}
+	//endregion
 }

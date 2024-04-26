@@ -38,7 +38,7 @@ public interface ClassDataPredicate extends BiPredicate<ClassInfo, ClassContent>
 	}
 	
 	static @NotNull ClassDataPredicate annotatedWith(@Nullable Type type) {
-		return (info, content) -> info.annotations().stream().anyMatch(annotation -> annotation.type().equals(type));
+		return (info, content) -> info.isAnnotatedWith(type);
 	}
 	
 	@Override
