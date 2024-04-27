@@ -12,4 +12,9 @@ import java.util.*;
  *
  */
 
-public record FieldData(String name, Type type, String signature, TypeAccess access, Set<TypeModifier> modifiers, Map<Type, AnnotationData> annotations, /*Nullable*/ Object initialValue) implements ASMData {}
+public record FieldData(String name, Type type, String signature, TypeAccess access, Set<TypeModifier> modifiers, Map<Type, AnnotationData> annotations, /*Nullable*/ Object initialValue) implements ASMData {
+	
+	public String getFieldSignature() {
+		return this.type + this.name;
+	}
+}

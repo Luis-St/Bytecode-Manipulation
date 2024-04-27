@@ -17,8 +17,7 @@ import java.util.*;
 public record MethodData(@NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull TypeAccess access, @NotNull Set<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations,
 						 @NotNull List<ParameterData> parameters, @NotNull List<Type> exceptions) implements ASMData {
 	
-	
-	
-	
-	
+	public @NotNull String getMethodSignature() {
+		return this.name + this.type;
+	}
 }
