@@ -7,11 +7,13 @@ import net.luis.asm.base.visitor.BaseClassVisitor;
 import net.luis.asm.exception.InterfaceInjectionError;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.type.ClassType;
+import net.luis.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  *
@@ -23,10 +25,10 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	private static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> targets;
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 	
 	public InterfaceInjectionTransformer(@NotNull PreloadContext context) {
-		this.targets = ASMUtils.createTargetsLookup(context, INJECT_INTERFACE);
+		this.lookup = ASMUtils.createTargetsLookup(context, INJECT_INTERFACE);
 	}
 	
 	@Override
@@ -36,16 +38,15 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			
 			@Override
 			public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
-				if (targets.containsKey(name)) {
+				if (lookup.containsKey(name)) {
 					ClassType type = ClassType.fromAccess(access);
+					List<String> injects = lookup.getOrDefault(name, new ArrayList<>());
 					if (type == ClassType.ANNOTATION) {
-						throw new InterfaceInjectionError("Cannot inject interfaces into an annotation class");
+						throw new InterfaceInjectionError("Cannot inject interfaces (" + injects + ") into an annotation class " + Type.getObjectType(name));
 					} else if (type == ClassType.INTERFACE) {
-						throw new InterfaceInjectionError("Cannot inject interfaces into an interface class");
+						throw new InterfaceInjectionError("Cannot inject interfaces (" + injects + ") into an interface class " + Type.getObjectType(name));
 					}
-					Set<String> newInterfaces = interfaces == null ? new HashSet<>() : ASMUtils.newSet(interfaces);
-					newInterfaces.addAll(targets.getOrDefault(name, new ArrayList<>()));
-					interfaces = newInterfaces.toArray(String[]::new);
+					interfaces = Stream.concat(Utils.stream(interfaces), injects.stream()).distinct().toArray(String[]::new);
 				}
 				super.visit(version, access, name, signature, superClass, interfaces);
 			}
