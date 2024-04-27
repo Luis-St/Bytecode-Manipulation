@@ -22,7 +22,7 @@ public interface ASMData {
 	
 	@Unmodifiable @NotNull Set<TypeModifier> modifiers();
 	
-	default boolean hasModifier(@NotNull TypeModifier modifier) {
+	default boolean is(@NotNull TypeModifier modifier) {
 		return this.modifiers().contains(modifier);
 	}
 	

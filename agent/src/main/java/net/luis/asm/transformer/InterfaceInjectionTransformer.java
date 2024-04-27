@@ -4,10 +4,9 @@ import net.luis.annotation.InjectInterface;
 import net.luis.asm.ASMUtils;
 import net.luis.asm.base.BaseClassTransformer;
 import net.luis.asm.base.visitor.BaseClassVisitor;
-import net.luis.preload.ClassDataPredicate;
+import net.luis.asm.exception.InterfaceInjectionError;
 import net.luis.preload.PreloadContext;
-import net.luis.preload.data.AnnotationData;
-import net.luis.preload.data.ClassInfo;
+import net.luis.preload.type.ClassType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -38,6 +37,12 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			@Override
 			public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 				if (targets.containsKey(name)) {
+					ClassType type = ClassType.fromAccess(access);
+					if (type == ClassType.ANNOTATION) {
+						throw new InterfaceInjectionError("Cannot inject interfaces into an annotation class");
+					} else if (type == ClassType.INTERFACE) {
+						throw new InterfaceInjectionError("Cannot inject interfaces into an interface class");
+					}
 					Set<String> newInterfaces = interfaces == null ? new HashSet<>() : ASMUtils.newSet(interfaces);
 					newInterfaces.addAll(targets.getOrDefault(name, new ArrayList<>()));
 					interfaces = newInterfaces.toArray(String[]::new);
