@@ -20,45 +20,18 @@ import java.util.*;
  *
  */
 
-@SuppressWarnings("UnqualifiedFieldAccess")
 public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	private static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
-	private final Map<String, List<String>> targets;
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> targets;
 	
-	private InterfaceInjectionTransformer(@NotNull Map<String, List<String>> targets) {
-		this.targets = targets;
-	}
-	
-	public static InterfaceInjectionTransformer create(@NotNull PreloadContext context) {
-		Map<String, List<String>> targets = new HashMap<>();
-		
-		context.stream().filter(ClassDataPredicate.annotatedWith(INJECT_INTERFACE)).forEach((info, content) -> {
-			if (info.isAnnotatedWith(INJECT_INTERFACE)) {
-				List<Type> types = info.getAnnotation(INJECT_INTERFACE).get("targets");
-				for (Type target : types) {
-					targets.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
-				}
-			}
-			
-			
-			
-			
-//			for (AnnotationData data : info.annotations()) {
-//				if (INJECT_INTERFACE.equals(data.type())) {
-//					List<Type> types = data.get("targets");
-//					for (Type target : types) {
-//						targets.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
-//					}
-//				}
-//			}
-		});
-		System.out.println(targets);
-		return new InterfaceInjectionTransformer(targets);
+	public InterfaceInjectionTransformer(@NotNull PreloadContext context) {
+		this.targets = ASMUtils.createTargetsLookup(context, INJECT_INTERFACE);
 	}
 	
 	@Override
+	@SuppressWarnings("UnqualifiedFieldAccess")
 	protected ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		return new BaseClassVisitor(writer) {
 			

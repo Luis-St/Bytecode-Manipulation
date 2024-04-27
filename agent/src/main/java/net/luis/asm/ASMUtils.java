@@ -1,6 +1,9 @@
 package net.luis.asm;
 
+import net.luis.preload.ClassDataPredicate;
+import net.luis.preload.PreloadContext;
 import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.Type;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -62,6 +65,17 @@ public class ASMUtils {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
 	}
 	//endregion
+	
+	public static @NotNull Map<String, List<String>> createTargetsLookup(@NotNull PreloadContext context, @NotNull Type annotationType) {
+		Map<String, List<String>> lookup = new HashMap<>();
+		context.stream().filter(ClassDataPredicate.annotatedWith(annotationType)).forEach((info, content) -> {
+			List<Type> types = info.getAnnotation(annotationType).get("targets");
+			for (Type target : types) {
+				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
+			}
+		});
+		return lookup;
+	}
 	
 	//region Internal
 	private static class MemorizedSupplier<T> implements Supplier<T> {

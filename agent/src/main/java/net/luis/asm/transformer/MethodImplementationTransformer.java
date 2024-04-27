@@ -21,26 +21,12 @@ public class MethodImplementationTransformer extends BaseClassTransformer {
 	
 	private static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
+	private final PreloadContext context;
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> targets;
 	
-	public static MethodImplementationTransformer create(@NotNull PreloadContext context) {
-		Map<ClassInfo, ClassContent> targets = new HashMap<>();
-		
-		
-		
-//		context.stream().filter(ClassDataPredicate.annotatedWith(INJECT_INTERFACE)).forEach((info, content) -> {
-//
-//			for (AnnotationData data : info.annotations()) {
-//				if (INJECT_INTERFACE.equals(data.type())) {
-//					List<Type> types = data.get("targets");
-//					for (Type target : types) {
-//						ClassInfo targetInfo = context.getClassInfo(target);
-//					}
-//				}
-//			}
-//		});
-		
-		
-		return new MethodImplementationTransformer();
+	public MethodImplementationTransformer(@NotNull PreloadContext context) {
+		this.context = context;
+		this.targets = ASMUtils.createTargetsLookup(context, INJECT_INTERFACE);
 	}
 	
 	@Override
