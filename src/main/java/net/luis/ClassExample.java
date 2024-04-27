@@ -11,6 +11,17 @@ import java.util.List;
 
 public abstract class ClassExample extends AbstractList<String> implements List<String> {
 	
+	private final List<String> list = new AbstractList<String>() {
+		@Override
+		public String get(int index) {
+			return null;
+		}
+		
+		@Override
+		public int size() {
+			return 0;
+		}
+	};
 	private String name;
 	
 	protected ClassExample(String name) {
