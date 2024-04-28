@@ -1,10 +1,12 @@
 package net.luis.asm.report;
 
+import net.luis.util.SortedHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -15,18 +17,18 @@ import java.util.*;
 public class CrashReport {
 	
 	private static final String DEFAULT_MESSAGE = "An error occurred during the class transformation process";
-	private static final String DEFAULT_TYPE = "Crash Report";
+	private static final String DEFAULT_CATEGORY = "Class Transformation Error";
 	
-	private final LinkedHashMap<String, Object> details = new LinkedHashMap<>();
+	private final SortedHashMap<String, Object> details = new SortedHashMap<>();
 	private final String message;
-	private final String type;
+	private final String category;
 	private final Throwable exception;
 	private boolean canContinue = false;
 	private int exitCode = 1;
 	
-	private CrashReport(@Nullable String message, @Nullable String type, @Nullable Throwable exception) {
+	private CrashReport(@Nullable String message, @Nullable String category, @Nullable Throwable exception) {
 		this.message = message == null ? DEFAULT_MESSAGE : message;
-		this.type = type == null ? DEFAULT_TYPE : type;
+		this.category = category == null ? DEFAULT_CATEGORY : category;
 		this.exception = exception;
 	}
 	
@@ -35,56 +37,49 @@ public class CrashReport {
 		return new CrashReport(message, null, exception);
 	}
 	
+	public static @NotNull CrashReport create(@NotNull String message, @NotNull String type) {
+		return new CrashReport(message, type, null);
+	}
+	
 	public static @NotNull CrashReport create(@NotNull String message, @NotNull String type, @Nullable Throwable exception) {
 		return new CrashReport(message, type, exception);
 	}
-	
-	public static @NotNull CrashReport createPreload(@NotNull String message, @Nullable Throwable exception) {
-		return new CrashReport(message, "Preload Report", exception);
-	}
-	
-	public static @NotNull CrashReport createTransformation(@NotNull String message, @Nullable Throwable exception) {
-		return new CrashReport(message, "Class Transformation Report", exception);
-	}
 	//endregion
 	
-	//region Getters and setters
+	//region Getters
 	public @NotNull String getMessage() {
 		return this.message;
 	}
 	
-	public @NotNull String getType() {
-		return this.type;
+	public @NotNull String getCategory() {
+		return this.category;
 	}
 	
 	public @Nullable Throwable getException() {
 		return this.exception;
 	}
 	
-	public boolean canContinue() {
-		return this.canContinue;
+	public @NotNull Map<String, Object> getDetails() {
+		return this.details;
 	}
 	
-	public @NotNull CrashReport setCanContinue(boolean canContinue) {
-		this.canContinue = canContinue;
-		return this;
+	public boolean canContinue() {
+		return this.canContinue;
 	}
 	
 	public int getExitCode() {
 		return this.exitCode;
 	}
+	//endregion
 	
-	public @NotNull CrashReport setExitCode(int exitCode) {
-		this.exitCode = exitCode;
+	//region Builder methods
+	public @NotNull CrashReport setCanContinue(boolean canContinue) {
+		this.canContinue = canContinue;
 		return this;
 	}
 	
-	public @NotNull Map<String, Object> getDetails() {
-		return this.details;
-	}
-	
-	public @NotNull CrashReport addDetailFirst(@NotNull String key, @NotNull Object value) {
-		this.details.putFirst(key, value);
+	public @NotNull CrashReport setExitCode(int exitCode) {
+		this.exitCode = exitCode;
 		return this;
 	}
 	
@@ -93,8 +88,23 @@ public class CrashReport {
 		return this;
 	}
 	
+	public @NotNull CrashReport addDetailFirst(@NotNull String key, @NotNull Object value) {
+		this.details.putFirst(key, value);
+		return this;
+	}
+	
 	public @NotNull CrashReport addDetailLast(@NotNull String key, @NotNull Object value) {
 		this.details.putLast(key, value);
+		return this;
+	}
+	
+	public @NotNull CrashReport addDetailBefore(@NotNull String target, @NotNull String key, @NotNull Object value) {
+		this.details.putBefore(target, key, value);
+		return this;
+	}
+	
+	public @NotNull CrashReport addDetailAfter(@NotNull String target, @NotNull String key, @NotNull Object value) {
+		this.details.putAfter(target, key, value);
 		return this;
 	}
 	//endregion
@@ -114,7 +124,7 @@ public class CrashReport {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("-".repeat(25)).append(" ").append(this.type).append(" ").append("-".repeat(25)).append("\n");
+		builder.append("-".repeat(25)).append(" Crash Report ").append("-".repeat(25)).append("\n");
 		builder.append("Message").append(": ").append(this.message).append("\n");
 		this.details.forEach((key, value) -> builder.append(this.getDetailString(key, value)));
 		if (this.exception != null) {
