@@ -10,7 +10,6 @@ import org.objectweb.asm.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -21,8 +20,8 @@ import java.util.stream.Collectors;
 
 public class ClassContentScanner extends BaseClassVisitor {
 	
-	private final List<RecordComponentData> recordComponents = new ArrayList<>();
-	private final List<FieldData> fields = new ArrayList<>();
+	private final Map<String, RecordComponentData> recordComponents = new HashMap<>();
+	private final Map<String, FieldData> fields = new HashMap<>();
 	private final List<MethodData> methods = new ArrayList<>();
 	
 	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, @NotNull BiConsumer<Type, AnnotationData> action) {
@@ -39,7 +38,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		System.out.println("  Type: " + Type.getType(recordDescriptor));
 		System.out.println("  Signature: " + signature);*/
 		Map<Type, AnnotationData> componentAnnotations = new HashMap<>();
-		this.recordComponents.add(new RecordComponentData(name, Type.getType(recordDescriptor), signature == null ? "" : signature, componentAnnotations));
+		this.recordComponents.put(name, new RecordComponentData(name, Type.getType(recordDescriptor), signature == null ? "" : signature, componentAnnotations));
 		return new BaseRecordComponentVisitor() {
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
@@ -58,7 +57,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		System.out.println("  Signature: " + signature);
 		System.out.println("  Initial value: " + initialValue);*/
 		Map<Type, AnnotationData> fieldAnnotations = new HashMap<>();
-		this.fields.add(new FieldData(name, Type.getType(fieldDescriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
+		this.fields.put(name, new FieldData(name, Type.getType(fieldDescriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
 		return new BaseFieldVisitor() {
 			
 			@Override
