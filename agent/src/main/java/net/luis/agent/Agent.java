@@ -1,8 +1,10 @@
 package net.luis.agent;
 
 import net.luis.asm.transformer.InterfaceInjectionTransformer;
+import net.luis.asm.transformer.MethodImplementationTransformer;
 import net.luis.preload.ClassFileScanner;
 import net.luis.preload.PreloadContext;
+import net.luis.preload.data.ClassContent;
 import org.objectweb.asm.Type;
 
 import java.lang.instrument.Instrumentation;
@@ -21,6 +23,15 @@ public class Agent {
 	public static void premain(String agentArgs, Instrumentation inst) {
 		System.out.println("Agent loaded");
 		//ClassFileScanner.scanClass(Type.getType("Lnet/luis/Main;"));
-		inst.addTransformer(InterfaceInjectionTransformer.create(CONTEXT));
+		ClassContent content = ClassFileScanner.scanClassContent(Type.getType("Lnet/luis/ClassExample;"));
+		content.getFields().forEach(field -> {
+			System.out.println(field.type());
+		});
+		content.methods().forEach(method -> {
+			System.out.println(method.type());
+		});
+		
+		inst.addTransformer(new InterfaceInjectionTransformer(CONTEXT));
+		inst.addTransformer(new MethodImplementationTransformer(CONTEXT));
 	}
 }
