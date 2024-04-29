@@ -66,7 +66,6 @@ abstract class AbstractImplementationTransformer extends BaseClassTransformer {
 			if (this.lookup.containsKey(name)) {
 				Type target = Type.getObjectType(name);
 				ClassContent targetContent = this.context.getClassContent(target);
-				// Expected the target to be an interface
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
 					ClassContent ifaceContent = this.context.getClassContent(iface);
 					for (MethodData method : ifaceContent.methods()) {

@@ -33,6 +33,14 @@ public class Utils {
 		return array == null ? Stream.empty() : Arrays.stream(array).filter(Objects::nonNull);
 	}
 	
+	public static @NotNull String capitalize(@NotNull String string) {
+		return string.isEmpty() ? string : Character.toUpperCase(string.charAt(0)) + string.substring(1);
+	}
+	
+	public static @NotNull String uncapitalize(@NotNull String string) {
+		return string.isEmpty() ? string : Character.toLowerCase(string.charAt(0)) + string.substring(1);
+	}
+	
 	//region Array to list
 	public static @NotNull List<Boolean> asList(boolean @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());

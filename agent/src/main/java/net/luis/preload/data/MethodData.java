@@ -20,4 +20,12 @@ public record MethodData(@NotNull String name, @NotNull Type type, @Nullable Str
 	public @NotNull String getMethodSignature() {
 		return this.name + this.type;
 	}
+	
+	public @NotNull Type getReturnType() {
+		return this.type.getReturnType();
+	}
+	
+	public int getParameterCount() {
+		return this.parameters.size();
+	}
 }
