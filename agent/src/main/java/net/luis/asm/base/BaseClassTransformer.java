@@ -45,5 +45,5 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		return buffer;
 	}
 	
-	protected abstract ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer);
+	protected abstract @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer);
 }

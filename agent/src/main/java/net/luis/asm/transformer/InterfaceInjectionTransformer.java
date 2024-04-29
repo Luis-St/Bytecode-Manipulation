@@ -4,7 +4,7 @@ import net.luis.annotation.InjectInterface;
 import net.luis.asm.ASMUtils;
 import net.luis.asm.base.BaseClassTransformer;
 import net.luis.asm.base.visitor.BaseClassVisitor;
-import net.luis.asm.exception.InterfaceInjectionError;
+import net.luis.asm.report.CrashReport;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.type.ClassType;
 import net.luis.util.Utils;
@@ -32,9 +32,10 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	}
 	
 	@Override
-	@SuppressWarnings("UnqualifiedFieldAccess")
-	protected ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	@SuppressWarnings({ "UnqualifiedFieldAccess", "ReturnOfInnerClass" })
+	protected @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		return new BaseClassVisitor(writer) {
+			private static final String REPORT_CATEGORY = "Interface Injection Error";
 			
 			@Override
 			public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
@@ -42,9 +43,9 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 					ClassType type = ClassType.fromAccess(access);
 					List<String> injects = lookup.getOrDefault(name, new ArrayList<>());
 					if (type == ClassType.ANNOTATION) {
-						throw new InterfaceInjectionError("Cannot inject interfaces (" + injects + ") into an annotation class " + Type.getObjectType(name));
+						throw CrashReport.create("Cannot inject interfaces into an annotation class", REPORT_CATEGORY).addDetail("Interfaces", injects).exception();
 					} else if (type == ClassType.INTERFACE) {
-						throw new InterfaceInjectionError("Cannot inject interfaces (" + injects + ") into an interface class " + Type.getObjectType(name));
+						throw CrashReport.create("Cannot inject interfaces into an interface class", REPORT_CATEGORY).addDetail("Interfaces", injects).exception();
 					}
 					interfaces = Stream.concat(Utils.stream(interfaces), injects.stream()).distinct().toArray(String[]::new);
 				}
