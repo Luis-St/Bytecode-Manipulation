@@ -51,7 +51,7 @@ public record ClassContent(@NotNull Map</*Record Component Name*/String, RecordC
 	public @Unmodifiable @NotNull List<MethodData> getMethods(@NotNull String name) {
 		return this.methods.stream().filter(method -> method.name().equals(name)).toList();
 	}
-
+	
 	public boolean hasMethod(@NotNull String name, @NotNull Type type) {
 		return this.methods.stream().anyMatch(method -> method.name().equals(name) && method.type().equals(type));
 	}

@@ -41,6 +41,7 @@ abstract class AbstractImplementationTransformer extends BaseClassTransformer {
 		
 		private static final String REPORT_CATEGORY = "Method Implementation Error";
 		private static final Set<Type> ANNOTATIONS = Set.of(ImplementationVisitor.IMPLEMENTED, ImplementationVisitor.ACCESSOR, ImplementationVisitor.ASSIGNOR, ImplementationVisitor.INVOKER);
+		
 		protected static final Type IMPLEMENTED = Type.getType("Lnet/luis/annotation/Implemented;");
 		protected static final Type ACCESSOR = Type.getType("Lnet/luis/annotation/Accessor;");
 		protected static final Type ASSIGNOR = Type.getType("Lnet/luis/annotation/Assignor;");

@@ -21,7 +21,7 @@ public class Utils {
 	}
 	
 	@SafeVarargs
-	public static <T> @NotNull Set<T> newSet(T@NotNull ... elements) {
+	public static <T> @NotNull Set<T> newSet(T @NotNull ... elements) {
 		return new HashSet<>(Arrays.asList(elements));
 	}
 	

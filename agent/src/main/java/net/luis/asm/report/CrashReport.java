@@ -73,13 +73,13 @@ public class CrashReport {
 	//endregion
 	
 	//region Builder methods
-	public @NotNull CrashReport setCanContinue(boolean canContinue) {
-		this.canContinue = canContinue;
+	public @NotNull CrashReport setExitCode(int exitCode) {
+		this.exitCode = exitCode;
 		return this;
 	}
 	
-	public @NotNull CrashReport setExitCode(int exitCode) {
-		this.exitCode = exitCode;
+	public @NotNull CrashReport setCanContinue(boolean canContinue) {
+		this.canContinue = canContinue;
 		return this;
 	}
 	
