@@ -1,6 +1,5 @@
 package net.luis.preload;
 
-import net.luis.asm.ASMUtils;
 import net.luis.preload.data.ClassContent;
 import net.luis.preload.data.ClassInfo;
 import org.jetbrains.annotations.NotNull;
@@ -8,7 +7,6 @@ import org.objectweb.asm.Type;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**

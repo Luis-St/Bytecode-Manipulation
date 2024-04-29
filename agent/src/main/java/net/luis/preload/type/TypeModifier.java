@@ -4,7 +4,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.objectweb.asm.Opcodes;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**

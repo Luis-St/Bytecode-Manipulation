@@ -8,7 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 public class ImplementedValidationTransformer extends AbstractImplementationTransformer {
 	

@@ -8,8 +8,6 @@ import org.objectweb.asm.*;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
-import java.util.List;
-import java.util.Map;
 
 /**
  *

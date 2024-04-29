@@ -1,7 +1,5 @@
 package net.luis;
 
-import net.luis.utils.annotation.Ignored;
-
 /**
  *
  * @author Luis-St

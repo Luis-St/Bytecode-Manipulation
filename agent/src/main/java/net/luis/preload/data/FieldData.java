@@ -4,7 +4,8 @@ import net.luis.preload.type.TypeAccess;
 import net.luis.preload.type.TypeModifier;
 import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *

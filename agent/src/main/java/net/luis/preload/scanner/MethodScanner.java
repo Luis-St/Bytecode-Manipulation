@@ -1,11 +1,13 @@
 package net.luis.preload.scanner;
 
 import net.luis.asm.base.visitor.BaseMethodVisitor;
-import net.luis.preload.data.*;
+import net.luis.preload.data.AnnotationData;
+import net.luis.preload.data.ParameterData;
 import net.luis.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.*;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Type;
 
 import java.util.*;
 import java.util.function.BiConsumer;

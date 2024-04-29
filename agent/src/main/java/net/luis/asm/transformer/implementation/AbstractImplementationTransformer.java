@@ -7,8 +7,10 @@ import net.luis.asm.base.visitor.BaseClassVisitor;
 import net.luis.asm.report.CrashReport;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.data.*;
-import net.luis.preload.type.*;
-import org.jetbrains.annotations.*;
+import net.luis.preload.type.TypeAccess;
+import net.luis.preload.type.TypeModifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.util.*;

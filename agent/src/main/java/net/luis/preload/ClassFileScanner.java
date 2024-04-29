@@ -1,6 +1,7 @@
 package net.luis.preload;
 
-import net.luis.preload.data.*;
+import net.luis.preload.data.ClassContent;
+import net.luis.preload.data.ClassInfo;
 import net.luis.preload.scanner.ClassContentScanner;
 import net.luis.preload.scanner.ClassInfoScanner;
 import org.jetbrains.annotations.NotNull;
