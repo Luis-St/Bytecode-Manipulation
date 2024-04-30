@@ -4,3 +4,6 @@
 ### IntelliJ IDEA ###
 /.idea/
 Bytecode-Manipulation.iml
+
+### Project ###
+transformed/
