@@ -16,7 +16,7 @@ public class InvokerImplementationTransformer extends AbstractImplementationTran
 	}
 	
 	@Override
-	protected @NotNull ImplementationVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		return new InvokerVisitor(writer, this.context, this.lookup);
 	}
 	

@@ -18,7 +18,7 @@ public class AccessorImplementationTransformer extends AbstractImplementationTra
 	}
 	
 	@Override
-	protected @NotNull ImplementationVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		return new AccessorVisitor(writer, this.context, this.lookup);
 	}
 	
@@ -52,6 +52,7 @@ public class AccessorImplementationTransformer extends AbstractImplementationTra
 		
 		@Override
 		protected void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
+			System.out.println("Validating Accessor - " + ifaceMethod.name() + " - " + iface.getInternalName());
 			this.baseValidation("@Accessor", iface, ifaceMethod);
 			if (ifaceMethod.getReturnType() == Type.VOID_TYPE) {
 				throw CrashReport.create("Accessor method has void return type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature()).exception();
@@ -77,13 +78,13 @@ public class AccessorImplementationTransformer extends AbstractImplementationTra
 		}
 		
 		private void generateAccessor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
-			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), null, null);
+			/*MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), null, null);
 			method.visitCode();
 			method.visitVarInsn(Opcodes.ALOAD, 0);
 			method.visitFieldInsn(Opcodes.GETFIELD, target.getDescriptor(), targetField.name(), targetField.type().getDescriptor());
 			method.visitInsn(Opcodes.ARETURN);
 			method.visitMaxs(1, 1);
-			method.visitEnd();
+			method.visitEnd();*/
 		}
 	}
 }

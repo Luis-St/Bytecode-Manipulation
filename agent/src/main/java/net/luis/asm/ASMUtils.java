@@ -5,6 +5,8 @@ import net.luis.preload.PreloadContext;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -24,5 +26,15 @@ public class ASMUtils {
 			}
 		});
 		return lookup;
+	}
+	
+	public static void saveClass(@NotNull File file, byte @NotNull [] data) {
+		try {
+			Files.deleteIfExists(file.toPath());
+			Files.createDirectories(file.getParentFile().toPath());
+			Files.write(file.toPath(), data);
+		} catch (Exception e) {
+			System.err.println("Failed to save class file: " + file.getName());
+		}
 	}
 }

@@ -33,7 +33,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	@Override
 	@SuppressWarnings({ "UnqualifiedFieldAccess", "ReturnOfInnerClass" })
-	protected @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	public @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		return new BaseClassVisitor(writer) {
 			private static final String REPORT_CATEGORY = "Interface Injection Error";
 			
@@ -48,6 +48,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 						throw CrashReport.create("Cannot inject interfaces into an interface class", REPORT_CATEGORY).addDetail("Interfaces", injects).exception();
 					}
 					interfaces = Stream.concat(Utils.stream(interfaces), injects.stream()).distinct().toArray(String[]::new);
+					modified = true;
 				}
 				super.visit(version, access, name, signature, superClass, interfaces);
 			}

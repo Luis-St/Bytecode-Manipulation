@@ -20,20 +20,24 @@ public class Agent {
 	private static final PreloadContext CONTEXT = new PreloadContext();
 	
 	public static void premain(String agentArgs, Instrumentation inst) {
-		System.out.println("Agent loaded");
-		//ClassFileScanner.scanClass(Type.getType("Lnet/luis/Main;"));
-		ClassContent content = ClassFileScanner.scanClassContent(Type.getType("Lnet/luis/ClassExample;"));
-		content.getFields().forEach(field -> {
-			System.out.println(field.type());
-		});
-		content.methods().forEach(method -> {
-			System.out.println(method.type());
-		});
-		
-		inst.addTransformer(new InterfaceInjectionTransformer(CONTEXT));
-		inst.addTransformer(new ImplementedValidationTransformer(CONTEXT));
-		inst.addTransformer(new AccessorImplementationTransformer(CONTEXT));
-		inst.addTransformer(new AssignorImplementationTransformer(CONTEXT));
-		inst.addTransformer(new InvokerImplementationTransformer(CONTEXT));
+		try {
+			System.out.println("Agent loaded");
+			//ClassFileScanner.scanClass(Type.getType("Lnet/luis/Main;"));
+			ClassContent content = ClassFileScanner.scanClassContent(Type.getType("Lnet/luis/ClassExample;"));
+			content.getFields().forEach(field -> {
+				System.out.println(field.type());
+			});
+			content.methods().forEach(method -> {
+				System.out.println(method.type());
+			});
+			
+			inst.addTransformer(new InterfaceInjectionTransformer(CONTEXT));
+			inst.addTransformer(new ImplementedValidationTransformer(CONTEXT));
+			inst.addTransformer(new AccessorImplementationTransformer(CONTEXT));
+			inst.addTransformer(new AssignorImplementationTransformer(CONTEXT));
+			inst.addTransformer(new InvokerImplementationTransformer(CONTEXT));
+		} catch (Exception e) {
+			System.out.println("Error: " + e.getMessage());
+		}
 	}
 }

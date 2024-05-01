@@ -34,7 +34,7 @@ abstract class AbstractImplementationTransformer extends BaseClassTransformer {
 	}
 	
 	@Override
-	protected abstract @NotNull AbstractImplementationTransformer.ImplementationVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer);
+	protected abstract @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer);
 	
 	@SuppressWarnings("ProtectedInnerClass")
 	protected abstract static class ImplementationVisitor extends BaseClassVisitor {

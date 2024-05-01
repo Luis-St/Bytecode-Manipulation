@@ -18,7 +18,7 @@ public class ImplementedValidationTransformer extends AbstractImplementationTran
 	}
 	
 	@Override
-	protected @NotNull ImplementationVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		return new ImplementedVisitor(writer, this.context, this.lookup);
 	}
 	
@@ -35,6 +35,7 @@ public class ImplementedValidationTransformer extends AbstractImplementationTran
 		
 		@Override
 		protected void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
+			System.out.println("Validating Implemented - " + ifaceMethod.name() + " - " + iface.getInternalName());
 			this.baseValidation("@Implemented", iface, ifaceMethod);
 			if (!targetContent.hasMethod(ifaceMethod.name(), ifaceMethod.type())) {
 				throw createReport("Method annotated with @Implemented must be implemented in target class", iface, ifaceMethod.getMethodSignature())
