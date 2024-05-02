@@ -1,6 +1,7 @@
 package net.luis.agent;
 
 import net.luis.asm.transformer.InterfaceInjectionTransformer;
+import net.luis.asm.transformer.implementation.ImplementedValidationTransformer;
 import net.luis.preload.ClassFileScanner;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.data.ClassContent;
@@ -27,5 +28,6 @@ public class Agent {
 		content.methods().forEach(method -> System.out.println(method.parameters()));
 		
 		inst.addTransformer(new InterfaceInjectionTransformer(CONTEXT));
+		inst.addTransformer(new ImplementedValidationTransformer(CONTEXT));
 	}
 }

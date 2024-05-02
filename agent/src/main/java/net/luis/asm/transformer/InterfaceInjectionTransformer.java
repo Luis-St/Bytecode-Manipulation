@@ -15,6 +15,8 @@ import org.objectweb.asm.*;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static net.luis.asm.Types.*;
+
 /**
  *
  * @author Luis-St
@@ -22,8 +24,6 @@ import java.util.stream.Stream;
  */
 
 public class InterfaceInjectionTransformer extends BaseClassTransformer {
-	
-	private static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
 	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 	
