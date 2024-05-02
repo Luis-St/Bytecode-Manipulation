@@ -1,0 +1,170 @@
+package net.luis.asm.transformer.implementation;
+
+import net.luis.asm.ASMUtils;
+import net.luis.asm.base.BaseClassTransformer;
+import net.luis.asm.base.visitor.BaseClassVisitor;
+import net.luis.asm.report.CrashReport;
+import net.luis.preload.PreloadContext;
+import net.luis.preload.data.*;
+import net.luis.preload.type.TypeAccess;
+import net.luis.preload.type.TypeModifier;
+import net.luis.util.Utils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.*;
+
+import java.util.*;
+
+import static net.luis.asm.Types.*;
+
+public class AccessorImplementationTransformer extends BaseClassTransformer {
+	
+	private final PreloadContext context;
+	
+	public AccessorImplementationTransformer(@NotNull PreloadContext context) {
+		this.context = context;
+	}
+	
+	@Override
+	protected @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+		return new AccessorImplementationVisitor(writer, this.context, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE), () -> this.modified = true);
+	}
+	
+	private static class AccessorImplementationVisitor extends BaseClassVisitor {
+		
+		private static final String REPORT_CATEGORY = "Accessor Implementation Error";
+		
+		private final PreloadContext context;
+		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
+		private final Runnable markedModified;
+		
+		private AccessorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup, Runnable markedModified) {
+			super(writer);
+			this.context = context;
+			this.lookup = lookup;
+			this.markedModified = markedModified;
+		}
+		
+		private static @NotNull CrashReport createReport(@NotNull String message, @NotNull Type iface, @NotNull String methodSignature) {
+			return CrashReport.create(message, REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Interface Method", methodSignature);
+		}
+		
+		@Override
+		@SuppressWarnings("DuplicatedCode")
+		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
+			super.visit(version, access, name, signature, superClass, interfaces);
+			if (this.lookup.containsKey(name)) {
+				Type target = Type.getObjectType(name);
+				ClassContent targetContent = this.context.getClassContent(target);
+				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
+					ClassContent ifaceContent = this.context.getClassContent(iface);
+					for (MethodData method : ifaceContent.methods()) {
+						if (method.isAnnotatedWith(ACCESSOR)) {
+							this.validateMethod(iface, method, target, targetContent);
+						} else if (method.access() == TypeAccess.PUBLIC && method.is(TypeModifier.ABSTRACT)) {
+							if (method.getAnnotations().isEmpty()) {
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
+							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(ANNOTATIONS::contains)) {
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		private @NotNull String getAccessorName(@NotNull MethodData ifaceMethod) {
+			AnnotationData annotation = ifaceMethod.getAnnotation(ACCESSOR);
+			if (annotation.has("target", String.class)) {
+				return annotation.get("target");
+			}
+			String methodName = ifaceMethod.name();
+			if (methodName.startsWith("get")) {
+				return Utils.uncapitalize(methodName.substring(3));
+			} else if (methodName.startsWith("access")) {
+				return Utils.uncapitalize(methodName.substring(6));
+			}
+			return methodName;
+		}
+		
+		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
+			//System.out.println("Validating Accessor - " + ifaceMethod.name() + " - " + iface.getInternalName());
+			String signature = ifaceMethod.getMethodSignature();
+			//region Base validation
+			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
+				throw createReport("Method annotated with @Accessor must be public", iface, signature).exception();
+			}
+			if (ifaceMethod.is(TypeModifier.STATIC)) {
+				throw createReport("Method annotated with @Accessor must not be static", iface, signature).exception();
+			}
+			if (!ifaceMethod.is(TypeModifier.ABSTRACT)) {
+				throw createReport("Method annotated with @Accessor must not be default implemented", iface, signature).exception();
+			}
+			//endregion
+			if (Type.VOID_TYPE.equals(ifaceMethod.getReturnType())) {
+				throw CrashReport.create("Accessor method has void return type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature()).exception();
+			}
+			if (ifaceMethod.getParameterCount() > 0) {
+				throw CrashReport.create("Accessor method has parameters", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature()).exception();
+			}
+			if (ifaceMethod.getExceptionCount() > 0) {
+				throw CrashReport.create("Accessor method has exceptions", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature()).exception();
+			}
+			String accessorTarget = this.getAccessorName(ifaceMethod);
+			if (!targetContent.hasField(accessorTarget)) {
+				throw CrashReport.create("Accessor target field not found", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature())
+					.addDetail("Expected Accessor Target", accessorTarget).exception();
+			}
+			FieldData targetField = targetContent.getField(accessorTarget);
+			if (targetField.access() == TypeAccess.PUBLIC) {
+				throw CrashReport.create("Accessor target field is public", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature())
+					.addDetail("Accessor Target", accessorTarget).exception();
+			}
+			if (!Objects.equals(targetField.type(), ifaceMethod.getReturnType())) {
+				throw CrashReport.create("Accessor target field type mismatch", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature())
+					.addDetail("Accessor Target", accessorTarget).addDetail("Expected Type", targetField.type()).addDetail("Actual Type", ifaceMethod.getReturnType()).exception();
+			}
+			String fieldSignature = targetField.signature();
+			if (fieldSignature != null) {
+				String accessorSignature = this.getSignature(ifaceMethod);
+				if (!Objects.equals(fieldSignature, accessorSignature)) {
+					throw CrashReport.create("Accessor target field signature mismatch", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature())
+						.addDetail("Accessor Target", accessorTarget).addDetail("Expected Signature", fieldSignature).addDetail("Actual Signature", accessorSignature).exception();
+				}
+			}
+			this.generateAccessor(ifaceMethod, target, targetField);
+		}
+		
+		private @NotNull String getSignature(@NotNull MethodData ifaceMethod) {
+			String signature = ifaceMethod.signature();
+			if (signature == null) {
+				return "";
+			}
+			int index = signature.indexOf(')');
+			return signature.substring(index + 1);
+		}
+		
+		private void generateAccessor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
+			/*System.out.println("\nGenerating Accessor");
+			System.out.println();
+			System.out.println("  " + ifaceMethod.name());
+			System.out.println("  " + ifaceMethod.type().getDescriptor());
+			System.out.println("  " + ifaceMethod.signature());*/
+			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			method.visitCode();
+			method.visitVarInsn(Opcodes.ALOAD, 0);
+			/*System.out.println();
+			System.out.println("  " + target.getInternalName());
+			System.out.println("  " + targetField.name());
+			System.out.println("  " + targetField.type().getDescriptor());*/
+			method.visitFieldInsn(Opcodes.GETFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
+			method.visitInsn(Opcodes.ARETURN);
+			/*System.out.println();
+			System.out.println("  " + target.getDescriptor());*/
+			method.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
+			method.visitMaxs(1, 1);
+			method.visitEnd();
+			this.markedModified.run();
+		}
+	}
+}

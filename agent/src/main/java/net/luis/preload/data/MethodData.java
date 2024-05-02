@@ -28,4 +28,8 @@ public record MethodData(@NotNull String name, @NotNull Type type, @Nullable Str
 	public int getParameterCount() {
 		return this.parameters.size();
 	}
+	
+	public int getExceptionCount() {
+		return this.exceptions.size();
+	}
 }

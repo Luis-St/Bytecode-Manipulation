@@ -30,6 +30,7 @@ public final class Main {
 			System.out.println("LoggerConfiguration is an instance of MyInterface!");
 			System.out.println(my.build().getName());
 			System.out.println(my.getLoggers());
+			System.out.println(my.getTypes());
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
 		}
