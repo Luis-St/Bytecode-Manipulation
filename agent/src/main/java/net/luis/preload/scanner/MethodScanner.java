@@ -24,7 +24,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	private final Type[] parameterTypes;
 	private final BiConsumer<Type, AnnotationData> annotationConsumer;
 	private final Consumer<ParameterData> parameterConsumer;
-	private final List<Map.Entry<String, Set<TypeModifier>>> parameters = new ArrayList<>();
+	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
 	private final Map<Integer, Map<Type, AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
@@ -47,10 +47,9 @@ public class MethodScanner extends BaseMethodVisitor {
 		if (name == null) {
 			name = "arg" + this.parameterIndex;
 		}
-		this.parameterIndex++;
 		/*System.out.println("Parameter name: " + name);
 		System.out.println("  Modifier: " + TypeModifier.fromParameterAccess(access));*/
-		this.parameters.add(Map.entry(name, TypeModifier.fromParameterAccess(access)));
+		this.parameters.put(this.parameterIndex++, Map.entry(name, TypeModifier.fromParameterAccess(access)));
 	}
 	
 	@Override
@@ -65,9 +64,9 @@ public class MethodScanner extends BaseMethodVisitor {
 	
 	@Override
 	public void visitEnd() {
-		for (int i = 0; i < this.parameters.size(); i++) {
-			Map.Entry<String, Set<TypeModifier>> entry = this.parameters.get(i);
-			Map<Type, AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, new HashMap<>());
+		for (int i = this.parameterIndex; i < this.parameterTypes.length; i++) {
+			Map.Entry<String, Set<TypeModifier>> entry = this.parameters.getOrDefault(i, Map.entry("arg" + i, Collections.emptySet()));
+			Map<Type, AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, Map.of());
 			this.parameterConsumer.accept(new ParameterData(entry.getKey(), this.parameterTypes[i], i, entry.getValue(), annotations));
 		}
 	}
