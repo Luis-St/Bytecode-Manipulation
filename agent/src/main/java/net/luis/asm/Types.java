@@ -20,5 +20,7 @@ public interface Types {
 	Type ASSIGNOR = Type.getType(Assignor.class);
 	Type INVOKER = Type.getType(Invoker.class);
 	
-	Set<Type> ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER);
+	Type GENERATED = Type.getType(Generated.class);
+	
+	Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER);
 }

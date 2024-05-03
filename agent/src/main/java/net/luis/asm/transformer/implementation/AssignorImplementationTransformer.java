@@ -17,8 +17,6 @@ import java.util.*;
 
 import static net.luis.asm.Types.*;
 
-import static net.luis.asm.Types.*;
-
 public class AssignorImplementationTransformer extends BaseClassTransformer {
 	
 	private final PreloadContext context;
@@ -67,7 +65,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 						} else if (method.access() == TypeAccess.PUBLIC && method.is(TypeModifier.ABSTRACT)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
-							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(ANNOTATIONS::contains)) {
+							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
 								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
 							}
 						}
