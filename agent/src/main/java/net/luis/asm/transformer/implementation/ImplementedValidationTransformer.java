@@ -86,12 +86,12 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 			}
 			//endregion
 			if (!targetContent.hasMethod(ifaceMethod.name(), ifaceMethod.type())) {
-				throw createReport("Method annotated with @Implemented must be implemented in target class", iface, ifaceMethod.getMethodSignature())
+				throw createReport("Method annotated with @Implemented must be implemented in target class", iface, signature)
 					.addDetailBefore("Interface", "Target Class", target).exception();
 			}
 			MethodData targetMethod = targetContent.getMethod(ifaceMethod.name(), ifaceMethod.type());
 			if (targetMethod.access() != TypeAccess.PUBLIC) {
-				throw createReport("Method annotated with @Implemented must be public in target class", iface, ifaceMethod.getMethodSignature())
+				throw createReport("Method annotated with @Implemented must be public in target class", iface, signature)
 					.addDetailBefore("Interface", "Target Class", target)
 					.addDetailBefore("Interface", "Target Method", targetMethod.getMethodSignature()).exception();
 			}

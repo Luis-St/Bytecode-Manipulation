@@ -92,43 +92,49 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
-				throw createReport("Method annotated with @Accessor must be public", iface, signature).exception();
+				throw CrashReport.create("Method annotated with @Accessor must be public", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			if (ifaceMethod.is(TypeModifier.STATIC)) {
-				throw createReport("Method annotated with @Accessor must not be static", iface, signature).exception();
+				throw CrashReport.create("Method annotated with @Accessor must not be static", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			if (!ifaceMethod.is(TypeModifier.ABSTRACT)) {
-				throw createReport("Method annotated with @Accessor must not be default implemented", iface, signature).exception();
+				throw CrashReport.create("Method annotated with @Accessor must not be default implemented", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			//endregion
 			if (Type.VOID_TYPE.equals(ifaceMethod.getReturnType())) {
-				throw CrashReport.create("Accessor method has void return type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature()).exception();
+				throw CrashReport.create("Method annotated with @Accessor has void return type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			if (ifaceMethod.getParameterCount() > 0) {
-				throw CrashReport.create("Accessor method has parameters", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature()).exception();
+				throw CrashReport.create("Method annotated with @Accessor has parameters", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			if (ifaceMethod.getExceptionCount() > 0) {
-				throw CrashReport.create("Accessor method has exceptions", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature()).exception();
+				throw CrashReport.create("Method annotated with @Accessor must not throw exceptions", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
+					.addDetail("Exceptions", ifaceMethod.exceptions()).exception();
+			}
+			MethodData existingMethod = targetContent.getMethod(ifaceMethod.name(), ifaceMethod.type());
+			if (existingMethod != null) {
+				throw CrashReport.create("Target class of accessor already has method with same signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
+					.addDetail("Existing Method", existingMethod.getMethodSignature()).exception();
 			}
 			String accessorTarget = this.getAccessorName(ifaceMethod);
 			if (!targetContent.hasField(accessorTarget)) {
-				throw CrashReport.create("Accessor target field not found", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature())
+				throw CrashReport.create("Target field for accessor was not found in target class", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 					.addDetail("Expected Accessor Target", accessorTarget).exception();
 			}
 			FieldData targetField = targetContent.getField(accessorTarget);
 			if (targetField.access() == TypeAccess.PUBLIC) {
-				throw CrashReport.create("Accessor target field is public", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature())
+				throw CrashReport.create("Target field for accessor is public, no accessor required", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 					.addDetail("Accessor Target", accessorTarget).exception();
 			}
 			if (!Objects.equals(targetField.type(), ifaceMethod.getReturnType())) {
-				throw CrashReport.create("Accessor target field type mismatch", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature())
+				throw CrashReport.create("Accessor return type does not match target field type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 					.addDetail("Accessor Target", accessorTarget).addDetail("Expected Type", targetField.type()).addDetail("Actual Type", ifaceMethod.getReturnType()).exception();
 			}
 			String fieldSignature = targetField.signature();
 			if (fieldSignature != null) {
 				String accessorSignature = this.getSignature(ifaceMethod);
 				if (!Objects.equals(fieldSignature, accessorSignature)) {
-					throw CrashReport.create("Accessor target field signature mismatch", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", ifaceMethod.getMethodSignature())
+					throw CrashReport.create("Accessor signature does not match target field signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 						.addDetail("Accessor Target", accessorTarget).addDetail("Expected Signature", fieldSignature).addDetail("Actual Signature", accessorSignature).exception();
 				}
 			}
