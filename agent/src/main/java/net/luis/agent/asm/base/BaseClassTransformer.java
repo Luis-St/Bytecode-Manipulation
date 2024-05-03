@@ -29,16 +29,29 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 	
 	protected boolean modified;
 	
+	protected boolean shouldIgnore(@NotNull Type type) {
+		for (String ignored : IGNORED_CLASSES) {
+			if (type.getInternalName().startsWith(ignored)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String className, @Nullable Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
+		Type type = Type.getObjectType(className);
+		if (this.shouldIgnore(type)) {
+			return null;
+		}
 		ClassReader reader = new ClassReader(buffer);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
-		ClassVisitor visitor = this.visit(className, clazz, reader, writer);
+		ClassVisitor visitor = this.visit(type, clazz, reader, writer);
 		try {
 			reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 			byte[] bytes = writer.toByteArray();
 			if (this.modified) {
-				System.out.println("Transformed Class: " + Type.getObjectType(className));
+				System.out.println("Transformed Class: " + type);
 				ASMUtils.saveClass(new File("transformed/" + className + ".class"), bytes);
 				this.modified = false;
 			}
@@ -49,9 +62,9 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 				if (throwable instanceof ReportedException ex) {
 					report = ex.getReport();
 				} else {
-					report = CrashReport.create("Error occurred while transforming class '" + Type.getObjectType(className) + "'", throwable);
+					report = CrashReport.create("Error occurred while transforming class '" + type + "'", throwable);
 				}
-				report.addDetailFirst("Transformed Class", Type.getObjectType(className));
+				report.addDetailFirst("Transformed Class", type);
 				report.addDetailFirst("Class Transformer", this.getClass().getSimpleName());
 				report.addDetailFirst("Class Loader", loader.getName());
 				report.print();
@@ -66,5 +79,5 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		return null;
 	}
 	
-	protected abstract @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer);
+	protected abstract @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer);
 }

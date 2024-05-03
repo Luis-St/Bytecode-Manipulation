@@ -26,7 +26,7 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 	}
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		return new ImplementedValidationVisitor(writer, this.context, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	

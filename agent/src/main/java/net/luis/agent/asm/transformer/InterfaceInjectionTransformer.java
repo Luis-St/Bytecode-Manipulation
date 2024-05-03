@@ -32,18 +32,18 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	@Override
 	@SuppressWarnings("UnqualifiedFieldAccess")
-	public @NotNull ClassVisitor visit(@NotNull String className, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	public @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		return new BaseClassVisitor(writer) {
 			private static final String REPORT_CATEGORY = "Interface Injection Error";
 			
 			@Override
 			public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 				if (lookup.containsKey(name)) {
-					ClassType type = ClassType.fromAccess(access);
+					ClassType classType = ClassType.fromAccess(access);
 					List<String> injects = lookup.getOrDefault(name, new ArrayList<>());
-					if (type == ClassType.ANNOTATION) {
+					if (classType == ClassType.ANNOTATION) {
 						throw CrashReport.create("Cannot inject interfaces into an annotation class", REPORT_CATEGORY).addDetail("Interfaces", injects).exception();
-					} else if (type == ClassType.INTERFACE) {
+					} else if (classType == ClassType.INTERFACE) {
 						throw CrashReport.create("Cannot inject interfaces into an interface class", REPORT_CATEGORY).addDetail("Interfaces", injects).exception();
 					}
 					interfaces = Stream.concat(Utils.stream(interfaces), injects.stream()).distinct().toArray(String[]::new);
