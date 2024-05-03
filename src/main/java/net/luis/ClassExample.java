@@ -1,7 +1,6 @@
 package net.luis;
 
-import java.util.AbstractList;
-import java.util.List;
+import java.util.*;
 
 /**
  *
@@ -34,6 +33,22 @@ public abstract class ClassExample extends AbstractList<String> implements List<
 	
 	public void setName(String name) throws IllegalArgumentException {
 		this.name = name;
+	}
+	
+	public void someMethod(int index, String value) {
+		this.someInternalMethod(index, value, false, new ArrayList<>());
+	}
+	
+	public void someMethod(int index, String value, boolean flag) {
+		this.someInternalMethod(index, value, flag, new ArrayList<>());
+	}
+	
+	public void someMethod(int index, String value, boolean flag, List<String> values) {
+		this.someInternalMethod(index, value, flag, values);
+	}
+	
+	private void someInternalMethod(int index, String value, boolean flag, List<String> values) {
+		System.out.println("Some internal method");
 	}
 	
 	protected abstract void printName();

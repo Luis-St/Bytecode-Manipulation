@@ -2,6 +2,7 @@ package net.luis;
 
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
+import org.apache.logging.log4j.Level;
 
 import java.util.List;
 import java.util.Set;
@@ -26,8 +27,6 @@ import java.util.Set;
 public final class Main {
 	
 	public static void main(String[] args) {
-		System.out.println("Hello World!");
-		
 		LoggerConfiguration logger = new LoggerConfiguration("*");
 		
 		if (logger instanceof MyInterface my) {
@@ -39,6 +38,8 @@ public final class Main {
 			System.out.println(types);
 			my.setLoggers(loggers);
 			my.setTypes(types);
+			System.out.println(my.invokeGetPattern(LoggingType.FILE, Level.ERROR));
+			System.out.println(my.getLoggingPattern(LoggingType.FILE, Level.ERROR));
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
 		}

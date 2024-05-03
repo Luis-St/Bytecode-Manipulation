@@ -83,27 +83,27 @@ public class CrashReport {
 		return this;
 	}
 	
-	public @NotNull CrashReport addDetail(@NotNull String key, @NotNull Object value) {
+	public @NotNull CrashReport addDetail(@NotNull String key, @Nullable Object value) {
 		this.details.put(key, value);
 		return this;
 	}
 	
-	public @NotNull CrashReport addDetailFirst(@NotNull String key, @NotNull Object value) {
+	public @NotNull CrashReport addDetailFirst(@NotNull String key, @Nullable Object value) {
 		this.details.putFirst(key, value);
 		return this;
 	}
 	
-	public @NotNull CrashReport addDetailLast(@NotNull String key, @NotNull Object value) {
+	public @NotNull CrashReport addDetailLast(@NotNull String key, @Nullable Object value) {
 		this.details.putLast(key, value);
 		return this;
 	}
 	
-	public @NotNull CrashReport addDetailBefore(@NotNull String target, @NotNull String key, @NotNull Object value) {
+	public @NotNull CrashReport addDetailBefore(@NotNull String target, @NotNull String key, @Nullable Object value) {
 		this.details.putBefore(target, key, value);
 		return this;
 	}
 	
-	public @NotNull CrashReport addDetailAfter(@NotNull String target, @NotNull String key, @NotNull Object value) {
+	public @NotNull CrashReport addDetailAfter(@NotNull String target, @NotNull String key, @Nullable Object value) {
 		this.details.putAfter(target, key, value);
 		return this;
 	}
