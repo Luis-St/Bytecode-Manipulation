@@ -4,7 +4,7 @@ import net.luis.preload.ClassDataPredicate;
 import net.luis.preload.PreloadContext;
 import net.luis.preload.data.MethodData;
 import org.jetbrains.annotations.NotNull;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
@@ -12,6 +12,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static net.luis.asm.Types.*;
 
 /**
  *
@@ -59,5 +61,38 @@ public class ASMUtils {
 		int start = signature.indexOf('(');
 		int end = signature.indexOf(')');
 		return signature.substring(start + 1, end);
+	}
+	
+	public static void addMethodAnnotations(@NotNull MethodVisitor methodVisitor, @NotNull MethodData method) {
+		addMethodAnnotations(methodVisitor, method, true);
+	}
+	
+	public static void addMethodAnnotations(@NotNull MethodVisitor methodVisitor, @NotNull MethodData method, boolean generated) {
+		if (generated) {
+			AnnotationVisitor annotationVisitor = methodVisitor.visitAnnotation(GENERATED.getDescriptor(), true);
+			if (annotationVisitor != null) {
+				annotationVisitor.visitEnd();
+			}
+		}
+		method.getAnnotations().forEach(annotation -> {
+			if (annotation.type().equals(GENERATED) || IMPLEMENTATION_ANNOTATIONS.contains(annotation.type())) {
+				return;
+			}
+			AnnotationVisitor annotationVisitor = methodVisitor.visitAnnotation(annotation.type().getDescriptor(), true);
+			if (annotationVisitor != null) {
+				annotationVisitor.visitEnd();
+			}
+		});
+	}
+	
+	public static void addParameterAnnotations(@NotNull MethodVisitor methodVisitor, @NotNull MethodData method) {
+		method.parameters().forEach(parameter -> {
+			parameter.getAnnotations().forEach(annotation -> {
+				AnnotationVisitor annotationVisitor = methodVisitor.visitParameterAnnotation(parameter.index(), annotation.type().getDescriptor(), true);
+				if (annotationVisitor != null) {
+					annotationVisitor.visitEnd();
+				}
+			});
+		});
 	}
 }

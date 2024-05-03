@@ -148,6 +148,8 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 			System.out.println("  " + ifaceMethod.type().getDescriptor());
 			System.out.println("  " + ifaceMethod.signature());*/
 			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			ASMUtils.addMethodAnnotations(method, ifaceMethod);
+			ASMUtils.addParameterAnnotations(method, ifaceMethod);
 			method.visitCode();
 			method.visitVarInsn(Opcodes.ALOAD, 0);
 			/*System.out.println();

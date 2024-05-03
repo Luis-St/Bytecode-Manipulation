@@ -89,7 +89,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		}
 		
 		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
-			System.out.println("Validating Assignor - " + ifaceMethod.name() + " - " + iface.getInternalName());
+			//System.out.println("Validating Assignor - " + ifaceMethod.name() + " - " + iface.getInternalName());
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
@@ -153,6 +153,8 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 			System.out.println("  " + ifaceMethod.type().getDescriptor());
 			System.out.println("  " + ifaceMethod.signature());*/
 			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			ASMUtils.addMethodAnnotations(method, ifaceMethod);
+			ASMUtils.addParameterAnnotations(method, ifaceMethod);
 			method.visitCode();
 			method.visitVarInsn(Opcodes.ALOAD, 0);
 			method.visitVarInsn(Opcodes.ALOAD, 1);
