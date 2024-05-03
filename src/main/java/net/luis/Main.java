@@ -17,11 +17,11 @@ import java.util.Set;
 	testInt = -1,
 	testString = "Hello World!",
 	testBoolean = true,
-	testDouble = 0.0,
+	testDouble = 0.5,
 	testClass = Main.class,
 	testIntArray = { 1, 2, 3 },
 	testStringArray = { "Hello", "World", "!" },
-	testClassArray = { Main.class },
+	testClassArray = Main.class,
 	testAnnotation = @AnnotationExample("test")
 )
 public final class Main {
@@ -38,7 +38,7 @@ public final class Main {
 			System.out.println(types);
 			my.setLoggers(loggers);
 			my.setTypes(types);
-			System.out.println(my.invokeGetPattern(LoggingType.FILE, Level.ERROR));
+			System.out.println(my.invokeGetPattern(LoggingType.CONSOLE, Level.TRACE));
 			System.out.println(my.getLoggingPattern(LoggingType.FILE, Level.ERROR));
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");

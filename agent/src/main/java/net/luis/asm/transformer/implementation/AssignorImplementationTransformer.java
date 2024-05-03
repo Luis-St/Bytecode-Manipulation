@@ -156,7 +156,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 			method.visitFieldInsn(Opcodes.PUTFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
 			method.visitInsn(Opcodes.RETURN);
 			method.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
-			method.visitLocalVariable(targetField.name(), targetField.type().getDescriptor(), null, new Label(), new Label(), 1);
+			method.visitLocalVariable("arg0", targetField.type().getDescriptor(), null, new Label(), new Label(), 1);
 			method.visitMaxs(2, 2);
 			method.visitEnd();
 			this.markedModified.run();

@@ -31,6 +31,6 @@ public interface MyInterface {
 	@Invoker // Invokes private method
 	@NotNull String invokeGetPattern(@NotNull LoggingType type, @NotNull Level level);
 	
-	@Invoker(target = "getPattern") // Invokes private method (target required, because method name does not match)
+	@Invoker(target = "getPattern(LoggingType, Level)") // Invokes private method (target required, because method name does not match)
 	@NotNull String getLoggingPattern(@NotNull LoggingType type, @NotNull Level level);
 }

@@ -35,20 +35,26 @@ public abstract class ClassExample extends AbstractList<String> implements List<
 		this.name = name;
 	}
 	
-	public void someMethod(int index, String value) {
-		this.someInternalMethod(index, value, false, new ArrayList<>());
+	public String someMethod(int index, String value) {
+		return this.someInternalMethod(index, value, false, new ArrayList<>());
 	}
 	
-	public void someMethod(int index, String value, boolean flag) {
-		this.someInternalMethod(index, value, flag, new ArrayList<>());
+	public String someMethod(int index, String value, boolean flag) {
+		return this.someInternalMethod(index, value, flag, new ArrayList<>());
 	}
 	
-	public void someMethod(int index, String value, boolean flag, List<String> values) {
-		this.someInternalMethod(index, value, flag, values);
+	public String someMethod(int index, String value, boolean flag, String[] values) {
+		return this.someInternalMethod(index, value, flag, Arrays.asList(values));
 	}
 	
-	private void someInternalMethod(int index, String value, boolean flag, List<String> values) {
+	public String someMethod(int index, String value, boolean flag, List<String> values) {
+		return this.someInternalMethod(index, value, flag, values);
+	}
+	
+	private String someInternalMethod(int index, String value, boolean flag, List<String> values) {
+		Objects.requireNonNull(value, "Value cannot be null");
 		System.out.println("Some internal method");
+		return "";
 	}
 	
 	protected abstract void printName();

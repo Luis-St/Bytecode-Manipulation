@@ -29,5 +29,6 @@ public class Agent {
 		inst.addTransformer(new ImplementedValidationTransformer(CONTEXT));
 		inst.addTransformer(new AccessorImplementationTransformer(CONTEXT));
 		inst.addTransformer(new AssignorImplementationTransformer(CONTEXT));
+		inst.addTransformer(new InvokerImplementationTransformer(CONTEXT));
 	}
 }

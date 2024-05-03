@@ -1,6 +1,5 @@
 package net.luis.asm.transformer;
 
-import net.luis.annotation.InjectInterface;
 import net.luis.asm.ASMUtils;
 import net.luis.asm.base.BaseClassTransformer;
 import net.luis.asm.base.visitor.BaseClassVisitor;
