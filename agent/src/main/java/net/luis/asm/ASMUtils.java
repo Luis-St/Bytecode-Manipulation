@@ -2,12 +2,16 @@ package net.luis.asm;
 
 import net.luis.preload.ClassDataPredicate;
 import net.luis.preload.PreloadContext;
+import net.luis.preload.data.MethodData;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.signature.SignatureReader;
+import org.objectweb.asm.signature.SignatureVisitor;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -36,5 +40,24 @@ public class ASMUtils {
 		} catch (Exception e) {
 			System.err.println("Failed to save class file: " + file.getName());
 		}
+	}
+	
+	public static  @NotNull String getReturnTypeSignature(@NotNull MethodData method) {
+		String signature = method.signature();
+		if (signature == null || signature.isEmpty()) {
+			return "";
+		}
+		int index = signature.indexOf(')');
+		return signature.substring(index + 1);
+	}
+	
+	public static @NotNull String getParameterTypesSignature(@NotNull MethodData method) {
+		String signature = method.signature();
+		if (signature == null || signature.isEmpty()) {
+			return "";
+		}
+		int start = signature.indexOf('(');
+		int end = signature.indexOf(')');
+		return signature.substring(start + 1, end);
 	}
 }

@@ -1,8 +1,7 @@
 package net.luis.agent;
 
 import net.luis.asm.transformer.InterfaceInjectionTransformer;
-import net.luis.asm.transformer.implementation.AccessorImplementationTransformer;
-import net.luis.asm.transformer.implementation.ImplementedValidationTransformer;
+import net.luis.asm.transformer.implementation.*;
 import net.luis.preload.PreloadContext;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,5 +28,6 @@ public class Agent {
 		inst.addTransformer(new InterfaceInjectionTransformer(CONTEXT));
 		inst.addTransformer(new ImplementedValidationTransformer(CONTEXT));
 		inst.addTransformer(new AccessorImplementationTransformer(CONTEXT));
+		inst.addTransformer(new AssignorImplementationTransformer(CONTEXT));
 	}
 }

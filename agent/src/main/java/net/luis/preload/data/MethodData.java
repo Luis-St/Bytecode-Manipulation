@@ -25,6 +25,10 @@ public record MethodData(@NotNull String name, @NotNull Type type, @Nullable Str
 		return this.type.getReturnType();
 	}
 	
+	public @NotNull Type getParameterType(int index) {
+		return this.parameters.get(index).type();
+	}
+	
 	public int getParameterCount() {
 		return this.parameters.size();
 	}

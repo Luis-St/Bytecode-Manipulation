@@ -1,6 +1,10 @@
 package net.luis;
 
 import net.luis.utils.logging.LoggerConfiguration;
+import net.luis.utils.logging.LoggingType;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -29,8 +33,12 @@ public final class Main {
 		if (logger instanceof MyInterface my) {
 			System.out.println("LoggerConfiguration is an instance of MyInterface!");
 			System.out.println(my.build().getName());
-			System.out.println(my.getLoggers());
-			System.out.println(my.getTypes());
+			List<String> loggers = my.getLoggers();
+			Set<LoggingType> types = my.getTypes();
+			System.out.println(loggers);
+			System.out.println(types);
+			my.setLoggers(loggers);
+			my.setTypes(types);
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
 		}
