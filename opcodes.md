@@ -49,3 +49,33 @@
  This flag is used to indicate that the class is a record class. Record classes are a special kind of class introduced in Java 14 as a preview feature, which are used to model plain data aggregates with less ceremony than regular classes.
  - `ACC_DEPRECATED` (0x20000):\
  This flag is used to indicate that the class, field, or method is marked as deprecated. Deprecated classes, fields, or methods are not recommended for use, typically because they have been superseded by newer forms or they are dangerous.
+
+# Load value
+ - `ILOAD`:\
+ Loads an int value from a local variable onto the operand stack.
+ - `LLOAD`:\
+ Loads a long value from a local variable onto the operand stack.
+ - `FLOAD`:\
+ Loads a float value from a local variable onto the operand stack.
+ - `DLOAD`:\
+ Loads a double value from a local variable onto the operand stack.
+ - `ALOAD`:\
+ Loads a reference (object) from a local variable onto the operand stack.
+
+# Load array element
+ - `IALOAD`:\
+ Loads an int value from an array. The array reference and the index are popped from the operand stack.
+ - `LALOAD`:\
+ Loads a long value from an array. The array reference and the index are popped from the operand stack.
+ - `FALOAD`:\
+ Loads a float value from an array. The array reference and the index are popped from the operand stack.
+ - `DALOAD`:\
+ Loads a double value from an array. The array reference and the index are popped from the operand stack.
+ - `AALOAD`:\
+ Loads a reference (object) from an array. The array reference and the index are popped from the operand stack.
+ - `BALOAD`:\
+ Loads a byte or boolean value from an array. The array reference and the index are popped from the operand stack.
+ - `CALOAD`:\
+ Loads a char value from an array. The array reference and the index are popped from the operand stack.
+ - `SALOAD`:\
+ Loads a short value from an array. The array reference and the index are popped from the operand stack.
