@@ -146,31 +146,16 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 			if (targetField.is(TypeModifier.FINAL)) {
 				this.unfinal.add(targetField.name());
 			}
-			/*System.out.println("\nGenerating Assignor");
-			System.out.println(ifaceMethod);
-			System.out.println();
-			System.out.println("  " + ifaceMethod.name());
-			System.out.println("  " + ifaceMethod.type().getDescriptor());
-			System.out.println("  " + ifaceMethod.signature());*/
+			//System.out.println("Generating Assignor");
 			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
 			ASMUtils.addMethodAnnotations(method, ifaceMethod);
 			ASMUtils.addParameterAnnotations(method, ifaceMethod);
 			method.visitCode();
 			method.visitVarInsn(Opcodes.ALOAD, 0);
 			method.visitVarInsn(Opcodes.ALOAD, 1);
-			/*System.out.println();
-			System.out.println("  " + target.getInternalName());
-			System.out.println("  " + targetField.name());
-			System.out.println("  " + targetField.type().getDescriptor());*/
 			method.visitFieldInsn(Opcodes.PUTFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
 			method.visitInsn(Opcodes.RETURN);
-			/*System.out.println();
-			System.out.println("  " + target.getDescriptor());
-			System.out.println("  " + targetField.signature());*/
 			method.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
-			/*System.out.println();
-			System.out.println("  " + targetField.name());
-			System.out.println("  " + targetField.type().getDescriptor());*/
 			method.visitLocalVariable(targetField.name(), targetField.type().getDescriptor(), null, new Label(), new Label(), 1);
 			method.visitMaxs(2, 2);
 			method.visitEnd();

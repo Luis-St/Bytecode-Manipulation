@@ -142,24 +142,14 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 		}
 		
 		private void generateAccessor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
-			/*System.out.println("\nGenerating Accessor");
-			System.out.println();
-			System.out.println("  " + ifaceMethod.name());
-			System.out.println("  " + ifaceMethod.type().getDescriptor());
-			System.out.println("  " + ifaceMethod.signature());*/
+			//System.out.println("Generating Accessor");
 			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
 			ASMUtils.addMethodAnnotations(method, ifaceMethod);
 			ASMUtils.addParameterAnnotations(method, ifaceMethod);
 			method.visitCode();
 			method.visitVarInsn(Opcodes.ALOAD, 0);
-			/*System.out.println();
-			System.out.println("  " + target.getInternalName());
-			System.out.println("  " + targetField.name());
-			System.out.println("  " + targetField.type().getDescriptor());*/
 			method.visitFieldInsn(Opcodes.GETFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
 			method.visitInsn(Opcodes.ARETURN);
-			/*System.out.println();
-			System.out.println("  " + target.getDescriptor());*/
 			method.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
 			method.visitMaxs(1, 1);
 			method.visitEnd();
