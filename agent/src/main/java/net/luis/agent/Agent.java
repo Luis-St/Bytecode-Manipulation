@@ -1,8 +1,8 @@
 package net.luis.agent;
 
-import net.luis.asm.transformer.InterfaceInjectionTransformer;
-import net.luis.asm.transformer.implementation.*;
-import net.luis.preload.PreloadContext;
+import net.luis.agent.asm.transformer.InterfaceInjectionTransformer;
+import net.luis.agent.asm.transformer.implementation.*;
+import net.luis.agent.preload.PreloadContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.instrument.Instrumentation;

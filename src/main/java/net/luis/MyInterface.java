@@ -1,6 +1,6 @@
 package net.luis;
 
-import net.luis.annotation.*;
+import net.luis.agent.annotation.*;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.logging.log4j.Level;
