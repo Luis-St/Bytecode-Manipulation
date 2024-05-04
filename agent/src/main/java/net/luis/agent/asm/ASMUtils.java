@@ -100,6 +100,14 @@ public class ASMUtils {
 		return index == -1 ? name : name.substring(index + 1);
 	}
 	
+	public static @NotNull Class<?> getClass(@NotNull Type type) {
+		try {
+			return Class.forName(type.getClassName());
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public static boolean isPrimitive(@NotNull Type type) {
 		return type.getSort() >= Type.BOOLEAN && type.getSort() <= Type.DOUBLE;
 	}
