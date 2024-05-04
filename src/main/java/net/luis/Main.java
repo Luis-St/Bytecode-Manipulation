@@ -3,6 +3,7 @@ package net.luis;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ import java.util.Set;
 )
 public final class Main {
 	
-	public static void main(String[] args) {
+	public static void main(@NotNull String @NotNull [] args) {
 		LoggerConfiguration logger = new LoggerConfiguration("*");
 		
 		if (logger instanceof MyInterface my) {

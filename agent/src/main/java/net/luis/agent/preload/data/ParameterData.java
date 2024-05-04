@@ -20,4 +20,8 @@ public record ParameterData(@NotNull String name, @NotNull Type type, int index,
 	public @Nullable String signature() {
 		return null;
 	}
+	
+	public boolean isNamed() {
+		return !this.name.isBlank() && !this.name.equals("arg" + this.index);
+	}
 }

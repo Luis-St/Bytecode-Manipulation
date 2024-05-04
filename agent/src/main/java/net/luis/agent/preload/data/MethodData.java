@@ -21,6 +21,18 @@ public record MethodData(@NotNull String name, @NotNull Type type, @Nullable Str
 		return this.name + this.type;
 	}
 	
+	public boolean isConstructor() {
+		return "<init>".equals(this.name);
+	}
+	
+	public boolean isStaticInitializer() {
+		return "<clinit>".equals(this.name);
+	}
+	
+	public boolean isMethod() {
+		return !this.isConstructor() && !this.isStaticInitializer();
+	}
+	
 	public @NotNull Type getReturnType() {
 		return this.type.getReturnType();
 	}

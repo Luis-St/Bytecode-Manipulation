@@ -41,6 +41,10 @@ public class Utils {
 		return string.isEmpty() ? string : Character.toLowerCase(string.charAt(0)) + string.substring(1);
 	}
 	
+	public static boolean isSingleWord(@NotNull String string) {
+		return string.chars().allMatch(Character::isLetterOrDigit);
+	}
+	
 	//region Array to list
 	public static @NotNull List<Boolean> asList(boolean @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
