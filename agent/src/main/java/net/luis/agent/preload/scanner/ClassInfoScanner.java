@@ -19,7 +19,7 @@ import java.util.*;
 public class ClassInfoScanner extends BaseClassVisitor {
 	
 	private final Map<Type, AnnotationData> classAnnotations = new HashMap<>();
-	private final List<TypeModifier> modifiers = new ArrayList<>();
+	private final Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
 	private final List<Type> interfaces = new ArrayList<>();
 	private String name;
 	private Type type;
@@ -78,6 +78,6 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	}
 	
 	public @NotNull ClassInfo getClassInfo() {
-		return new ClassInfo(this.name, this.type, this.signature, this.access, this.classType, Set.copyOf(this.modifiers), this.superType, this.interfaces, this.classAnnotations);
+		return new ClassInfo(this.name, this.type, this.signature, this.access, this.classType, this.modifiers, this.superType, this.interfaces, this.classAnnotations);
 	}
 }

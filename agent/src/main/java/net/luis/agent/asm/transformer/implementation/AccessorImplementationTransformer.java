@@ -36,13 +36,13 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 		
 		private final PreloadContext context;
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
-		private final Runnable markedModified;
+		private final Runnable markModified;
 		
-		private AccessorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup, Runnable markedModified) {
+		private AccessorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup, Runnable markModified) {
 			super(writer);
 			this.context = context;
 			this.lookup = lookup;
-			this.markedModified = markedModified;
+			this.markModified = markModified;
 		}
 		
 		private static @NotNull CrashReport createReport(@NotNull String message, @NotNull Type iface, @NotNull String methodSignature) {
@@ -75,7 +75,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getAccessorName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(ACCESSOR);
-			if (annotation.has("target", String.class)) {
+			if (annotation.has("target")) {
 				return annotation.get("target");
 			}
 			String methodName = ifaceMethod.name();
@@ -153,7 +153,17 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 			method.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
 			method.visitMaxs(1, 1);
 			method.visitEnd();
-			this.markedModified.run();
+			this.updateClass(ifaceMethod, target);
+			this.markModified.run();
+		}
+		
+		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target) {
+			ClassContent content = this.context.getClassContent(target);
+			Map<Type, AnnotationData> annotations = new HashMap<>(ifaceMethod.annotations());
+			annotations.remove(ACCESSOR);
+			annotations.put(GENERATED, new AnnotationData(GENERATED, new HashMap<>()));
+			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, EnumSet.noneOf(TypeModifier.class), annotations, new ArrayList<>(), new ArrayList<>());
+			content.methods().add(method);
 		}
 	}
 }

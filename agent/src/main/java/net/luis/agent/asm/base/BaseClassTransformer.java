@@ -45,7 +45,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			return null;
 		}
 		ClassReader reader = new ClassReader(buffer);
-		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
+		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
 		ClassVisitor visitor = this.visit(type, clazz, reader, writer);
 		try {
 			reader.accept(visitor, ClassReader.EXPAND_FRAMES);

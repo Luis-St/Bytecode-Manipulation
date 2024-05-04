@@ -36,14 +36,14 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		
 		private final PreloadContext context;
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
-		private final Runnable markedModified;
+		private final Runnable markModified;
 		private final List<String> unfinal = new ArrayList<>();
 		
-		protected AssignorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup, Runnable markedModified) {
+		protected AssignorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup, Runnable markModified) {
 			super(writer);
 			this.context = context;
 			this.lookup = lookup;
-			this.markedModified = markedModified;
+			this.markModified = markModified;
 		}
 		
 		private static @NotNull CrashReport createReport(@NotNull String message, @NotNull Type iface, @NotNull String methodSignature) {
@@ -76,7 +76,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getAssignorName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(ASSIGNOR);
-			if (annotation.has("target", String.class)) {
+			if (annotation.has("target")) {
 				return annotation.get("target");
 			}
 			String methodName = ifaceMethod.name();
@@ -159,14 +159,26 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 			method.visitLocalVariable("arg0", targetField.type().getDescriptor(), null, new Label(), new Label(), 1);
 			method.visitMaxs(2, 2);
 			method.visitEnd();
-			this.markedModified.run();
+			this.updateClass(ifaceMethod, target, targetField);
+			this.markModified.run();
+		}
+		
+		@SuppressWarnings("DuplicatedCode")
+		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
+			ClassContent content = this.context.getClassContent(target);
+			Map<Type, AnnotationData> annotations = new HashMap<>(ifaceMethod.annotations());
+			annotations.remove(ASSIGNOR);
+			annotations.put(GENERATED, new AnnotationData(GENERATED, new HashMap<>()));
+			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, EnumSet.noneOf(TypeModifier.class), annotations, ifaceMethod.parameters(), new ArrayList<>());
+			content.methods().add(method);
+			targetField.modifiers().remove(TypeModifier.FINAL);
 		}
 		
 		@Override
 		public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
 			if (this.unfinal.contains(name)) {
 				access = access & ~Opcodes.ACC_FINAL;
-				this.markedModified.run();
+				this.markModified.run();
 			}
 			return super.visitField(access, name, descriptor, signature, value);
 		}

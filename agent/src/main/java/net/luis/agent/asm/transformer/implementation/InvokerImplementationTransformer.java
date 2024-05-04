@@ -75,7 +75,7 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getInvokerName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(INVOKER);
-			if (annotation.has("target", String.class)) {
+			if (annotation.has("target")) {
 				return annotation.get("target");
 			}
 			String methodName = ifaceMethod.name();
@@ -157,7 +157,18 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 			int max = ifaceMethod.getParameterCount() + 1;
 			method.visitMaxs(max, max);
 			method.visitEnd();
+			this.updateClass(ifaceMethod, target);
 			this.markedModified.run();
+		}
+		
+		@SuppressWarnings("DuplicatedCode")
+		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target) {
+			ClassContent content = this.context.getClassContent(target);
+			Map<Type, AnnotationData> annotations = new HashMap<>(ifaceMethod.annotations());
+			annotations.remove(INVOKER);
+			annotations.put(GENERATED, new AnnotationData(GENERATED, new HashMap<>()));
+			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, EnumSet.noneOf(TypeModifier.class), annotations, ifaceMethod.parameters(), new ArrayList<>());
+			content.methods().add(method);
 		}
 	}
 }

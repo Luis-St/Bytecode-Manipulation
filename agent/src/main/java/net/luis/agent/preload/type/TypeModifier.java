@@ -49,34 +49,34 @@ public enum TypeModifier {
 		this.module = module;
 	}
 	
-	public static @Unmodifiable @NotNull Set<TypeModifier> fromClassAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnClass).collect(Collectors.toUnmodifiableSet());
+	public static @NotNull Set<TypeModifier> fromClassAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnClass).collect(Collectors.toSet());
 	}
 	
-	public static @Unmodifiable @NotNull Set<TypeModifier> fromFieldAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnField).collect(Collectors.toUnmodifiableSet());
+	public static @NotNull Set<TypeModifier> fromFieldAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnField).collect(Collectors.toSet());
 	}
 	
-	public static @Unmodifiable @NotNull Set<TypeModifier> fromMethodAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnMethod).collect(Collectors.toUnmodifiableSet());
+	public static @NotNull Set<TypeModifier> fromMethodAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnMethod).collect(Collectors.toSet());
 	}
 	
-	public static @Unmodifiable @NotNull Set<TypeModifier> fromParameterAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnParameter).collect(Collectors.toUnmodifiableSet());
+	public static @NotNull Set<TypeModifier> fromParameterAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnParameter).collect(Collectors.toSet());
 	}
 	
-	public static @Unmodifiable @NotNull Set<TypeModifier> fromModuleAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnModule).collect(Collectors.toUnmodifiableSet());
+	public static @NotNull Set<TypeModifier> fromModuleAccess(int access) {
+		return fromAccess(access).stream().filter(TypeModifier::allowedOnModule).collect(Collectors.toSet());
 	}
 	
-	public static @Unmodifiable @NotNull Set<TypeModifier> fromAccess(int access) {
+	public static @NotNull Set<TypeModifier> fromAccess(int access) {
 		Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
 		for (TypeModifier modifier : values()) {
 			if ((access & modifier.value) != 0) {
 				modifiers.add(modifier);
 			}
 		}
-		return Set.copyOf(modifiers);
+		return modifiers;
 	}
 	
 	public boolean allowedOnClass() {

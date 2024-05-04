@@ -5,6 +5,7 @@ import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.asm.report.CrashReport;
+import net.luis.agent.preload.data.MethodData;
 import net.luis.agent.preload.type.ClassType;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -25,9 +26,11 @@ import static net.luis.agent.asm.Types.*;
 public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
+	private final PreloadContext context;
 	
 	public InterfaceInjectionTransformer(@NotNull PreloadContext context) {
 		this.lookup = ASMUtils.createTargetsLookup(context, INJECT_INTERFACE);
+		this.context = context;
 	}
 	
 	@Override
@@ -47,9 +50,14 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 						throw CrashReport.create("Cannot inject interfaces into an interface class", REPORT_CATEGORY).addDetail("Interfaces", injects).exception();
 					}
 					interfaces = Stream.concat(Utils.stream(interfaces), injects.stream()).distinct().toArray(String[]::new);
+					this.updateClass(injects.stream().map(Type::getObjectType).toList());
 					modified = true;
 				}
 				super.visit(version, access, name, signature, superClass, interfaces);
+			}
+			
+			private void updateClass(@NotNull List<Type> injects) {
+				context.getClassInfo(type).interfaces().addAll(injects);
 			}
 		};
 	}

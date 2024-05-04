@@ -13,7 +13,7 @@ import java.util.Map;
  *
  */
 
-public record ClassContent(@NotNull Map</*Record Component Name*/String, RecordComponentData> recordComponents, @NotNull Map</*Field Name*/String, FieldData> fields, @Unmodifiable @NotNull List<MethodData> methods) {
+public record ClassContent(@NotNull Map</*Record Component Name*/String, RecordComponentData> recordComponents, @NotNull Map</*Field Name*/String, FieldData> fields, @NotNull List<MethodData> methods) {
 	
 	//region Record components
 	public @Unmodifiable @NotNull List<RecordComponentData> getRecordComponents() {
@@ -44,7 +44,7 @@ public record ClassContent(@NotNull Map</*Record Component Name*/String, RecordC
 	//endregion
 	
 	//region Methods
-	public boolean hasAnyMethod(@NotNull String name) {
+	public boolean hasMethod(@NotNull String name) {
 		return this.methods.stream().anyMatch(method -> method.name().equals(name));
 	}
 	

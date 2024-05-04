@@ -2,6 +2,8 @@ package net.luis.agent.preload.data;
 
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.util.Map;
@@ -13,9 +15,10 @@ import java.util.Set;
  *
  */
 
-public record FieldData(String name, Type type, String signature, TypeAccess access, Set<TypeModifier> modifiers, Map<Type, AnnotationData> annotations, /*Nullable*/ Object initialValue) implements ASMData {
+public record FieldData(@NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull TypeAccess access, @NotNull Set<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations,
+						@Nullable Object initialValue) implements ASMData {
 	
-	public String getFieldSignature() {
+	public @NotNull String getFieldSignature() {
 		return this.type + this.name;
 	}
 }
