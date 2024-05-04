@@ -1,12 +1,12 @@
 package net.luis;
 
+import net.luis.agent.annotation.Default;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -27,9 +27,10 @@ import java.util.Set;
 )
 public final class Main {
 	
-	public static void main(@NotNull String @NotNull [] args) {
+	public static void main(@Default @NotNull String[] args) {
 		LoggerConfiguration logger = new LoggerConfiguration("*");
 		
+		execute(null, null, null);
 		if (logger instanceof MyInterface my) {
 			System.out.println("LoggerConfiguration is an instance of MyInterface!");
 			System.out.println(my.build().getName());
@@ -44,5 +45,11 @@ public final class Main {
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
 		}
+	}
+	
+	public static void execute(@Default("ls") String command, @Default("[]") String[] args, @Default List<String> values) {
+		System.out.println("Command: " + command);
+		System.out.println("Args: " + Arrays.toString(args));
+		System.out.println("Values: " + values);
 	}
 }

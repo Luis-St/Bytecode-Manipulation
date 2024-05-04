@@ -33,7 +33,7 @@ public class Mutable<T> implements Supplier<T>, Consumer<T> {
 	}
 	
 	@Override
-	public @Nullable T get() {
+	public T get() {
 		return this.value;
 	}
 }
