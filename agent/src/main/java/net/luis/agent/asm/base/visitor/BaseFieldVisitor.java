@@ -15,7 +15,7 @@ public class BaseFieldVisitor extends FieldVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseFieldVisitor(FieldVisitor fieldVisitor) {
-		super(Opcodes.ASM9, fieldVisitor);
+	protected BaseFieldVisitor(FieldVisitor visitor) {
+		super(Opcodes.ASM9, visitor);
 	}
 }

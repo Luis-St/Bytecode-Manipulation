@@ -15,7 +15,7 @@ public class BaseRecordComponentVisitor extends RecordComponentVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseRecordComponentVisitor(RecordComponentVisitor recordComponentVisitor) {
-		super(Opcodes.ASM9, recordComponentVisitor);
+	protected BaseRecordComponentVisitor(RecordComponentVisitor visitor) {
+		super(Opcodes.ASM9, visitor);
 	}
 }

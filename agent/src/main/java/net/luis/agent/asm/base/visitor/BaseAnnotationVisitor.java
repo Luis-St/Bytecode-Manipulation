@@ -15,7 +15,7 @@ public abstract class BaseAnnotationVisitor extends AnnotationVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseAnnotationVisitor(AnnotationVisitor annotationVisitor) {
-		super(Opcodes.ASM9, annotationVisitor);
+	protected BaseAnnotationVisitor(AnnotationVisitor visitor) {
+		super(Opcodes.ASM9, visitor);
 	}
 }

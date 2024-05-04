@@ -15,7 +15,7 @@ public abstract class BaseClassVisitor extends ClassVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseClassVisitor(ClassVisitor classVisitor) {
-		super(Opcodes.ASM9, classVisitor);
+	protected BaseClassVisitor(ClassVisitor visitor) {
+		super(Opcodes.ASM9, visitor);
 	}
 }

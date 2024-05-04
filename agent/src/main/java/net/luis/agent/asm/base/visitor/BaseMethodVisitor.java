@@ -15,7 +15,7 @@ public class BaseMethodVisitor extends MethodVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseMethodVisitor(MethodVisitor methodVisitor) {
-		super(Opcodes.ASM9, methodVisitor);
+	protected BaseMethodVisitor(MethodVisitor visitor) {
+		super(Opcodes.ASM9, visitor);
 	}
 }
