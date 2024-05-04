@@ -16,6 +16,7 @@ dependencies {
 	implementation "net.luis:LUtils:${LUtils}" // Utility
 	// ASM
 	implementation "org.ow2.asm:asm:${ASM}"
+	implementation "org.ow2.asm:asm-util:${ASM}"
 	// Google
 	implementation "com.google.guava:guava:${GoogleGuava}" // Utility
 	// Apache
