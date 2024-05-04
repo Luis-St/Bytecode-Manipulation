@@ -1,5 +1,6 @@
 package net.luis.agent.preload.data;
 
+import net.luis.agent.preload.PreloadContext;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -19,15 +20,36 @@ public record AnnotationData(@NotNull Type type, @NotNull Map<String, Object> va
 		return this.values.containsKey(key);
 	}
 	
-	public <X> X get(String key) {
+	public <X> boolean hasDefault(@NotNull PreloadContext context, @NotNull String key) {
+		ClassContent content = context.getClassContent(this.type);
+		if (!content.hasMethod(key)) {
+			return false;
+		}
+		List<MethodData> methods = content.getMethods(key);
+		if (methods.size() != 1) {
+			return false;
+		}
+		return methods.getFirst().annotationDefault().isPresent();
+	}
+	
+	public <X> @NotNull X get(@NotNull String key) {
 		return (X) this.values.get(key);
 	}
 	
-	public <X> List<X> getArray(String key) {
-		return (List<X>) this.values.get(key);
+	@SuppressWarnings({ "ReturnOfNull", "DataFlowIssue" })
+	public <X> @NotNull X getDefault(@NotNull PreloadContext context, @NotNull String key) {
+		ClassContent content = context.getClassContent(this.type);
+		if (!content.hasMethod(key)) {
+			return null;
+		}
+		List<MethodData> methods = content.getMethods(key);
+		if (methods.size() != 1) {
+			return null;
+		}
+		return (X) methods.getFirst().annotationDefault().get();
 	}
 	
-	public AnnotationData getAnnotation(String key) {
-		return (AnnotationData) this.values.get(key);
+	public <X> X getOrDefault(@NotNull PreloadContext context, @NotNull String key) {
+		return this.has(key) ? this.get(key) : this.getDefault(context, key);
 	}
 }

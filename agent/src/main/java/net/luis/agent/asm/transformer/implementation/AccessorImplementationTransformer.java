@@ -8,6 +8,7 @@ import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.util.Mutable;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -162,7 +163,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 			Map<Type, AnnotationData> annotations = new HashMap<>(ifaceMethod.annotations());
 			annotations.remove(ACCESSOR);
 			annotations.put(GENERATED, new AnnotationData(GENERATED, new HashMap<>()));
-			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, EnumSet.noneOf(TypeModifier.class), annotations, new ArrayList<>(), new ArrayList<>());
+			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, EnumSet.noneOf(TypeModifier.class), annotations, new ArrayList<>(), new ArrayList<>(), new Mutable<>());
 			content.methods().add(method);
 		}
 	}

@@ -4,6 +4,7 @@ import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.util.Mutable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -82,8 +83,9 @@ public class ClassContentScanner extends BaseClassVisitor {
 		Map<Type, AnnotationData> methodAnnotations = new HashMap<>();
 		List<ParameterData> methodParameters = new ArrayList<>();
 		List<Type> methodExceptions = Optional.ofNullable(exceptions).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
-		this.methods.add(new MethodData(name, Type.getType(descriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions));
-		return new MethodScanner(Type.getArgumentTypes(descriptor), methodAnnotations::put, methodParameters::add);
+		Mutable<Object> annotationDefault = new Mutable<>();
+		this.methods.add(new MethodData(name, Type.getType(descriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions, annotationDefault));
+		return new MethodScanner(Type.getArgumentTypes(descriptor), methodAnnotations::put, methodParameters::add, annotationDefault);
 	}
 	
 	public @NotNull ClassContent getClassContent() {

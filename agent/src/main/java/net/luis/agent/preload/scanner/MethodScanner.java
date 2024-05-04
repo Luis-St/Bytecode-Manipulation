@@ -24,14 +24,24 @@ public class MethodScanner extends BaseMethodVisitor {
 	private final Type[] parameterTypes;
 	private final BiConsumer<Type, AnnotationData> annotationConsumer;
 	private final Consumer<ParameterData> parameterConsumer;
+	private final Consumer<Object> annotationDefaultConsumer;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
 	private final Map<Integer, Map<Type, AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
-	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer) {
+	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer, Consumer<Object> annotationDefaultConsumer) {
 		this.parameterTypes = parameterTypes;
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;
+		this.annotationDefaultConsumer = annotationDefaultConsumer;
+	}
+	
+	@Override
+	public AnnotationVisitor visitAnnotationDefault() {
+		return new AnnotationScanner((name, value) -> {
+			//System.out.println("Annotation default: " + value);
+			this.annotationDefaultConsumer.accept(value);
+		});
 	}
 	
 	@Override

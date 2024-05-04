@@ -2,6 +2,7 @@ package net.luis.agent.preload.data;
 
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.util.Mutable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -15,7 +16,7 @@ import java.util.*;
  */
 
 public record MethodData(@NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull TypeAccess access, @NotNull Set<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations,
-						 @NotNull List<ParameterData> parameters, @NotNull List<Type> exceptions) implements ASMData {
+						 @NotNull List<ParameterData> parameters, @NotNull List<Type> exceptions, @NotNull Mutable<Object> annotationDefault) implements ASMData {
 	
 	public @NotNull String getMethodSignature() {
 		return this.name + this.type;
