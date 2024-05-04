@@ -38,6 +38,14 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		return false;
 	}
 	
+	protected int getClassWriterFlags() {
+		return ClassWriter.COMPUTE_MAXS;
+	}
+	
+	protected int getClassReaderFlags() {
+		return ClassReader.EXPAND_FRAMES;
+	}
+	
 	@Override
 	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String className, @Nullable Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
 		Type type = Type.getObjectType(className);
@@ -45,11 +53,11 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			return null;
 		}
 		ClassReader reader = new ClassReader(buffer);
-		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
+		ClassWriter writer = new ClassWriter(reader, this.getClassWriterFlags());
 		ClassVisitor visitor = this.visit(type, clazz, reader, writer);
 		//TraceClassVisitor trace = new TraceClassVisitor(visitor, new ASMifier(), new PrintWriter(System.out);
 		try {
-			reader.accept(visitor, ClassReader.EXPAND_FRAMES);
+			reader.accept(visitor, this.getClassReaderFlags());
 			byte[] bytes = writer.toByteArray();
 			if (this.modified) {
 				System.out.println("Transformed Class: " + type);

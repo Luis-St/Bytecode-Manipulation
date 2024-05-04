@@ -39,7 +39,6 @@ public class NotNullTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		System.out.println("NotNullTransformer: " + type.getClassName());
 		ClassContent content = this.context.getClassContent(type);
 		Runnable markedModified = () -> this.modified = true;
 		return new ClassVisitor(Opcodes.ASM9, writer) {
