@@ -8,6 +8,6 @@ import java.lang.annotation.*;
  *
  */
 
-@Target(ElementType.PARAMETER)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
-public @interface NullToEmpty {}
+public @interface Inject {}

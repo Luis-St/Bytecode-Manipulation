@@ -2,6 +2,7 @@ package net.luis.agent.annotation;
 
 import net.luis.agent.util.DefaultStringFactory;
 import net.luis.agent.util.StringFactory;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
 
@@ -15,7 +16,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.CLASS)
 public @interface Default {
 	
-	String value() default "";
+	@NotNull String value() default "";
 	
-	Class<? extends StringFactory> factory() default DefaultStringFactory.class;
+	@NotNull Class<? extends StringFactory> factory() default DefaultStringFactory.class;
 }

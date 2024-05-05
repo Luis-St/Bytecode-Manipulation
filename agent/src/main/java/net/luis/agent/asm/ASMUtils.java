@@ -21,6 +21,16 @@ import static net.luis.agent.asm.Types.*;
 
 public class ASMUtils {
 	
+	public static void saveClass(@NotNull File file, byte @NotNull [] data) {
+		try {
+			Files.deleteIfExists(file.toPath());
+			Files.createDirectories(file.getParentFile().toPath());
+			Files.write(file.toPath(), data);
+		} catch (Exception e) {
+			System.err.println("Failed to save class file: " + file.getName());
+		}
+	}
+	
 	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull PreloadContext context, @NotNull Type annotationType) {
 		Map<String, List<String>> lookup = new HashMap<>();
 		context.stream().filter(ClassDataPredicate.annotatedWith(annotationType)).forEach((info, content) -> {
@@ -30,16 +40,6 @@ public class ASMUtils {
 			}
 		});
 		return lookup;
-	}
-	
-	public static void saveClass(@NotNull File file, byte @NotNull [] data) {
-		try {
-			Files.deleteIfExists(file.toPath());
-			Files.createDirectories(file.getParentFile().toPath());
-			Files.write(file.toPath(), data);
-		} catch (Exception e) {
-			System.err.println("Failed to save class file: " + file.getName());
-		}
 	}
 	
 	public static @NotNull String getReturnTypeSignature(@NotNull MethodData method) {
