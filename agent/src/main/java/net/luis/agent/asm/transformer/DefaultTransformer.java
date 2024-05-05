@@ -2,6 +2,7 @@ package net.luis.agent.asm.transformer;
 
 import net.luis.agent.annotation.Default;
 import net.luis.agent.asm.base.BaseClassTransformer;
+import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
@@ -48,7 +49,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		ClassContent content = this.context.getClassContent(type);
 		Runnable markedModified = () -> this.modified = true;
-		return new ClassVisitor(Opcodes.ASM9, writer) {
+		return new BaseClassVisitor(writer) {
 			@Override
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);

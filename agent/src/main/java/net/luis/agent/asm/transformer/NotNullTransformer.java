@@ -2,6 +2,7 @@ package net.luis.agent.asm.transformer;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
+import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -30,23 +31,28 @@ public class NotNullTransformer extends BaseClassTransformer {
 		this.context = context;
 	}
 	
+	private boolean checkReturn(@NotNull MethodData method) {
+		return method.isMethod() && !method.getReturnType().equals(Type.VOID_TYPE) && method.isAnnotatedWith(NOT_NULL);
+	}
+	
 	@Override
+	@SuppressWarnings("DuplicatedCode")
 	protected boolean shouldIgnore(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return super.shouldIgnore(type) || content.methods().stream().filter(method -> !method.is(TypeModifier.ABSTRACT)).map(MethodData::parameters)
-			.flatMap(List::stream).noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL));
+		return (content.methods().stream().filter(method -> !method.is(TypeModifier.ABSTRACT)).map(MethodData::parameters).flatMap(List::stream).noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) &&
+			content.methods().stream().noneMatch(this::checkReturn)) || super.shouldIgnore(type);
 	}
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		ClassContent content = this.context.getClassContent(type);
 		Runnable markedModified = () -> this.modified = true;
-		return new ClassVisitor(Opcodes.ASM9, writer) {
+		return new BaseClassVisitor(writer) {
 			@Override
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 				MethodData method = content.getMethod(name, Type.getType(descriptor));
-				boolean checkReturn = method.isMethod() && !method.getReturnType().equals(Type.VOID_TYPE) && method.isAnnotatedWith(NOT_NULL);
+				boolean checkReturn = NotNullTransformer.this.checkReturn(method);
 				if (method.is(TypeModifier.ABSTRACT) || !(method.parameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || checkReturn)) {
 					return visitor;
 				}
@@ -76,7 +82,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 			AnnotationData annotation = parameter.getAnnotation(NOT_NULL);
 			if (annotation.has("message")) {
 				String value = annotation.get("message");
-				if (value != null && !value.isBlank()) {
+				if (!value.isBlank()) {
 					if (Utils.isSingleWord(value.strip())) {
 						return Utils.capitalize(value.strip()) + " must not be null";
 					}
