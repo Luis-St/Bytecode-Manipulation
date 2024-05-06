@@ -22,11 +22,11 @@ public interface Types {
 	Type[] NUMBERS = { Type.BYTE_TYPE, Type.SHORT_TYPE, Type.INT_TYPE, Type.LONG_TYPE, Type.FLOAT_TYPE, Type.DOUBLE_TYPE };
 	
 	Type STRING = Type.getType(String.class);
-	
-	Type GENERATED = Type.getType(Generated.class);
+	Type TYPE = Type.getType(Type.class);
 	
 	Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
+	Type GENERATED = Type.getType(Generated.class);
 	Type IMPLEMENTED = Type.getType(Implemented.class);
 	Type ACCESSOR = Type.getType(Accessor.class);
 	Type ASSIGNOR = Type.getType(Assignor.class);

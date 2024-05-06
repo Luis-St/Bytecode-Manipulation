@@ -13,22 +13,22 @@ import org.objectweb.asm.Opcodes;
 
 public abstract class BaseClassVisitor extends ClassVisitor {
 	
-	private final Runnable markedModified;
+	private final Runnable markModified;
 	protected final PreloadContext context;
 	
-	protected BaseClassVisitor(@NotNull PreloadContext context, @NotNull Runnable markedModified) {
+	protected BaseClassVisitor(@NotNull PreloadContext context, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9);
 		this.context = context;
-		this.markedModified = markedModified;
+		this.markModified = markModified;
 	}
 	
-	protected BaseClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Runnable markedModified) {
+	protected BaseClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9, visitor);
 		this.context = context;
-		this.markedModified = markedModified;
+		this.markModified = markModified;
 	}
 	
 	protected void markModified() {
-		this.markedModified.run();
+		this.markModified.run();
 	}
 }

@@ -1,5 +1,6 @@
 package net.luis.agent.asm.base.visitor;
 
+import net.luis.agent.asm.Instrumentations;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -10,7 +11,7 @@ import org.objectweb.asm.Opcodes;
  *
  */
 
-public class BaseMethodVisitor extends MethodVisitor {
+public class BaseMethodVisitor extends MethodVisitor implements Instrumentations {
 	
 	protected BaseMethodVisitor() {
 		super(Opcodes.ASM9);
@@ -18,5 +19,10 @@ public class BaseMethodVisitor extends MethodVisitor {
 	
 	protected BaseMethodVisitor(@NotNull MethodVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
+	}
+	
+	@Override
+	public @NotNull MethodVisitor getDelegate() {
+		return super.getDelegate();
 	}
 }

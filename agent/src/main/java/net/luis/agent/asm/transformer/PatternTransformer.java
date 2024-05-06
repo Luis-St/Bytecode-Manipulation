@@ -2,10 +2,10 @@ package net.luis.agent.asm.transformer;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.type.MethodType;
 import net.luis.agent.preload.type.TypeModifier;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -30,10 +30,6 @@ public class PatternTransformer extends BaseClassTransformer {
 		super(context);
 	}
 	
-	private static boolean isMethodValid(@Nullable MethodData method) {
-		return method != null && method.isImplementedMethod() && method.returns(STRING) && method.isAnnotatedWith(PATTERN);
-	}
-	
 	@Override
 	protected int getClassWriterFlags() {
 		return ClassWriter.COMPUTE_FRAMES;
@@ -42,7 +38,7 @@ public class PatternTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldTransform(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return content.methods().stream().filter(MethodData::isImplementedMethod).map(MethodData::parameters).flatMap(List::stream).anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || content.methods().stream().anyMatch(PatternTransformer::isMethodValid);
+		return content.getParameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || content.methods().stream().anyMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
 	}
 	
 	@Override
@@ -53,51 +49,26 @@ public class PatternTransformer extends BaseClassTransformer {
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 				MethodData method = content.getMethod(name, Type.getType(descriptor));
-				boolean checkReturn = isMethodValid(method);
-				if (method == null || method.is(TypeModifier.ABSTRACT) || !(method.parameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || checkReturn)) {
+				if (method == null || method.is(TypeModifier.ABSTRACT)) {
 					return visitor;
 				}
 				LocalVariablesSorter sorter = new LocalVariablesSorter(access, descriptor, visitor);
-				return new PatternVisitor(type, sorter, method, !checkReturn, this::markModified);
+				return new PatternVisitor(sorter, this.context, type, method, this::markModified);
 			}
 		};
 	}
 	
-	private static class PatternVisitor extends BaseMethodVisitor {
+	private static class PatternVisitor extends ModificationMethodVisitor {
+		
+		private static final Type ILL_ARG = Type.getType(IllegalArgumentException.class);
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
-		private final Type type;
 		private final LocalVariablesSorter sorter;
-		private final MethodData method;
-		private final Runnable markedModified;
-		private final boolean ignoreReturn;
 		
-		@SuppressWarnings("DuplicatedCode")
-		private PatternVisitor(@NotNull Type type, @NotNull LocalVariablesSorter visitor, @NotNull MethodData method, boolean ignoreReturn, Runnable markedModified) {
-			super(visitor);
-			this.type = type;
+		private PatternVisitor(@NotNull LocalVariablesSorter visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, context, type, method, markModified);
 			this.sorter = visitor;
-			this.method = method;
-			this.ignoreReturn = ignoreReturn;
-			this.markedModified = markedModified;
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(PATTERN)).forEach(this.lookup::add);
-		}
-		
-		private void visitPatternCheck(@NotNull String regex, int index, @NotNull Label label) {
-			this.mv.visitLdcInsn(regex);
-			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/regex/Pattern", "compile", "(Ljava/lang/String;)Ljava/util/regex/Pattern;", false);
-			this.mv.visitVarInsn(Opcodes.ALOAD, index);
-			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/regex/Pattern", "matcher", "(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false);
-			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/regex/Matcher", "matches", "()Z", false);
-			this.mv.visitJumpInsn(Opcodes.IFNE, label);
-		}
-		
-		private void visitException(@NotNull String message) {
-			this.mv.visitTypeInsn(Opcodes.NEW, "java/lang/IllegalArgumentException");
-			this.mv.visitInsn(Opcodes.DUP);
-			this.mv.visitLdcInsn(message);
-			this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/IllegalArgumentException", "<init>", "(Ljava/lang/String;)V", false);
-			this.mv.visitInsn(Opcodes.ATHROW);
 		}
 		
 		@Override
@@ -110,35 +81,44 @@ public class PatternTransformer extends BaseClassTransformer {
 				if (value == null) {
 					continue;
 				}
-				
-				this.visitPatternCheck(value, isStatic ? parameter.index() : parameter.index() + 1, label);
-				this.visitException(parameter.getMessageName() + " must match pattern '" + value + "'");
-				
+		
+				this.instrumentPatternCheck(value, isStatic ? parameter.index() : parameter.index() + 1, label);
+				this.instrumentThrownException(ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
+		
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
-				this.markedModified.run();
+				this.markModified();
 			}
+		}
+		
+		private boolean isValidReturn() {
+			return this.method.is(MethodType.METHOD) && this.method.returns(STRING) && this.method.isAnnotatedWith(PATTERN);
 		}
 		
 		@Override
 		public void visitInsn(int opcode) {
-			if (opcode != Opcodes.ARETURN || this.ignoreReturn) {
-				this.mv.visitInsn(opcode);
-				return;
+			if (opcode == Opcodes.ARETURN && this.isValidReturn()) {
+				String value = this.method.getAnnotation(PATTERN).get("value");
+				if (value == null) {
+					this.mv.visitInsn(opcode);
+					return;
+				}
+				Label start = new Label();
+				Label end = new Label();
+				int local = this.sorter.newLocal(this.method.getReturnType());
+				this.mv.visitLabel(start);
+				this.mv.visitVarInsn(Opcodes.ASTORE, local);
+		
+				this.instrumentPatternCheck(value, local, end);
+				this.instrumentThrownException(ILL_ARG, "Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
+		
+				this.mv.visitJumpInsn(Opcodes.GOTO, end);
+				this.mv.visitLabel(end);
+				this.mv.visitVarInsn(Opcodes.ALOAD, local);
+				this.mv.visitLocalVariable("generated$Return_Temp" + local, STRING.getDescriptor(), null, start, end, local);
+				this.markModified();
 			}
-			Label label = new Label();
-			String value = this.method.getAnnotation(PATTERN).get("value");
-			int local = this.sorter.newLocal(this.method.getReturnType());
-			this.mv.visitVarInsn(Opcodes.ASTORE, local);
-			
-			this.visitPatternCheck(value == null ? ".*" : value, local, label);
-			this.visitException("Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
-			
-			this.mv.visitJumpInsn(Opcodes.GOTO, label);
-			this.mv.visitLabel(label);
-			this.mv.visitVarInsn(Opcodes.ALOAD, local);
 			this.mv.visitInsn(opcode);
-			this.markedModified.run();
 		}
 	}
 }

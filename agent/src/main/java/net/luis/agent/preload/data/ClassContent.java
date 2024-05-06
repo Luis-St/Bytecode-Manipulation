@@ -42,5 +42,9 @@ public record ClassContent(@NotNull Map</*Record Component Name*/String, RecordC
 	public @Nullable MethodData getMethod(@NotNull String name, @NotNull Type type) {
 		return this.methods.stream().filter(method -> method.name().equals(name) && method.type().equals(type)).findFirst().orElse(null);
 	}
+	
+	public @Unmodifiable @NotNull List<ParameterData> getParameters() {
+		return this.methods.stream().flatMap(method -> method.parameters().stream()).toList();
+	}
 	//endregion
 }

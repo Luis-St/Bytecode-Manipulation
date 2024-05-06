@@ -2,8 +2,7 @@ package net.luis.agent.asm.transformer;
 
 import net.luis.agent.annotation.Default;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -16,6 +15,8 @@ import org.objectweb.asm.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.luis.agent.asm.Types.*;
+
 /**
  *
  * @author Luis-St
@@ -23,8 +24,6 @@ import java.util.List;
  */
 
 public class DefaultTransformer extends BaseClassTransformer {
-	
-	private static final Type DEFAULT = Type.getType(Default.class);
 	
 	public DefaultTransformer(@NotNull PreloadContext context) {
 		super(context);
@@ -38,7 +37,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldTransform(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return content.methods().stream().filter(MethodData::isImplementedMethod).map(MethodData::parameters).flatMap(List::stream).anyMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
+		return content.getParameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
 	}
 	
 	@Override
@@ -49,30 +48,22 @@ public class DefaultTransformer extends BaseClassTransformer {
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 				MethodData method = content.getMethod(name, Type.getType(descriptor));
-				if (method == null || method.is(TypeModifier.ABSTRACT) || method.parameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT))) {
+				if (method == null || method.is(TypeModifier.ABSTRACT)) {
 					return visitor;
 				}
-				return new DefaultVisitor(this.context, visitor, method, this::markModified);
+				return new DefaultVisitor(visitor, this.context, type, method, this::markModified);
 			}
 		};
 	}
 	
-	private static class DefaultVisitor extends BaseMethodVisitor {
+	private static class DefaultVisitor extends ModificationMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid String Factory";
-		private static final Type TYPE = Type.getType(Type.class);
-		private static final Type STRING = Type.getType(String.class);
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
-		private final PreloadContext context;
-		private final MethodData method;
-		private final Runnable markedModified;
 		
-		private DefaultVisitor(@NotNull PreloadContext context, @NotNull MethodVisitor visitor, @NotNull MethodData method, Runnable markedModified) {
-			super(visitor);
-			this.context = context;
-			this.method = method;
-			this.markedModified = markedModified;
+		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, context, type, method, markModified);
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(DEFAULT)).forEach(this.lookup::add);
 		}
 		
@@ -84,14 +75,8 @@ public class DefaultTransformer extends BaseClassTransformer {
 			if (field == null) {
 				throw CrashReport.create("Missing field INSTANCE in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}
-			if (field.access() != TypeAccess.PUBLIC) {
-				throw CrashReport.create("INSTANCE field in string factory class is not public", REPORT_CATEGORY).addDetail("Factory", factory).exception();
-			}
-			if (!field.is(TypeModifier.STATIC)) {
-				throw CrashReport.create("INSTANCE field in string factory class is not static", REPORT_CATEGORY).addDetail("Factory", factory).exception();
-			}
-			if (!field.is(TypeModifier.FINAL)) {
-				throw CrashReport.create("INSTANCE field in string factory class is not final", REPORT_CATEGORY).addDetail("Factory", factory).exception();
+			if (!field.is(TypeAccess.PUBLIC, TypeModifier.STATIC, TypeModifier.FINAL)) {
+				throw CrashReport.create("INSTANCE field in string factory class is not public static final", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}
 			if (!field.type().equals(factory)) {
 				throw CrashReport.create("INSTANCE field in string factory class has invalid type", REPORT_CATEGORY).addDetail("Factory", factory)
@@ -125,7 +110,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(Opcodes.ASTORE, isStatic ? parameter.index() : parameter.index() + 1);
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
-				this.markedModified.run();
+				this.markModified();
 			}
 		}
 	}
