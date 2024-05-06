@@ -8,8 +8,8 @@ import java.lang.annotation.*;
  *
  */
 
-@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.CLASS)
+@Target({ ElementType.METHOD, ElementType.PARAMETER })
 public @interface Above {
 	
 	double value();
