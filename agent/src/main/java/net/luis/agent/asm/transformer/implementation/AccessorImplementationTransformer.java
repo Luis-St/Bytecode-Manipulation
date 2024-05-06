@@ -59,7 +59,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 					for (MethodData method : ifaceContent.methods()) {
 						if (method.isAnnotatedWith(ACCESSOR)) {
 							this.validateMethod(iface, method, target, targetContent);
-						} else if (method.access() == TypeAccess.PUBLIC && method.is(TypeModifier.ABSTRACT)) {
+						} else if (method.is(TypeAccess.PUBLIC, TypeModifier.ABSTRACT)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
 							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
@@ -73,8 +73,9 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getAccessorName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(ACCESSOR);
-			if (annotation.has("target")) {
-				return annotation.get("target");
+			String target = annotation.get("target");
+			if (target != null) {
+				return target;
 			}
 			String methodName = ifaceMethod.name();
 			if (methodName.startsWith("get")) {

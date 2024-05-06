@@ -57,7 +57,7 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 					for (MethodData method : ifaceContent.methods()) {
 						if (method.isAnnotatedWith(IMPLEMENTED)) {
 							this.validateMethod(iface, method, target, targetContent);
-						} else if (method.access() == TypeAccess.PUBLIC && method.is(TypeModifier.ABSTRACT)) {
+						} else if (method.is(TypeAccess.PUBLIC, TypeModifier.ABSTRACT)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
 							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
@@ -83,11 +83,11 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 				throw createReport("Method annotated with @Implemented must not be default implemented", iface, signature).exception();
 			}
 			//endregion
-			if (!targetContent.hasMethod(ifaceMethod.name(), ifaceMethod.type())) {
+			MethodData targetMethod = targetContent.getMethod(ifaceMethod.name(), ifaceMethod.type());
+			if (targetMethod == null) {
 				throw createReport("Method annotated with @Implemented must be implemented in target class", iface, signature)
 					.addDetailBefore("Interface", "Target Class", target).exception();
 			}
-			MethodData targetMethod = targetContent.getMethod(ifaceMethod.name(), ifaceMethod.type());
 			if (targetMethod.access() != TypeAccess.PUBLIC) {
 				throw createReport("Method annotated with @Implemented must be public in target class", iface, signature)
 					.addDetailBefore("Interface", "Target Class", target)

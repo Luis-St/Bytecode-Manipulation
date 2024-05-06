@@ -29,15 +29,14 @@ public class NotNullTransformer extends BaseClassTransformer {
 		super(context);
 	}
 	
-	private boolean checkReturn(@NotNull MethodData method) {
-		return method.isMethod() && !method.getReturnType().equals(Type.VOID_TYPE) && method.isAnnotatedWith(NOT_NULL);
+	private static boolean isMethodValid(@Nullable MethodData method) {
+		return method != null && method.isImplementedMethod() && !method.returnsAny(PRIMITIVES) && method.isAnnotatedWith(NOT_NULL);
 	}
 	
 	@Override
 	protected boolean shouldTransform(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return (content.methods().stream().filter(method -> !method.is(TypeModifier.ABSTRACT)).map(MethodData::parameters).flatMap(List::stream).noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) &&
-			content.methods().stream().noneMatch(this::checkReturn)) || super.shouldIgnore(type);
+		return content.methods().stream().filter(MethodData::isImplementedMethod).map(MethodData::parameters).flatMap(List::stream).anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || content.methods().stream().anyMatch(NotNullTransformer::isMethodValid);
 	}
 	
 	@Override
@@ -49,7 +48,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 				MethodData method = content.getMethod(name, Type.getType(descriptor));
-				boolean checkReturn = NotNullTransformer.this.checkReturn(method);
+				boolean checkReturn = isMethodValid(method);
 				if (method.is(TypeModifier.ABSTRACT) || !(method.parameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || checkReturn)) {
 					return visitor;
 				}
@@ -77,8 +76,8 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getMessage(@NotNull ParameterData parameter) {
 			AnnotationData annotation = parameter.getAnnotation(NOT_NULL);
-			if (annotation.has("message")) {
-				String value = annotation.get("message");
+			String value = annotation.get("message");
+			if (value != null) {
 				if (!value.isBlank()) {
 					if (Utils.isSingleWord(value.strip())) {
 						return Utils.capitalize(value.strip()) + " must not be null";

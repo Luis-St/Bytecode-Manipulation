@@ -59,7 +59,7 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 					for (MethodData method : ifaceContent.methods()) {
 						if (method.isAnnotatedWith(INVOKER)) {
 							this.validateMethod(iface, method, target, targetContent);
-						} else if (method.access() == TypeAccess.PUBLIC && method.is(TypeModifier.ABSTRACT)) {
+						} else if (method.is(TypeAccess.PUBLIC, TypeModifier.ABSTRACT)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
 							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
@@ -73,8 +73,9 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getInvokerName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(INVOKER);
-			if (annotation.has("target")) {
-				return annotation.get("target");
+			String target = annotation.get("target");
+			if (target != null) {
+				return target;
 			}
 			String methodName = ifaceMethod.name();
 			if (methodName.startsWith("invoke")) {
@@ -165,7 +166,7 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 			Map<Type, AnnotationData> annotations = new HashMap<>(ifaceMethod.annotations());
 			annotations.remove(INVOKER);
 			annotations.put(GENERATED, new AnnotationData(GENERATED, new HashMap<>()));
-			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, EnumSet.noneOf(TypeModifier.class), annotations, ifaceMethod.parameters(), new ArrayList<>(), new Mutable<>());
+			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, MethodType.METHOD, EnumSet.noneOf(TypeModifier.class), annotations, ifaceMethod.parameters(), new ArrayList<>(), new Mutable<>());
 			content.methods().add(method);
 		}
 	}

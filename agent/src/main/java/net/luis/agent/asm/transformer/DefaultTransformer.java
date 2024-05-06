@@ -82,10 +82,10 @@ public class DefaultTransformer extends BaseClassTransformer {
 			AnnotationData annotation = parameter.getAnnotation(DEFAULT);
 			Type factory = annotation.getOrDefault(this.context, "factory");
 			ClassContent content = this.context.getClassContent(factory);
-			if (!content.hasField("INSTANCE")) {
+			FieldData field = content.getField("INSTANCE");
+			if (field == null) {
 				throw CrashReport.create("Missing field INSTANCE in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}
-			FieldData field = content.getField("INSTANCE");
 			if (field.access() != TypeAccess.PUBLIC) {
 				throw CrashReport.create("INSTANCE field in string factory class is not public", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}

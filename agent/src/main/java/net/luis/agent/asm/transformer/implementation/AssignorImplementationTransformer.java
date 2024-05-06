@@ -60,7 +60,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 					for (MethodData method : ifaceContent.methods()) {
 						if (method.isAnnotatedWith(ASSIGNOR)) {
 							this.validateMethod(iface, method, target, targetContent);
-						} else if (method.access() == TypeAccess.PUBLIC && method.is(TypeModifier.ABSTRACT)) {
+						} else if (method.is(TypeAccess.PUBLIC, TypeModifier.ABSTRACT)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
 							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
@@ -74,8 +74,9 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getAssignorName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(ASSIGNOR);
-			if (annotation.has("target")) {
-				return annotation.get("target");
+			String target = annotation.get("target");
+			if (target != null) {
+				return target;
 			}
 			String methodName = ifaceMethod.name();
 			if (methodName.startsWith("set")) {
@@ -100,7 +101,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Assignor must not be default implemented", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature).exception();
 			}
 			//endregion
-			if (!Type.VOID_TYPE.equals(ifaceMethod.getReturnType())) {
+			if (!ifaceMethod.returns(Type.VOID_TYPE)) {
 				throw CrashReport.create("Method annotated with @Assignor must return void", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature).exception();
 			}
 			if (ifaceMethod.getParameterCount() != 1) {
@@ -116,11 +117,11 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 					.addDetail("Existing Method", existingMethod.getMethodSignature()).exception();
 			}
 			String accessorTarget = this.getAssignorName(ifaceMethod);
-			if (!targetContent.hasField(accessorTarget)) {
+			FieldData targetField = targetContent.getField(accessorTarget);
+			if (targetField == null) {
 				throw CrashReport.create("Target field for assignor was not found in target class", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Expected Accessor Target", accessorTarget).exception();
 			}
-			FieldData targetField = targetContent.getField(accessorTarget);
 			if (targetField.access() == TypeAccess.PUBLIC && !targetField.is(TypeModifier.FINAL)) {
 				throw CrashReport.create("Target field for assignor is public and not final, no assignor required", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Accessor Target", accessorTarget).exception();
@@ -167,7 +168,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 			Map<Type, AnnotationData> annotations = new HashMap<>(ifaceMethod.annotations());
 			annotations.remove(ASSIGNOR);
 			annotations.put(GENERATED, new AnnotationData(GENERATED, new HashMap<>()));
-			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, EnumSet.noneOf(TypeModifier.class), annotations, ifaceMethod.parameters(), new ArrayList<>(), new Mutable<>());
+			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, MethodType.METHOD, EnumSet.noneOf(TypeModifier.class), annotations, ifaceMethod.parameters(), new ArrayList<>(), new Mutable<>());
 			content.methods().add(method);
 			targetField.modifiers().remove(TypeModifier.FINAL);
 		}

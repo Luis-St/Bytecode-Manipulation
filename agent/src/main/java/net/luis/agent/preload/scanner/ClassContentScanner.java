@@ -2,8 +2,7 @@ package net.luis.agent.preload.scanner;
 
 import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.preload.data.*;
-import net.luis.agent.preload.type.TypeAccess;
-import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.preload.type.*;
 import net.luis.agent.util.Mutable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,12 +37,12 @@ public class ClassContentScanner extends BaseClassVisitor {
 		System.out.println("Record Component: " + name);
 		System.out.println("  Type: " + Type.getType(recordDescriptor));
 		System.out.println("  Signature: " + signature);*/
-		Map<Type, AnnotationData> componentAnnotations = new HashMap<>();
-		this.recordComponents.put(name, new RecordComponentData(name, Type.getType(recordDescriptor), signature == null ? "" : signature, componentAnnotations));
+		Map<Type, AnnotationData> annotations = new HashMap<>();
+		this.recordComponents.put(name, new RecordComponentData(name, Type.getType(recordDescriptor), signature, annotations));
 		return new BaseRecordComponentVisitor() {
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
-				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, componentAnnotations::put);
+				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, annotations::put);
 			}
 		};
 	}
@@ -57,19 +56,19 @@ public class ClassContentScanner extends BaseClassVisitor {
 		System.out.println("  Modifiers: " + TypeModifier.fromFieldAccess(access));
 		System.out.println("  Signature: " + signature);
 		System.out.println("  Initial value: " + initialValue);*/
-		Map<Type, AnnotationData> fieldAnnotations = new HashMap<>();
-		this.fields.put(name, new FieldData(name, Type.getType(fieldDescriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), fieldAnnotations, initialValue));
+		Map<Type, AnnotationData> annotations = new HashMap<>();
+		this.fields.put(name, new FieldData(name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), annotations, initialValue));
 		return new BaseFieldVisitor() {
 			
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
-				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, fieldAnnotations::put);
+				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, annotations::put);
 			}
 		};
 	}
 	
 	@Override
-	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
+	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exception) {
 		/*System.out.println();
 		System.out.println("Method: " + name);
 		System.out.println("  Type: " + Type.getType(descriptor));
@@ -80,12 +79,12 @@ public class ClassContentScanner extends BaseClassVisitor {
 		if (exceptions != null) {
 			System.out.println("  Exceptions: " + Arrays.stream(exceptions).map(Type::getObjectType).toList());
 		}*/
-		Map<Type, AnnotationData> methodAnnotations = new HashMap<>();
-		List<ParameterData> methodParameters = new ArrayList<>();
-		List<Type> methodExceptions = Optional.ofNullable(exceptions).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
-		Mutable<Object> annotationDefault = new Mutable<>();
-		this.methods.add(new MethodData(name, Type.getType(descriptor), signature == null ? "" : signature, TypeAccess.fromAccess(access), TypeModifier.fromMethodAccess(access), methodAnnotations, methodParameters, methodExceptions, annotationDefault));
-		return new MethodScanner(Type.getArgumentTypes(descriptor), methodAnnotations::put, methodParameters::add, annotationDefault);
+		Map<Type, AnnotationData> annotations = new HashMap<>();
+		List<ParameterData> parameters = new ArrayList<>();
+		List<Type> exceptions = Optional.ofNullable(exception).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
+		Mutable<Object> value = new Mutable<>();
+		this.methods.add(new MethodData(name, Type.getType(descriptor), signature, TypeAccess.fromAccess(access), MethodType.fromName(name), TypeModifier.fromMethodAccess(access), annotations, parameters, exceptions, value));
+		return new MethodScanner(Type.getArgumentTypes(descriptor), annotations::put, parameters::add, value);
 	}
 	
 	public @NotNull ClassContent getClassContent() {

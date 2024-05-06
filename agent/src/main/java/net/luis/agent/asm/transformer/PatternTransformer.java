@@ -30,20 +30,19 @@ public class PatternTransformer extends BaseClassTransformer {
 		super(context);
 	}
 	
-	private boolean checkReturn(@NotNull MethodData method) {
-		return method.isMethod() && method.getReturnType().equals(STRING) && method.isAnnotatedWith(PATTERN);
+	private static boolean isMethodValid(@Nullable MethodData method) {
+		return method != null && method.isImplementedMethod() && method.returns(STRING) && method.isAnnotatedWith(PATTERN);
 	}
 	
 	@Override
-		ClassContent content = this.context.getClassContent(type);
-		return (content.methods().stream().filter(method -> !method.is(TypeModifier.ABSTRACT)).map(MethodData::parameters).flatMap(List::stream).noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) &&
-			content.methods().stream().noneMatch(this::checkReturn)) || super.shouldIgnore(type);
 	protected int getClassWriterFlags() {
 		return ClassWriter.COMPUTE_FRAMES;
 	}
 	
 	@Override
 	protected boolean shouldTransform(@NotNull Type type) {
+		ClassContent content = this.context.getClassContent(type);
+		return content.methods().stream().filter(MethodData::isImplementedMethod).map(MethodData::parameters).flatMap(List::stream).anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || content.methods().stream().anyMatch(PatternTransformer::isMethodValid);
 	}
 	
 	@Override
@@ -55,7 +54,7 @@ public class PatternTransformer extends BaseClassTransformer {
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 				MethodData method = content.getMethod(name, Type.getType(descriptor));
-				boolean checkReturn = PatternTransformer.this.checkReturn(method);
+				boolean checkReturn = isMethodValid(method);
 				if (method.is(TypeModifier.ABSTRACT) || !(method.parameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || checkReturn)) {
 					return visitor;
 				}
@@ -117,8 +116,8 @@ public class PatternTransformer extends BaseClassTransformer {
 				Label label = new Label();
 				String value = parameter.getAnnotation(PATTERN).get("value");
 				
-				this.visitPatternCheck(value, isStatic ? parameter.index() : parameter.index() + 1, label);
-				this.visitException(this.getMessage(parameter, value));
+				this.visitPatternCheck(value == null ? ".*" : value, isStatic ? parameter.index() : parameter.index() + 1, label);
+				this.visitException(this.getMessage(parameter, value == null ? ".*" : value));
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
@@ -137,7 +136,7 @@ public class PatternTransformer extends BaseClassTransformer {
 			int local = this.sorter.newLocal(this.method.getReturnType());
 			this.mv.visitVarInsn(Opcodes.ASTORE, local);
 			
-			this.visitPatternCheck(value, local, label);
+			this.visitPatternCheck(value == null ? ".*" : value, local, label);
 			this.visitException("Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
 			
 			this.mv.visitJumpInsn(Opcodes.GOTO, label);

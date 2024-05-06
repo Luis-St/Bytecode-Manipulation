@@ -1,7 +1,6 @@
 package net.luis.agent.preload.data;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
+import org.jetbrains.annotations.*;
 import org.objectweb.asm.Type;
 
 import java.util.List;
@@ -20,11 +19,7 @@ public record ClassContent(@NotNull Map</*Record Component Name*/String, RecordC
 		return List.copyOf(this.recordComponents.values());
 	}
 	
-	public boolean hasRecordComponent(@NotNull String name) {
-		return this.recordComponents.containsKey(name);
-	}
-	
-	public RecordComponentData getRecordComponent(@NotNull String name) {
+	public @Nullable RecordComponentData getRecordComponent(@NotNull String name) {
 		return this.recordComponents.get(name);
 	}
 	//endregion
@@ -34,29 +29,17 @@ public record ClassContent(@NotNull Map</*Record Component Name*/String, RecordC
 		return List.copyOf(this.fields.values());
 	}
 	
-	public boolean hasField(@NotNull String name) {
-		return this.fields.containsKey(name);
-	}
-	
-	public FieldData getField(@NotNull String name) {
+	public @Nullable FieldData getField(@NotNull String name) {
 		return this.fields.get(name);
 	}
 	//endregion
 	
 	//region Methods
-	public boolean hasMethod(@NotNull String name) {
-		return this.methods.stream().anyMatch(method -> method.name().equals(name));
-	}
-	
 	public @Unmodifiable @NotNull List<MethodData> getMethods(@NotNull String name) {
 		return this.methods.stream().filter(method -> method.name().equals(name)).toList();
 	}
 	
-	public boolean hasMethod(@NotNull String name, @NotNull Type type) {
-		return this.methods.stream().anyMatch(method -> method.name().equals(name) && method.type().equals(type));
-	}
-	
-	public MethodData getMethod(@NotNull String name, @NotNull Type type) {
+	public @Nullable MethodData getMethod(@NotNull String name, @NotNull Type type) {
 		return this.methods.stream().filter(method -> method.name().equals(name) && method.type().equals(type)).findFirst().orElse(null);
 	}
 	//endregion
