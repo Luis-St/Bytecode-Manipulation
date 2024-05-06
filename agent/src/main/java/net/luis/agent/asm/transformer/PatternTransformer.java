@@ -48,18 +48,17 @@ public class PatternTransformer extends BaseClassTransformer {
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		ClassContent content = this.context.getClassContent(type);
-		Runnable markedModified = () -> this.modified = true;
-		return new BaseClassVisitor(writer) {
+		return new BaseClassVisitor(writer, this.context, () -> this.modified = true) {
 			@Override
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 				MethodData method = content.getMethod(name, Type.getType(descriptor));
 				boolean checkReturn = isMethodValid(method);
-				if (method.is(TypeModifier.ABSTRACT) || !(method.parameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || checkReturn)) {
+				if (method == null || method.is(TypeModifier.ABSTRACT) || !(method.parameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || checkReturn)) {
 					return visitor;
 				}
 				LocalVariablesSorter sorter = new LocalVariablesSorter(access, descriptor, visitor);
-				return new PatternVisitor(type, sorter, method, !checkReturn, markedModified);
+				return new PatternVisitor(type, sorter, method, !checkReturn, this::markModified);
 			}
 		};
 	}
@@ -82,13 +81,6 @@ public class PatternTransformer extends BaseClassTransformer {
 			this.ignoreReturn = ignoreReturn;
 			this.markedModified = markedModified;
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(PATTERN)).forEach(this.lookup::add);
-		}
-		
-		private @NotNull String getMessage(@NotNull ParameterData parameter, @NotNull String pattern) {
-			if (parameter.isNamed()) {
-				return Utils.capitalize(parameter.name()) + " must match pattern '" + pattern + "'";
-			}
-			return ASMUtils.getSimpleName(parameter.type()) + " (parameter #" + parameter.index() + ") must match pattern '" + pattern + "'";
 		}
 		
 		private void visitPatternCheck(@NotNull String regex, int index, @NotNull Label label) {
@@ -115,9 +107,12 @@ public class PatternTransformer extends BaseClassTransformer {
 			for (ParameterData parameter : this.lookup) {
 				Label label = new Label();
 				String value = parameter.getAnnotation(PATTERN).get("value");
+				if (value == null) {
+					continue;
+				}
 				
-				this.visitPatternCheck(value == null ? ".*" : value, isStatic ? parameter.index() : parameter.index() + 1, label);
-				this.visitException(this.getMessage(parameter, value == null ? ".*" : value));
+				this.visitPatternCheck(value, isStatic ? parameter.index() : parameter.index() + 1, label);
+				this.visitException(parameter.getMessageName() + " must match pattern '" + value + "'");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);

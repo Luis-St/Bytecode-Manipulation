@@ -25,19 +25,17 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new ImplementedValidationVisitor(writer, this.context, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
+		return new ImplementedValidationVisitor(writer, this.context, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	
 	private static class ImplementedValidationVisitor extends BaseClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Method Implementation Error";
 		
-		private final PreloadContext context;
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private ImplementedValidationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
-			super(writer);
-			this.context = context;
+		private ImplementedValidationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+			super(writer, context, markModified);
 			this.lookup = lookup;
 		}
 		
@@ -70,7 +68,6 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 		}
 		
 		protected void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
-			//System.out.println("Validating Implemented - " + ifaceMethod.name() + " - " + iface.getInternalName());
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {

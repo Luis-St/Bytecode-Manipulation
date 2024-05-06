@@ -1,5 +1,6 @@
 package net.luis.agent.asm.base.visitor;
 
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -15,7 +16,7 @@ public class BaseFieldVisitor extends FieldVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseFieldVisitor(FieldVisitor visitor) {
+	protected BaseFieldVisitor(@NotNull FieldVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
 	}
 }

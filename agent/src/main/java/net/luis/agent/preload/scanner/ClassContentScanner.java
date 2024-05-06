@@ -18,11 +18,15 @@ import java.util.stream.Collectors;
  *
  */
 
-public class ClassContentScanner extends BaseClassVisitor {
+public class ClassContentScanner extends ClassVisitor {
 	
 	private final Map<String, RecordComponentData> recordComponents = new HashMap<>();
 	private final Map<String, FieldData> fields = new HashMap<>();
 	private final List<MethodData> methods = new ArrayList<>();
+	
+	public ClassContentScanner() {
+		super(Opcodes.ASM9);
+	}
 	
 	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, @NotNull BiConsumer<Type, AnnotationData> action) {
 		Map<String, Object> values = new HashMap<>();

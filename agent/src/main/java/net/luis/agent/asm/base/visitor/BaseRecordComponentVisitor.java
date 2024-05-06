@@ -1,5 +1,6 @@
 package net.luis.agent.asm.base.visitor;
 
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.RecordComponentVisitor;
 
@@ -15,7 +16,7 @@ public class BaseRecordComponentVisitor extends RecordComponentVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseRecordComponentVisitor(RecordComponentVisitor visitor) {
+	protected BaseRecordComponentVisitor(@NotNull RecordComponentVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
 	}
 }

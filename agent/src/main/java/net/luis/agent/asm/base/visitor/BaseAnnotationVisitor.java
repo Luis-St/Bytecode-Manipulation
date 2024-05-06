@@ -1,5 +1,6 @@
 package net.luis.agent.asm.base.visitor;
 
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -15,7 +16,7 @@ public abstract class BaseAnnotationVisitor extends AnnotationVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseAnnotationVisitor(AnnotationVisitor visitor) {
+	protected BaseAnnotationVisitor(@NotNull AnnotationVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
 	}
 }

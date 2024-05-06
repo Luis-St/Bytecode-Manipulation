@@ -34,7 +34,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	@Override
 	@SuppressWarnings("UnqualifiedFieldAccess")
 	public @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new BaseClassVisitor(writer) {
+		return new BaseClassVisitor(writer, this.context, () -> this.modified = true) {
 			private static final String REPORT_CATEGORY = "Interface Injection Error";
 			
 			@Override
@@ -49,13 +49,13 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 					}
 					interfaces = Stream.concat(Utils.stream(interfaces), injects.stream()).distinct().toArray(String[]::new);
 					this.updateClass(injects.stream().map(Type::getObjectType).toList());
-					modified = true;
+					this.markModified();
 				}
 				super.visit(version, access, name, signature, superClass, interfaces);
 			}
 			
 			private void updateClass(@NotNull List<Type> injects) {
-				context.getClassInfo(type).interfaces().addAll(injects);
+				this.context.getClassInfo(type).interfaces().addAll(injects);
 			}
 		};
 	}

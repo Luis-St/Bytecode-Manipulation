@@ -42,17 +42,16 @@ public class NotNullTransformer extends BaseClassTransformer {
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		ClassContent content = this.context.getClassContent(type);
-		Runnable markedModified = () -> this.modified = true;
-		return new BaseClassVisitor(writer) {
+		return new BaseClassVisitor(writer, this.context, () -> this.modified = true) {
 			@Override
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 				MethodData method = content.getMethod(name, Type.getType(descriptor));
 				boolean checkReturn = isMethodValid(method);
-				if (method.is(TypeModifier.ABSTRACT) || !(method.parameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || checkReturn)) {
+				if (method == null || method.is(TypeModifier.ABSTRACT) || !(method.parameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || checkReturn)) {
 					return visitor;
 				}
-				return new NotNullVisitor(type, visitor, method, !checkReturn, markedModified);
+				return new NotNullVisitor(type, visitor, method, !checkReturn, this::markModified);
 			}
 		};
 	}
@@ -85,10 +84,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 					return value;
 				}
 			}
-			if (parameter.isNamed()) {
-				return Utils.capitalize(parameter.name()) + " must not be null";
-			}
-			return ASMUtils.getSimpleName(parameter.type()) + " (parameter #" + parameter.index() + ") must not be null";
+			return parameter.getMessageName() + " must not be null";
 		}
 		
 		@Override

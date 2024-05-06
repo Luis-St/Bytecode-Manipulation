@@ -25,22 +25,18 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new AccessorImplementationVisitor(writer, this.context, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE), () -> this.modified = true);
+		return new AccessorImplementationVisitor(writer, this.context, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	
 	private static class AccessorImplementationVisitor extends BaseClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Accessor Implementation Error";
 		
-		private final PreloadContext context;
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
-		private final Runnable markModified;
 		
-		private AccessorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup, Runnable markModified) {
-			super(writer);
-			this.context = context;
+		private AccessorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+			super(writer, context, markModified);
 			this.lookup = lookup;
-			this.markModified = markModified;
 		}
 		
 		private static @NotNull CrashReport createReport(@NotNull String message, @NotNull Type iface, @NotNull String methodSignature) {
@@ -87,7 +83,6 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 		}
 		
 		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
-			//System.out.println("Validating Accessor - " + ifaceMethod.name() + " - " + iface.getInternalName());
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
@@ -141,7 +136,6 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 		}
 		
 		private void generateAccessor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
-			//System.out.println("Generating Accessor");
 			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
 			ASMUtils.addMethodAnnotations(method, ifaceMethod);
 			ASMUtils.addParameterAnnotations(method, ifaceMethod);
@@ -153,7 +147,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 			method.visitMaxs(1, 1);
 			method.visitEnd();
 			this.updateClass(ifaceMethod, target);
-			this.markModified.run();
+			this.markModified();
 		}
 		
 		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target) {

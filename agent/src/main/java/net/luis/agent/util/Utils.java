@@ -45,6 +45,18 @@ public class Utils {
 		return string.chars().allMatch(Character::isLetterOrDigit);
 	}
 	
+	public static @NotNull String getSeparated(@NotNull String name) {
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < name.length(); i++) {
+			char c = name.charAt(i);
+			if (Character.isUpperCase(c) && i > 0) {
+				builder.append(" ");
+			}
+			builder.append(c);
+		}
+		return builder.toString().toLowerCase();
+	}
+	
 	//region Array to list
 	public static @NotNull List<Boolean> asList(boolean @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());

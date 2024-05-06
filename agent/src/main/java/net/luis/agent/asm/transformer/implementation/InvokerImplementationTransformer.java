@@ -25,22 +25,18 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new InvokerImplementationVisitor(writer, this.context, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE), () -> this.modified = true);
+		return new InvokerImplementationVisitor(writer, this.context, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	
 	private static class InvokerImplementationVisitor extends BaseClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invoker Implementation Error";
 		
-		private final PreloadContext context;
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
-		private final Runnable markedModified;
 		
-		protected InvokerImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup, Runnable markedModified) {
-			super(writer);
-			this.context = context;
+		private InvokerImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+			super(writer, context, markModified);
 			this.lookup = lookup;
-			this.markedModified = markedModified;
 		}
 		
 		private static @NotNull CrashReport createReport(@NotNull String message, @NotNull Type iface, @NotNull String methodSignature) {
@@ -92,7 +88,6 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 		}
 		
 		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
-			//System.out.println("Validating Invoker - " + ifaceMethod.name() + " - " + iface.getInternalName());
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
@@ -138,7 +133,6 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 		}
 		
 		private void generateInvoker(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull MethodData targetMethod) {
-			//System.out.println("Generating Invoker");
 			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
 			ASMUtils.addMethodAnnotations(method, ifaceMethod);
 			ASMUtils.addParameterAnnotations(method, ifaceMethod);
@@ -157,7 +151,7 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 			method.visitMaxs(max, max);
 			method.visitEnd();
 			this.updateClass(ifaceMethod, target);
-			this.markedModified.run();
+			this.markModified();
 		}
 		
 		@SuppressWarnings("DuplicatedCode")

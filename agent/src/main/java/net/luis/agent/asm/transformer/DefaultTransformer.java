@@ -42,19 +42,17 @@ public class DefaultTransformer extends BaseClassTransformer {
 	}
 	
 	@Override
-	@SuppressWarnings("UnqualifiedFieldAccess")
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		ClassContent content = this.context.getClassContent(type);
-		Runnable markedModified = () -> this.modified = true;
-		return new BaseClassVisitor(writer) {
+		return new BaseClassVisitor(writer, this.context, () -> this.modified = true) {
 			@Override
 			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 				MethodData method = content.getMethod(name, Type.getType(descriptor));
-				if (method.is(TypeModifier.ABSTRACT) || method.parameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT))) {
+				if (method == null || method.is(TypeModifier.ABSTRACT) || method.parameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT))) {
 					return visitor;
 				}
-				return new DefaultVisitor(context, visitor, method, markedModified);
+				return new DefaultVisitor(this.context, visitor, method, this::markModified);
 			}
 		};
 	}

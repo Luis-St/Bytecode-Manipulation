@@ -25,23 +25,19 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new AssignorImplementationVisitor(writer, this.context, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE), () -> this.modified = true);
+		return new AssignorImplementationVisitor(writer, this.context, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	
 	private static class AssignorImplementationVisitor extends BaseClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Assignor Implementation Error";
 		
-		private final PreloadContext context;
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
-		private final Runnable markModified;
 		private final List<String> unfinal = new ArrayList<>();
 		
-		protected AssignorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup, Runnable markModified) {
-			super(writer);
-			this.context = context;
+		private AssignorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+			super(writer, context, markModified);
 			this.lookup = lookup;
-			this.markModified = markModified;
 		}
 		
 		private static @NotNull CrashReport createReport(@NotNull String message, @NotNull Type iface, @NotNull String methodSignature) {
@@ -88,7 +84,6 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		}
 		
 		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
-			//System.out.println("Validating Assignor - " + ifaceMethod.name() + " - " + iface.getInternalName());
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
@@ -145,7 +140,6 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 			if (targetField.is(TypeModifier.FINAL)) {
 				this.unfinal.add(targetField.name());
 			}
-			//System.out.println("Generating Assignor");
 			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
 			ASMUtils.addMethodAnnotations(method, ifaceMethod);
 			ASMUtils.addParameterAnnotations(method, ifaceMethod);
@@ -159,7 +153,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 			method.visitMaxs(2, 2);
 			method.visitEnd();
 			this.updateClass(ifaceMethod, target, targetField);
-			this.markModified.run();
+			this.markModified();
 		}
 		
 		@SuppressWarnings("DuplicatedCode")
@@ -177,7 +171,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
 			if (this.unfinal.contains(name)) {
 				access = access & ~Opcodes.ACC_FINAL;
-				this.markModified.run();
+				this.markModified();
 			}
 			return super.visitField(access, name, descriptor, signature, value);
 		}

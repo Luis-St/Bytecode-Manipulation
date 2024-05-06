@@ -16,7 +16,7 @@ import java.util.*;
  *
  */
 
-public class ClassInfoScanner extends BaseClassVisitor {
+public class ClassInfoScanner extends ClassVisitor {
 	
 	private final Map<Type, AnnotationData> classAnnotations = new HashMap<>();
 	private final Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
@@ -27,6 +27,10 @@ public class ClassInfoScanner extends BaseClassVisitor {
 	private TypeAccess access;
 	private ClassType classType;
 	private Type superType;
+	
+	public ClassInfoScanner() {
+		super(Opcodes.ASM9);
+	}
 	
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {

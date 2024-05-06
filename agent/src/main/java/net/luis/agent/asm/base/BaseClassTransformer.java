@@ -21,7 +21,7 @@ import java.util.List;
 
 public abstract class BaseClassTransformer implements ClassFileTransformer {
 	
-	protected static final List<String> IGNORED_CLASSES = List.of(
+	private static final List<String> IGNORED_CLASSES = List.of(
 		"java/", "javax/", "sun/", "com/sun/", "jdk/", // Java
 		"org/jetbrains/annotations/", "org/intellij/lang/annotations/", // JetBrains
 		"org/objectweb/asm/", // ASM
@@ -35,6 +35,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		this.context = context;
 	}
 	
+	//region Flags
 	protected int getClassWriterFlags() {
 		return ClassWriter.COMPUTE_MAXS;
 	}
@@ -42,6 +43,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 	protected int getClassReaderFlags() {
 		return ClassReader.EXPAND_FRAMES;
 	}
+	//endregion
 	
 	protected boolean shouldTransform(@NotNull Type type) {
 		for (String ignored : IGNORED_CLASSES) {
@@ -61,7 +63,6 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		ClassReader reader = new ClassReader(buffer);
 		ClassWriter writer = new ClassWriter(reader, this.getClassWriterFlags());
 		ClassVisitor visitor = this.visit(type, clazz, reader, writer);
-		//TraceClassVisitor trace = new TraceClassVisitor(visitor, new ASMifier(), new PrintWriter(System.out);
 		try {
 			reader.accept(visitor, this.getClassReaderFlags());
 			byte[] bytes = writer.toByteArray();
@@ -72,23 +73,18 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			}
 			return bytes;
 		} catch (Throwable throwable) {
-			try {
-				CrashReport report;
-				if (throwable instanceof ReportedException ex) {
-					report = ex.getReport();
-				} else {
-					report = CrashReport.create("Error occurred while transforming class '" + type + "'", throwable);
-				}
-				report.addDetailFirst("Transformed Class", type);
-				report.addDetailFirst("Class Transformer", this.getClass().getSimpleName());
-				report.addDetailFirst("Class Loader", loader.getName());
-				report.print();
-				if (!report.canContinue()) {
-					System.exit(report.getExitCode());
-				}
-			} catch (Exception e) {
-				System.err.println("Failed to handle error report");
-				System.err.println(e);
+			CrashReport report;
+			if (throwable instanceof ReportedException ex) {
+				report = ex.getReport();
+			} else {
+				report = CrashReport.create("Error occurred while transforming class '" + type + "'", throwable);
+			}
+			report.addDetailFirst("Transformed Class", type);
+			report.addDetailFirst("Class Transformer", this.getClass().getSimpleName());
+			report.addDetailFirst("Class Loader", loader.getName());
+			report.print();
+			if (!report.canContinue()) {
+				System.exit(report.getExitCode());
 			}
 		}
 		return null;
