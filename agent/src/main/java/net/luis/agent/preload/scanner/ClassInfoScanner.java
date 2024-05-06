@@ -34,7 +34,6 @@ public class ClassInfoScanner extends ClassVisitor {
 	
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
-		/*System.out.println("Annotation: " + descriptor);*/
 		Map<String, Object> values = new HashMap<>();
 		Type type = Type.getType(descriptor);
 		AnnotationData data = new AnnotationData(type, values);
@@ -44,8 +43,6 @@ public class ClassInfoScanner extends ClassVisitor {
 	
 	@Override
 	public ModuleVisitor visitModule(String name, int access, String version) {
-		/*System.out.println();
-		System.out.println("Module: " + name);*/
 		this.name = name;
 		this.type = Type.getType("Lmodule-info;");
 		this.access = TypeAccess.PUBLIC;
@@ -70,15 +67,6 @@ public class ClassInfoScanner extends ClassVisitor {
 		this.modifiers.addAll(TypeModifier.fromClassAccess(access));
 		this.superType = Type.getObjectType(superClass);
 		this.interfaces.addAll(Arrays.stream(interfaces).map(Type::getObjectType).toList());
-		/*System.out.println();
-		System.out.println("Class: " + this.name);
-		System.out.println("  Type: " + this.type);
-		System.out.println("  Class type: " + this.classType);
-		System.out.println("  Access: " + this.access);
-		System.out.println("  Modifiers: " + this.modifiers);
-		System.out.println("  Signature: " + this.signature);
-		System.out.println("  Super: " + this.superType);
-		System.out.println("  Interfaces: " + this.interfaces);*/
 	}
 	
 	public @NotNull ClassInfo getClassInfo() {

@@ -27,8 +27,6 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	
 	@Override
 	public void visit(@NotNull String parameter, @NotNull Object value) {
-		/*System.out.println("Parameter: " + parameter);
-		System.out.println("  Value: " + value);*/
 		switch (value) {
 			case boolean[] a -> this.consumer.accept(parameter, Utils.asList(a));
 			case byte[] a -> this.consumer.accept(parameter, Utils.asList(a));
@@ -67,8 +65,6 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String name, @NotNull String descriptor) {
-		/*System.out.println("Nested annotation: " + name);
-		System.out.println("  Descriptor: " + descriptor);*/
 		Map<String, Object> values = new HashMap<>();
 		this.consumer.accept(name, new AnnotationData(Type.getType(descriptor), values));
 		return new AnnotationScanner(values::put);

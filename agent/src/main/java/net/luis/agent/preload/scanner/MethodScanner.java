@@ -38,10 +38,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	
 	@Override
 	public AnnotationVisitor visitAnnotationDefault() {
-		return new AnnotationScanner((name, value) -> {
-			//System.out.println("Annotation default: " + value);
-			this.annotationDefaultConsumer.accept(value);
-		});
+		return new AnnotationScanner((name, value) -> this.annotationDefaultConsumer.accept(value));
 	}
 	
 	@Override
@@ -57,15 +54,11 @@ public class MethodScanner extends BaseMethodVisitor {
 		if (name == null) {
 			name = "arg" + this.parameterIndex;
 		}
-		/*System.out.println("Parameter name: " + name);
-		System.out.println("  Modifier: " + TypeModifier.fromParameterAccess(access));*/
 		this.parameters.put(this.parameterIndex++, Map.entry(name, TypeModifier.fromParameterAccess(access)));
 	}
 	
 	@Override
 	public @NotNull AnnotationVisitor visitParameterAnnotation(int parameter, @NotNull String descriptor, boolean visible) {
-		/*System.out.println("Parameter index: " + parameter);
-		System.out.println("  Type: " + Type.getType(descriptor));*/
 		Map<String, Object> values = new HashMap<>();
 		Type type = Type.getType(descriptor);
 		this.parameterAnnotations.computeIfAbsent(parameter, p -> new HashMap<>()).put(type, new AnnotationData(type, values));

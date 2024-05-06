@@ -37,10 +37,6 @@ public class ClassContentScanner extends ClassVisitor {
 	
 	@Override
 	public @NotNull RecordComponentVisitor visitRecordComponent(@NotNull String name, @NotNull String recordDescriptor, @Nullable String signature) {
-		/*System.out.println();
-		System.out.println("Record Component: " + name);
-		System.out.println("  Type: " + Type.getType(recordDescriptor));
-		System.out.println("  Signature: " + signature);*/
 		Map<Type, AnnotationData> annotations = new HashMap<>();
 		this.recordComponents.put(name, new RecordComponentData(name, Type.getType(recordDescriptor), signature, annotations));
 		return new BaseRecordComponentVisitor() {
@@ -53,13 +49,6 @@ public class ClassContentScanner extends ClassVisitor {
 	
 	@Override
 	public @NotNull FieldVisitor visitField(int access, @NotNull String name, @NotNull String fieldDescriptor, @Nullable String signature, @Nullable Object initialValue) {
-		/*System.out.println();
-		System.out.println("Field: " + name);
-		System.out.println("  Type: " + Type.getType(fieldDescriptor));
-		System.out.println("  Access: " + TypeAccess.fromAccess(access));
-		System.out.println("  Modifiers: " + TypeModifier.fromFieldAccess(access));
-		System.out.println("  Signature: " + signature);
-		System.out.println("  Initial value: " + initialValue);*/
 		Map<Type, AnnotationData> annotations = new HashMap<>();
 		this.fields.put(name, new FieldData(name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), annotations, initialValue));
 		return new BaseFieldVisitor() {
@@ -73,16 +62,6 @@ public class ClassContentScanner extends ClassVisitor {
 	
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exception) {
-		/*System.out.println();
-		System.out.println("Method: " + name);
-		System.out.println("  Type: " + Type.getType(descriptor));
-		System.out.println("  Parameters: " + Arrays.toString(Type.getArgumentTypes(descriptor)));
-		System.out.println("  Access: " + TypeAccess.fromAccess(access));
-		System.out.println("  Modifiers: " + TypeModifier.fromMethodAccess(access));
-		System.out.println("  Signature: " + signature);
-		if (exceptions != null) {
-			System.out.println("  Exceptions: " + Arrays.stream(exceptions).map(Type::getObjectType).toList());
-		}*/
 		Map<Type, AnnotationData> annotations = new HashMap<>();
 		List<ParameterData> parameters = new ArrayList<>();
 		List<Type> exceptions = Optional.ofNullable(exception).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
