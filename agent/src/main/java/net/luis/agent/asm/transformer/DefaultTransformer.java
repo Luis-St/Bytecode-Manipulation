@@ -26,22 +26,19 @@ public class DefaultTransformer extends BaseClassTransformer {
 	
 	private static final Type DEFAULT = Type.getType(Default.class);
 	
-	private final PreloadContext context;
-	
 	public DefaultTransformer(@NotNull PreloadContext context) {
-		this.context = context;
-	}
-	
-	@Override
-	protected boolean shouldIgnore(@NotNull Type type) {
-		ClassContent content = this.context.getClassContent(type);
-		return super.shouldIgnore(type) || content.methods().stream().filter(method -> !method.is(TypeModifier.ABSTRACT)).map(MethodData::parameters)
-			.flatMap(List::stream).noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
+		super(context);
 	}
 	
 	@Override
 	protected int getClassWriterFlags() {
 		return ClassWriter.COMPUTE_FRAMES;
+	}
+	
+	@Override
+	protected boolean shouldTransform(@NotNull Type type) {
+		ClassContent content = this.context.getClassContent(type);
+		return content.methods().stream().filter(MethodData::isImplementedMethod).map(MethodData::parameters).flatMap(List::stream).anyMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
 	}
 	
 	@Override

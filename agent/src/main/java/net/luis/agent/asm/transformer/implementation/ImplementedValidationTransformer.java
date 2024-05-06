@@ -19,10 +19,8 @@ import static net.luis.agent.asm.Types.*;
 
 public class ImplementedValidationTransformer extends BaseClassTransformer {
 	
-	private final PreloadContext context;
-	
 	public ImplementedValidationTransformer(@NotNull PreloadContext context) {
-		this.context = context;
+		super(context);
 	}
 	
 	@Override

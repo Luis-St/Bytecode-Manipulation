@@ -6,8 +6,7 @@ import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
-import net.luis.agent.preload.type.TypeAccess;
-import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.preload.type.*;
 import net.luis.agent.util.Mutable;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -20,10 +19,8 @@ import static net.luis.agent.asm.Types.*;
 
 public class AssignorImplementationTransformer extends BaseClassTransformer {
 	
-	private final PreloadContext context;
-	
 	public AssignorImplementationTransformer(@NotNull PreloadContext context) {
-		this.context = context;
+		super(context);
 	}
 	
 	@Override

@@ -3,6 +3,7 @@ package net.luis.agent.asm.base;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.report.ReportedException;
+import net.luis.agent.preload.PreloadContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -27,15 +28,11 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		"net/luis/agent/" // Agent
 	);
 	
+	protected final PreloadContext context;
 	protected boolean modified;
 	
-	protected boolean shouldIgnore(@NotNull Type type) {
-		for (String ignored : IGNORED_CLASSES) {
-			if (type.getInternalName().startsWith(ignored)) {
-				return true;
-			}
-		}
-		return false;
+	protected BaseClassTransformer(@NotNull PreloadContext context) {
+		this.context = context;
 	}
 	
 	protected int getClassWriterFlags() {
@@ -46,10 +43,19 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		return ClassReader.EXPAND_FRAMES;
 	}
 	
+	protected boolean shouldTransform(@NotNull Type type) {
+		for (String ignored : IGNORED_CLASSES) {
+			if (type.getInternalName().startsWith(ignored)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	@Override
 	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String className, @Nullable Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
 		Type type = Type.getObjectType(className);
-		if (this.shouldIgnore(type)) {
+		if (!this.shouldTransform(type)) {
 			return null;
 		}
 		ClassReader reader = new ClassReader(buffer);

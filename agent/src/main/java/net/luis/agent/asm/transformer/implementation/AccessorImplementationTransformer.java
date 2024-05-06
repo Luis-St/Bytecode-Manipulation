@@ -6,8 +6,7 @@ import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
-import net.luis.agent.preload.type.TypeAccess;
-import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.preload.type.*;
 import net.luis.agent.util.Mutable;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -20,10 +19,8 @@ import static net.luis.agent.asm.Types.*;
 
 public class AccessorImplementationTransformer extends BaseClassTransformer {
 	
-	private final PreloadContext context;
-	
 	public AccessorImplementationTransformer(@NotNull PreloadContext context) {
-		this.context = context;
+		super(context);
 	}
 	
 	@Override
@@ -102,7 +99,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Accessor must not be default implemented", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			//endregion
-			if (Type.VOID_TYPE.equals(ifaceMethod.getReturnType())) {
+			if (ifaceMethod.returns(Type.VOID_TYPE)) {
 				throw CrashReport.create("Method annotated with @Accessor has void return type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			if (ifaceMethod.getParameterCount() > 0) {
@@ -118,16 +115,16 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 					.addDetail("Existing Method", existingMethod.getMethodSignature()).exception();
 			}
 			String accessorTarget = this.getAccessorName(ifaceMethod);
-			if (!targetContent.hasField(accessorTarget)) {
+			FieldData targetField = targetContent.getField(accessorTarget);
+			if (targetField == null) {
 				throw CrashReport.create("Target field for accessor was not found in target class", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 					.addDetail("Expected Accessor Target", accessorTarget).exception();
 			}
-			FieldData targetField = targetContent.getField(accessorTarget);
 			if (targetField.access() == TypeAccess.PUBLIC) {
 				throw CrashReport.create("Target field for accessor is public, no accessor required", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 					.addDetail("Accessor Target", accessorTarget).exception();
 			}
-			if (!Objects.equals(targetField.type(), ifaceMethod.getReturnType())) {
+			if (!ifaceMethod.returns(targetField.type())) {
 				throw CrashReport.create("Accessor return type does not match target field type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 					.addDetail("Accessor Target", accessorTarget).addDetail("Expected Type", targetField.type()).addDetail("Actual Type", ifaceMethod.getReturnType()).exception();
 			}
@@ -163,7 +160,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 			Map<Type, AnnotationData> annotations = new HashMap<>(ifaceMethod.annotations());
 			annotations.remove(ACCESSOR);
 			annotations.put(GENERATED, new AnnotationData(GENERATED, new HashMap<>()));
-			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, EnumSet.noneOf(TypeModifier.class), annotations, new ArrayList<>(), new ArrayList<>(), new Mutable<>());
+			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, MethodType.METHOD, EnumSet.noneOf(TypeModifier.class), annotations, new ArrayList<>(), new ArrayList<>(), new Mutable<>());
 			content.methods().add(method);
 		}
 	}

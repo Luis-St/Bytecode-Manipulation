@@ -15,6 +15,8 @@ import org.objectweb.asm.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.luis.agent.asm.Types.*;
+
 /**
  *
  * @author Luis-St
@@ -23,12 +25,8 @@ import java.util.List;
 
 public class NotNullTransformer extends BaseClassTransformer {
 	
-	private static final Type NOT_NULL = Type.getType(NotNull.class);
-	
-	private final PreloadContext context;
-	
 	public NotNullTransformer(@NotNull PreloadContext context) {
-		this.context = context;
+		super(context);
 	}
 	
 	private boolean checkReturn(@NotNull MethodData method) {
@@ -36,8 +34,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 	}
 	
 	@Override
-	@SuppressWarnings("DuplicatedCode")
-	protected boolean shouldIgnore(@NotNull Type type) {
+	protected boolean shouldTransform(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
 		return (content.methods().stream().filter(method -> !method.is(TypeModifier.ABSTRACT)).map(MethodData::parameters).flatMap(List::stream).noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) &&
 			content.methods().stream().noneMatch(this::checkReturn)) || super.shouldIgnore(type);

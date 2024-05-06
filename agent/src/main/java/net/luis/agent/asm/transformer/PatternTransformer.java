@@ -8,7 +8,6 @@ import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeModifier;
 import net.luis.agent.util.Utils;
-import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -16,6 +15,8 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.luis.agent.asm.Types.*;
 
 /**
  *
@@ -25,13 +26,8 @@ import java.util.List;
 
 public class PatternTransformer extends BaseClassTransformer {
 	
-	private static final Type PATTERN = Type.getType(Pattern.class);
-	private static final Type STRING = Type.getType(String.class);
-	
-	private final PreloadContext context;
-	
 	public PatternTransformer(@NotNull PreloadContext context) {
-		this.context = context;
+		super(context);
 	}
 	
 	private boolean checkReturn(@NotNull MethodData method) {
@@ -39,16 +35,15 @@ public class PatternTransformer extends BaseClassTransformer {
 	}
 	
 	@Override
-	@SuppressWarnings("DuplicatedCode")
-	protected boolean shouldIgnore(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
 		return (content.methods().stream().filter(method -> !method.is(TypeModifier.ABSTRACT)).map(MethodData::parameters).flatMap(List::stream).noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) &&
 			content.methods().stream().noneMatch(this::checkReturn)) || super.shouldIgnore(type);
+	protected int getClassWriterFlags() {
+		return ClassWriter.COMPUTE_FRAMES;
 	}
 	
 	@Override
-	protected int getClassWriterFlags() {
-		return ClassWriter.COMPUTE_FRAMES;
+	protected boolean shouldTransform(@NotNull Type type) {
 	}
 	
 	@Override

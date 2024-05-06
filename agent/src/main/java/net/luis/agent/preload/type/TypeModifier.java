@@ -1,7 +1,6 @@
 package net.luis.agent.preload.type;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
 import org.objectweb.asm.Opcodes;
 
 import java.util.EnumSet;

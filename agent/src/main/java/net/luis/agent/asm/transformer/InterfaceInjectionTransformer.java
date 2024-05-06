@@ -3,9 +3,8 @@ package net.luis.agent.asm.transformer;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseClassVisitor;
-import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.data.MethodData;
+import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.type.ClassType;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -26,11 +25,10 @@ import static net.luis.agent.asm.Types.*;
 public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
-	private final PreloadContext context;
 	
 	public InterfaceInjectionTransformer(@NotNull PreloadContext context) {
+		super(context);
 		this.lookup = ASMUtils.createTargetsLookup(context, INJECT_INTERFACE);
-		this.context = context;
 	}
 	
 	@Override
