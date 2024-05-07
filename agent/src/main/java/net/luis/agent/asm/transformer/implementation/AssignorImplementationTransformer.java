@@ -121,7 +121,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Target field for assignor is public and not final, no assignor required", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Accessor Target", accessorTarget).exception();
 			}
-			if (!Objects.equals(targetField.type(), ifaceMethod.getParameterType(0))) {
+			if (!targetField.is(ifaceMethod.getParameterType(0))) {
 				throw CrashReport.create("Assignor parameter type does not match target field type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Accessor Target", accessorTarget).addDetail("Expected Type", targetField.type()).addDetail("Actual Type", ifaceMethod.getReturnType()).exception();
 			}

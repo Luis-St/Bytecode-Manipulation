@@ -5,6 +5,7 @@ import net.luis.agent.preload.data.MethodData;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 
 /**
  *
@@ -36,5 +37,12 @@ public abstract class ModificationMethodVisitor extends BaseMethodVisitor {
 	
 	protected void markModified() {
 		this.markModified.run();
+	}
+	
+	protected int newLocal(@NotNull Type type) {
+		if (this.mv instanceof LocalVariablesSorter sorter) {
+			return sorter.newLocal(type);
+		}
+		throw new IllegalStateException("LocalVariablesSorter is required as base visitor");
 	}
 }

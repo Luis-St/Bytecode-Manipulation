@@ -17,7 +17,17 @@ public interface ASMData {
 	
 	@NotNull String name();
 	
+	//region Type
 	@NotNull Type type();
+	
+	default boolean is(@NotNull Type type) {
+		return this.type().equals(type);
+	}
+	
+	default boolean isAny(@NotNull Type... type) {
+		return Arrays.stream(type).anyMatch(this::is);
+	}
+	//endregion
 	
 	@Nullable String signature();
 	

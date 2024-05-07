@@ -120,7 +120,7 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Target method of invoker is public, no invoker required", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature)
 					.addDetail("Target Method", targetMethod.getMethodSignature()).exception();
 			}
-			if (!Objects.equals(targetMethod.type(), ifaceMethod.type())) {
+			if (!targetMethod.is(ifaceMethod.type())) {
 				throw CrashReport.create("Invoker method signature does not match target method signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature)
 					.addDetail("Target Method", targetMethod.getMethodSignature()).exception();
 			}

@@ -78,7 +78,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 			if (!field.is(TypeAccess.PUBLIC, TypeModifier.STATIC, TypeModifier.FINAL)) {
 				throw CrashReport.create("INSTANCE field in string factory class is not public static final", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}
-			if (!field.type().equals(factory)) {
+			if (!field.is(factory)) {
 				throw CrashReport.create("INSTANCE field in string factory class has invalid type", REPORT_CATEGORY).addDetail("Factory", factory)
 					.addDetail("Expected Type", factory).addDetail("Actual Type", field.type()).exception();
 			}
@@ -95,7 +95,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 				this.mv.visitJumpInsn(Opcodes.IFNONNULL, label);
 				
 				String value = parameter.getAnnotation(DEFAULT).getOrDefault(this.context, "value");
-				if (parameter.type().equals(STRING)) {
+				if (parameter.is(STRING)) {
 					this.mv.visitLdcInsn(value);
 				} else {
 					Type factory = this.getFactory(parameter);

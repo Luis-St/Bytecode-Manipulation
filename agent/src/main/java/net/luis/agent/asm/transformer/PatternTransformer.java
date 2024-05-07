@@ -63,11 +63,9 @@ public class PatternTransformer extends BaseClassTransformer {
 		private static final Type ILL_ARG = Type.getType(IllegalArgumentException.class);
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
-		private final LocalVariablesSorter sorter;
 		
 		private PatternVisitor(@NotNull LocalVariablesSorter visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
 			super(visitor, context, type, method, markModified);
-			this.sorter = visitor;
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(PATTERN)).forEach(this.lookup::add);
 		}
 		
@@ -105,7 +103,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				}
 				Label start = new Label();
 				Label end = new Label();
-				int local = this.sorter.newLocal(this.method.getReturnType());
+				int local = this.newLocal(this.method.getReturnType());
 				this.mv.visitLabel(start);
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
 		

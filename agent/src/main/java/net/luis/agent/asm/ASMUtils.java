@@ -35,6 +35,9 @@ public class ASMUtils {
 		Map<String, List<String>> lookup = new HashMap<>();
 		context.stream().filter(ClassDataPredicate.annotatedWith(annotationType)).forEach((info, content) -> {
 			List<Type> types = info.getAnnotation(annotationType).get("targets");
+			if (types == null || types.isEmpty()) {
+				return;
+			}
 			for (Type target : types) {
 				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
 			}
