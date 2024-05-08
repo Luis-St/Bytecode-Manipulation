@@ -97,10 +97,6 @@ public class PatternTransformer extends BaseClassTransformer {
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.isValidReturn()) {
 				String value = this.method.getAnnotation(PATTERN).get("value");
-				if (value == null) {
-					this.mv.visitInsn(opcode);
-					return;
-				}
 				Label start = new Label();
 				Label end = new Label();
 				int local = this.newLocal(this.method.getReturnType());

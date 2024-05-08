@@ -57,12 +57,12 @@ public interface ASMData {
 		return List.copyOf(this.annotations().values());
 	}
 	
-	default boolean isAnnotatedWith(@Nullable Type type) {
-		return type != null && this.annotations().containsKey(type);
+	default boolean isAnnotatedWith(@NotNull Type type) {
+		return this.annotations().containsKey(type);
 	}
 	
 	default boolean isAnnotatedWithAny(@NotNull Type... type) {
-		return type != null && Arrays.stream(type).anyMatch(this::isAnnotatedWith);
+		return Arrays.stream(type).anyMatch(this::isAnnotatedWith);
 	}
 	
 	default @NotNull AnnotationData getAnnotation(@NotNull Type type) {

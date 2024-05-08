@@ -6,8 +6,7 @@ import net.luis.utils.logging.LoggingType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.intellij.lang.annotations.Pattern;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 
 import java.util.*;
 
@@ -56,7 +55,8 @@ public final class Main {
 		System.out.println("Values: " + values);
 	}
 	
-	public static @NotNull @Pattern("^.*$") String getExtension(@Nullable String file) {
+	@Pattern("^.*$")
+	public static @NotNull String getExtension(@Nullable String file) {
 		String str = StringUtils.stripToEmpty(file);
 		int index = str.lastIndexOf(".");
 		if (index == -1) {
