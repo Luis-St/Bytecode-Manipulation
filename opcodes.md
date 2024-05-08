@@ -79,3 +79,35 @@
  Loads a char value from an array. The array reference and the index are popped from the operand stack.
  - `SALOAD`:\
  Loads a short value from an array. The array reference and the index are popped from the operand stack.
+
+# Convert too
+ - `I2B`:\
+ Convert int to byte.
+ - `I2C`:\
+ Convert int to char.
+ - `I2S`:\
+ Convert int to short.
+ - `I2L`:\
+ Convert int to long.
+ - `I2F`:\
+ Convert int to float.
+ - `I2D`:\
+ Convert int to double.
+ - `L2I`:\
+ Convert long to int.
+ - `L2F`:\
+ Convert long to float.
+ - `L2D`:\
+ Convert long to double.
+ - `F2I`:\
+ Convert float to int.
+ - `F2L`:\
+ Convert float to long.
+ - `F2D`:\
+ Convert float to double.
+ - `D2I`:\
+ Convert double to int.
+ - `D2L`:\
+ Convert double to long.
+ - `D2F`:\
+ Convert double to float.
