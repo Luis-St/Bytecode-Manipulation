@@ -124,16 +124,16 @@ public class RangeTransformer extends BaseClassTransformer {
 				int index = this.method.is(TypeModifier.STATIC) ? parameter.index() : parameter.index() + 1;
 				
 				if (parameter.isAnnotatedWith(ABOVE)) {
-					this.instrument(parameter.getAnnotation(ABOVE), parameter.type(), index, true, Opcodes.IFLE, message + "above");
+					this.instrument(parameter.getAnnotation(ABOVE), parameter.type(), index, true, Opcodes.IFGT, message + "above");
 				}
 				if (parameter.isAnnotatedWith(ABOVE_EQUAL)) {
-					this.instrument(parameter.getAnnotation(ABOVE_EQUAL), parameter.type(), index, true, Opcodes.IFLT, message + "above or equal to");
+					this.instrument(parameter.getAnnotation(ABOVE_EQUAL), parameter.type(), index, true, Opcodes.IFGE, message + "above or equal to");
 				}
 				if (parameter.isAnnotatedWith(BELOW)) {
-					this.instrument(parameter.getAnnotation(BELOW), parameter.type(), index, false, Opcodes.IFLE, message + "below");
+					this.instrument(parameter.getAnnotation(BELOW), parameter.type(), index, false, Opcodes.IFGT, message + "below");
 				}
 				if (parameter.isAnnotatedWith(BELOW_EQUAL)) {
-					this.instrument(parameter.getAnnotation(BELOW_EQUAL), parameter.type(), index, false, Opcodes.IFLT, message + "below or equal to");
+					this.instrument(parameter.getAnnotation(BELOW_EQUAL), parameter.type(), index, false, Opcodes.IFGE, message + "below or equal to");
 				}
 				this.markModified();
 			}
@@ -159,16 +159,16 @@ public class RangeTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
 				
 				if (this.method.isAnnotatedWith(ABOVE)) {
-					this.instrument(this.method.getAnnotation(ABOVE), type, local, true, Opcodes.IFLE, message + "above");
+					this.instrument(this.method.getAnnotation(ABOVE), type, local, true, Opcodes.IFGT, message + "above");
 				}
 				if (this.method.isAnnotatedWith(ABOVE_EQUAL)) {
-					this.instrument(this.method.getAnnotation(ABOVE_EQUAL), type, local, true, Opcodes.IFLT,  message + "above or equal to");
+					this.instrument(this.method.getAnnotation(ABOVE_EQUAL), type, local, true, Opcodes.IFGE,  message + "above or equal to");
 				}
 				if (this.method.isAnnotatedWith(BELOW)) {
-					this.instrument(this.method.getAnnotation(BELOW), type, local, false, Opcodes.IFLE,  message + "below");
+					this.instrument(this.method.getAnnotation(BELOW), type, local, false, Opcodes.IFGT,  message + "below");
 				}
 				if (this.method.isAnnotatedWith(BELOW_EQUAL)) {
-					this.instrument(this.method.getAnnotation(BELOW_EQUAL), type, local, false, Opcodes.IFLT,  message + "below or equal to");
+					this.instrument(this.method.getAnnotation(BELOW_EQUAL), type, local, false, Opcodes.IFGE,  message + "below or equal to");
 				}
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);

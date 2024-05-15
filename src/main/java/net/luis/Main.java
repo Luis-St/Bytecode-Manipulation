@@ -1,13 +1,15 @@
 package net.luis;
 
 import net.luis.agent.annotation.Default;
-import net.luis.agent.annotation.range.*;
+import net.luis.agent.annotation.range.Above;
+import net.luis.agent.annotation.range.BelowEqual;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.intellij.lang.annotations.Pattern;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -34,6 +36,7 @@ public final class Main {
 		LoggerConfiguration logger = new LoggerConfiguration("*");
 		
 		execute("ls", null, null);
+		validateIndex(1);
 		if (logger instanceof MyInterface my) {
 			System.out.println("LoggerConfiguration is an instance of MyInterface!");
 			System.out.println(my.build().getName());
@@ -68,7 +71,7 @@ public final class Main {
 	}
 	
 	@Above(0)
-	public static int validateIndex(@BelowEqual(0) int index) {
+	public static int validateIndex(@BelowEqual(1) int index) {
 		System.out.println("Index: " + index);
 		return index;
 	}
