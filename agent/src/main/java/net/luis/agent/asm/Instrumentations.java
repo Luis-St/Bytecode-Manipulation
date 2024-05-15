@@ -13,6 +13,56 @@ public interface Instrumentations {
 	
 	@NotNull MethodVisitor getDelegate();
 	
+	//region Number loading as
+	default void loadNumberAsInt(@NotNull Type type, int index) {
+		MethodVisitor mv = this.getDelegate();
+		mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+		if (type.equals(Type.LONG_TYPE)) {
+			mv.visitInsn(Opcodes.L2I);
+		} else if (type.equals(Type.FLOAT_TYPE)) {
+			mv.visitInsn(Opcodes.F2I);
+		} else if (type.equals(Type.DOUBLE_TYPE)) {
+			mv.visitInsn(Opcodes.D2I);
+		}
+	}
+	
+	default void loadNumberAsLong(@NotNull Type type, int index) {
+		MethodVisitor mv = this.getDelegate();
+		mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+		if (type.equals(Type.BYTE_TYPE) || type.equals(Type.SHORT_TYPE) || type.equals(Type.INT_TYPE)) {
+			mv.visitInsn(Opcodes.I2L);
+		} else if (type.equals(Type.FLOAT_TYPE)) {
+			mv.visitInsn(Opcodes.F2L);
+		} else if (type.equals(Type.DOUBLE_TYPE)) {
+			mv.visitInsn(Opcodes.D2L);
+		}
+	}
+	
+	default void loadNumberAsFloat(@NotNull Type type, int index) {
+		MethodVisitor mv = this.getDelegate();
+		mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+		if (type.equals(Type.BYTE_TYPE) || type.equals(Type.SHORT_TYPE) || type.equals(Type.INT_TYPE)) {
+			mv.visitInsn(Opcodes.I2F);
+		} else if (type.equals(Type.LONG_TYPE)) {
+			mv.visitInsn(Opcodes.L2F);
+		} else if (type.equals(Type.DOUBLE_TYPE)) {
+			mv.visitInsn(Opcodes.D2F);
+		}
+	}
+	
+	default void loadNumberAsDouble(@NotNull Type type, int index) {
+		MethodVisitor mv = this.getDelegate();
+		mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+		if (type.equals(Type.BYTE_TYPE) || type.equals(Type.SHORT_TYPE) || type.equals(Type.INT_TYPE)) {
+			mv.visitInsn(Opcodes.I2D);
+		} else if (type.equals(Type.LONG_TYPE)) {
+			mv.visitInsn(Opcodes.L2D);
+		} else if (type.equals(Type.FLOAT_TYPE)) {
+			mv.visitInsn(Opcodes.F2D);
+		}
+	}
+	//endregion
+	
 	default void instrumentThrownException(@NotNull Type type, @NotNull String message) {
 		MethodVisitor mv = this.getDelegate();
 		mv.visitTypeInsn(Opcodes.NEW, type.getInternalName());
