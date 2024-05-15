@@ -1,11 +1,9 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.annotation.*;
-import net.luis.agent.annotation.unused.Above;
-import net.luis.agent.annotation.unused.Below;
+import net.luis.agent.annotation.unused.*;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Range;
 import org.objectweb.asm.Type;
 
 import java.util.Set;
@@ -37,7 +35,8 @@ public interface Types {
 	Type NOT_NULL = Type.getType(NotNull.class);
 	Type PATTERN = Type.getType(Pattern.class);
 	
-	Type RANGE = Type.getType(Range.class);
 	Type ABOVE = Type.getType(Above.class);
+	Type ABOVE_EQUAL = Type.getType(AboveEqual.class);
 	Type BELOW = Type.getType(Below.class);
+	Type BELOW_EQUAL = Type.getType(BelowEqual.class);
 }
