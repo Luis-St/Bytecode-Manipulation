@@ -56,8 +56,8 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getMessage(@NotNull ParameterData parameter) {
 			AnnotationData annotation = parameter.getAnnotation(NOT_NULL);
-			String value = annotation.get("message");
-			if (value != null && !value.isBlank()) {
+			String value = annotation.getOrDefault(this.context, "value");
+			if (!value.isBlank()) {
 				if (Utils.isSingleWord(value.strip())) {
 					return Utils.capitalize(value.strip()) + " must not be null";
 				}

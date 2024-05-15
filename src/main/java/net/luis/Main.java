@@ -68,7 +68,6 @@ public final class Main {
 	}
 	
 	@Above(0)
-	@AboveEqual(0)
 	public static int validateIndex(@BelowEqual(0) int index) {
 		System.out.println("Index: " + index);
 		return index;
