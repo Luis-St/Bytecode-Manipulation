@@ -80,7 +80,7 @@
  - `SALOAD`:\
  Loads a short value from an array. The array reference and the index are popped from the operand stack.
 
-# Convert too
+# Convert to
  - `I2B`:\
  Convert int to byte.
  - `I2C`:\
@@ -111,3 +111,47 @@
  Convert double to long.
  - `D2F`:\
  Convert double to float.
+
+# Compare to
+ - `LCMP`:\
+ Compare two long values, pushing -1 if the first value is less than the second, 0 if they're equal, and 1 if the first value is greater than the second.
+ - `FCMPL`:\
+ Compare two float values, pushing -1 if the first value is less than the second, 0 if they're equal, and 1 if the first value is greater than the second. If either value is NaN, push -1.
+ - `FCMPG`:\
+ Compare two float values, pushing -1 if the first value is less than the second, 0 if they're equal, and 1 if the first value is greater than the second. If either value is NaN, push 1.
+ - `DCMPL`:\
+ Compare two double values, pushing -1 if the first value is less than the second, 0 if they're equal, and 1 if the first value is greater than the second. If either value is NaN, push -1.
+ - `DCMPG`:\
+ Compare two double values, pushing -1 if the first value is less than the second, 0 if they're equal, and 1 if the first value is greater than the second. If either value is NaN, push 1.
+ - `IFEQ`:\
+ Jump if int comparison with zero succeeds.
+ - `IFNE`:\
+ Jump if int comparison with zero fails.
+ - `IFLT`:\
+ Jump if int comparison is less than zero.
+ - `IFGE`:\
+ Jump if int comparison is greater than or equal to zero.
+ - `IFGT`:\
+ Jump if int comparison is greater than zero.
+ - `IFLE`:\
+ Jump if int comparison is less than or equal to zero.
+ - `IF_ICMPEQ`:\
+ Jump if int comparison succeeds.
+ - `IF_ICMPNE`:\
+ Jump if int comparison fails.
+ - `IF_ICMPLT`:\
+ Jump if int comparison is less than zero.
+ - `IF_ICMPGE`:\
+ Jump if int comparison is greater than or equal to zero.
+ - `IF_ICMPGT`:\
+ Jump if int comparison is greater than zero.
+ - `IF_ICMPLE`:\
+ Jump if int comparison is less than or equal to zero.
+ - `IF_ACMPEQ`:\
+ Jump if object comparison succeeds.
+ - `IF_ACMPNE`:\
+ Jump if object comparison fails.
+ - `IFNULL`:\
+ Jump if an object is null.
+ - `IFNONNULL`:\
+ Jump if an object is not null.
