@@ -34,5 +34,6 @@ public class Agent {
 		inst.addTransformer(new PatternTransformer(CONTEXT));
 		inst.addTransformer(new NotNullTransformer(CONTEXT));
 		inst.addTransformer(new DefaultTransformer(CONTEXT));
+		inst.addTransformer(new RangeTransformer(CONTEXT));
 	}
 }

@@ -76,10 +76,7 @@ public class PatternTransformer extends BaseClassTransformer {
 			for (ParameterData parameter : this.lookup) {
 				Label label = new Label();
 				String value = parameter.getAnnotation(PATTERN).get("value");
-				if (value == null) {
-					continue;
-				}
-		
+				
 				this.instrumentPatternCheck(value, isStatic ? parameter.index() : parameter.index() + 1, label);
 				this.instrumentThrownException(ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
 		
@@ -109,7 +106,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.mv.visitLabel(end);
 				this.mv.visitVarInsn(Opcodes.ALOAD, local);
-				this.mv.visitLocalVariable("generated$Return_Temp" + local, STRING.getDescriptor(), null, start, end, local);
+				this.mv.visitLocalVariable("generated$PatternTransformer$Temp" + local, STRING.getDescriptor(), null, start, end, local);
 				this.markModified();
 			}
 			this.mv.visitInsn(opcode);

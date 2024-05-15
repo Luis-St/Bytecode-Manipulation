@@ -1,6 +1,7 @@
 package net.luis;
 
 import net.luis.agent.annotation.Default;
+import net.luis.agent.annotation.range.*;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.commons.lang3.StringUtils;
@@ -64,5 +65,12 @@ public final class Main {
 		} else {
 			return str.substring(index + 1);
 		}
+	}
+	
+	@Above(0)
+	@AboveEqual(0)
+	public static int validateIndex(@BelowEqual(0) int index) {
+		System.out.println("Index: " + index);
+		return index;
 	}
 }

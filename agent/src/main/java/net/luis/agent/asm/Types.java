@@ -1,7 +1,7 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.annotation.*;
-import net.luis.agent.annotation.unused.*;
+import net.luis.agent.annotation.range.*;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
