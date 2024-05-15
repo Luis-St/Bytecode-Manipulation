@@ -1,7 +1,7 @@
 package net.luis.agent.preload;
 
-import net.luis.agent.preload.data.ClassContent;
-import net.luis.agent.preload.data.ClassInfo;
+import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.scanner.MethodContent;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -47,5 +47,9 @@ public class PreloadContext {
 	
 	public @NotNull ClassDataStream stream() {
 		return new ClassDataStream(this.getClassData().values().stream());
+	}
+	
+	public @NotNull MethodContent getMethodContent(@NotNull Type type, @NotNull MethodData method) {
+		return ClassFileScanner.scanMethodContent(type, method);
 	}
 }
