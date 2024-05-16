@@ -159,10 +159,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		@SuppressWarnings("DuplicatedCode")
 		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
 			ClassContent content = this.context.getClassContent(target);
-			Map<Type, AnnotationData> annotations = new HashMap<>(ifaceMethod.annotations());
-			annotations.remove(ASSIGNOR);
-			annotations.put(GENERATED, new AnnotationData(GENERATED, new HashMap<>()));
-			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, MethodType.METHOD, EnumSet.noneOf(TypeModifier.class), annotations, ifaceMethod.parameters(), new ArrayList<>(), new Mutable<>());
+			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, MethodType.METHOD, EnumSet.noneOf(TypeModifier.class), ifaceMethod.annotations(), ifaceMethod.parameters(), new ArrayList<>(), new Mutable<>());
 			content.methods().add(method);
 			targetField.modifiers().remove(TypeModifier.FINAL);
 		}

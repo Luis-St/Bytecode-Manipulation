@@ -25,7 +25,6 @@ public interface Types {
 	
 	Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
-	Type GENERATED = Type.getType(Generated.class);
 	Type IMPLEMENTED = Type.getType(Implemented.class);
 	Type ACCESSOR = Type.getType(Accessor.class);
 	Type ASSIGNOR = Type.getType(Assignor.class);
