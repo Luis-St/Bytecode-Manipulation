@@ -32,6 +32,10 @@ public interface ASMData {
 	@Nullable String signature();
 	
 	//region Access & Modifiers
+	default int getOpcodes() {
+		return this.access().getOpcode() | TypeModifier.toOpcodes(this.modifiers());
+	}
+	
 	@NotNull TypeAccess access();
 	
 	default boolean is(@NotNull TypeAccess access) {

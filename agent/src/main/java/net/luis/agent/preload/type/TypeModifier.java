@@ -32,15 +32,15 @@ public enum TypeModifier {
 	MANDATED(Opcodes.ACC_MANDATED, false, false, false, true, false),
 	DEPRECATED(Opcodes.ACC_DEPRECATED, true, true, true, true, true);
 	
-	private final int value;
+	private final int opcode;
 	private final boolean clazz;
 	private final boolean field;
 	private final boolean method;
 	private final boolean parameter;
 	private final boolean module;
 	
-	TypeModifier(int value, boolean clazz, boolean field, boolean method, boolean parameter, boolean module) {
-		this.value = value;
+	TypeModifier(int opcode, boolean clazz, boolean field, boolean method, boolean parameter, boolean module) {
+		this.opcode = opcode;
 		this.clazz = clazz;
 		this.field = field;
 		this.method = method;
@@ -48,6 +48,7 @@ public enum TypeModifier {
 		this.module = module;
 	}
 	
+	//region Static methods
 	public static @NotNull Set<TypeModifier> fromClassAccess(int access) {
 		return fromAccess(access).stream().filter(TypeModifier::allowedOnClass).collect(Collectors.toSet());
 	}
@@ -71,11 +72,20 @@ public enum TypeModifier {
 	public static @NotNull Set<TypeModifier> fromAccess(int access) {
 		Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
 		for (TypeModifier modifier : values()) {
-			if ((access & modifier.value) != 0) {
+			if ((access & modifier.opcode) != 0) {
 				modifiers.add(modifier);
 			}
 		}
 		return modifiers;
+	}
+	
+	public static int toOpcodes(@NotNull Set<TypeModifier> modifiers) {
+		return modifiers.stream().mapToInt(TypeModifier::getOpcode).reduce(0, (a, b) -> a | b);
+	}
+	//endregion
+	
+	public int getOpcode() {
+		return this.opcode;
 	}
 	
 	public boolean allowedOnClass() {

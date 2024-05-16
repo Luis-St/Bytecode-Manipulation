@@ -11,28 +11,34 @@ import org.objectweb.asm.Opcodes;
 
 public enum ClassType {
 	
-	CLASS(-1),
+	CLASS(0),
 	ANNOTATION(Opcodes.ACC_ANNOTATION),
 	INTERFACE(Opcodes.ACC_INTERFACE),
 	ENUM(Opcodes.ACC_ENUM),
 	RECORD(Opcodes.ACC_RECORD),
 	MODULE(Opcodes.ACC_MODULE);
 	
-	private final int value;
+	private final int opcode;
 	
-	ClassType(int value) {
-		this.value = value;
+	ClassType(int opcode) {
+		this.opcode = opcode;
 	}
 	
+	//region Static methods
 	public static @NotNull ClassType fromAccess(int access) {
 		for (ClassType type : values()) {
 			if (type == CLASS) {
 				continue;
 			}
-			if ((access & type.value) != 0) {
+			if ((access & type.opcode) != 0) {
 				return type;
 			}
 		}
 		return CLASS;
+	}
+	//endregion
+	
+	public int getOpcode() {
+		return this.opcode;
 	}
 }
