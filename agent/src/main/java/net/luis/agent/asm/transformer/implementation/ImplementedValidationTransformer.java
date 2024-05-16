@@ -25,7 +25,7 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new ImplementedValidationVisitor(writer, this.context, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
+		return new ImplementedValidationVisitor(writer, this.context, type, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	
 	private static class ImplementedValidationVisitor extends BaseClassVisitor {
@@ -34,8 +34,8 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private ImplementedValidationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
-			super(writer, context, markModified);
+		private ImplementedValidationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+			super(writer, context, type, markModified);
 			this.lookup = lookup;
 		}
 		

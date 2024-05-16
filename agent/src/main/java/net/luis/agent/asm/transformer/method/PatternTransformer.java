@@ -2,7 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
+import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.base.visitor.ModificationMethodVisitor;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -30,25 +30,22 @@ public class PatternTransformer extends BaseClassTransformer {
 		super(context, true);
 	}
 	
+	//region Type filtering
 	@Override
 	protected boolean shouldTransform(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
 		return content.getParameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || content.methods().stream().anyMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
 	}
+	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		ClassContent content = this.context.getClassContent(type);
-		return new BaseClassVisitor(writer, this.context, () -> this.modified = true) {
+		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
+			
 			@Override
-			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
-				MethodData method = content.getMethod(name, Type.getType(descriptor));
-				if (method == null || method.is(TypeModifier.ABSTRACT)) {
-					return visitor;
-				}
-				LocalVariablesSorter sorter = new LocalVariablesSorter(access, descriptor, visitor);
-				return new PatternVisitor(sorter, this.context, type, method, this::markModified);
+			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
+				return new PatternVisitor(visitor, this.context, this.type, method, this::markModified);
 			}
 		};
 	}

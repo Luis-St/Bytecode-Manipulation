@@ -1,8 +1,7 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
-import net.luis.agent.asm.base.visitor.ModificationMethodVisitor;
+import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -11,6 +10,7 @@ import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,24 +29,22 @@ public class DefaultTransformer extends BaseClassTransformer {
 		super(context, true);
 	}
 	
+	//region Type filtering
 	@Override
 	protected boolean shouldTransform(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
 		return content.getParameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
 	}
+	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		ClassContent content = this.context.getClassContent(type);
-		return new BaseClassVisitor(writer, this.context, () -> this.modified = true) {
+		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
+			
 			@Override
-			public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-				MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
-				MethodData method = content.getMethod(name, Type.getType(descriptor));
-				if (method == null || method.is(TypeModifier.ABSTRACT)) {
-					return visitor;
-				}
-				return new DefaultVisitor(visitor, this.context, type, method, this::markModified);
+			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
+				return new DefaultVisitor(visitor, this.context, this.type, method, this::markModified);
 			}
 		};
 	}

@@ -28,11 +28,13 @@ public class AsyncTransformer extends BaseClassTransformer {
 		super(context, true);
 	}
 	
+	//region Type filtering
 	@Override
 	protected boolean shouldTransform(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
 		return content.methods().stream().anyMatch(method -> method.returns(VOID) && method.isAnnotatedWith(ASYNC));
 	}
+	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
@@ -46,18 +48,16 @@ public class AsyncTransformer extends BaseClassTransformer {
 			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false);
 		private static final Type VOID_METHOD = Type.getMethodType(VOID);
 		
-		private final Type type;
 		private final ClassContent content;
 		private final Map<MethodData, String> methods = new HashMap<>();
 		
 		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull ClassContent content, @NotNull Runnable markModified) {
-			super(visitor, context, markModified);
-			this.type = type;
+			super(visitor, context, type, markModified);
 			this.content = content;
 		}
 		
 		@Override
-		public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
+		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodData method = this.content.getMethod(name, Type.getMethodType(descriptor));
 			if (method == null || !method.is(MethodType.METHOD) || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(ASYNC)) {
 				return super.visitMethod(access, name, descriptor, signature, exceptions);

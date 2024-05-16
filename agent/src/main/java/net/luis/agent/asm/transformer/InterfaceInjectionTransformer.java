@@ -34,7 +34,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	@Override
 	@SuppressWarnings("UnqualifiedFieldAccess")
 	public @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new BaseClassVisitor(writer, this.context, () -> this.modified = true) {
+		return new BaseClassVisitor(writer, this.context, type, () -> this.modified = true) {
 			private static final String REPORT_CATEGORY = "Interface Injection Error";
 			
 			@Override

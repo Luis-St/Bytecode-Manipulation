@@ -25,7 +25,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new AssignorImplementationVisitor(writer, this.context, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
+		return new AssignorImplementationVisitor(writer, this.context, type, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	
 	private static class AssignorImplementationVisitor extends BaseClassVisitor {
@@ -35,8 +35,8 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		private final List<String> unfinal = new ArrayList<>();
 		
-		private AssignorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
-			super(writer, context, markModified);
+		private AssignorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+			super(writer, context, type, markModified);
 			this.lookup = lookup;
 		}
 		
