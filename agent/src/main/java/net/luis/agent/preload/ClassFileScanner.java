@@ -1,9 +1,10 @@
 package net.luis.agent.preload;
 
-import net.luis.agent.preload.data.*;
-import net.luis.agent.preload.scanner.*;
+import net.luis.agent.preload.data.ClassContent;
+import net.luis.agent.preload.data.ClassInfo;
+import net.luis.agent.preload.scanner.ClassContentScanner;
+import net.luis.agent.preload.scanner.ClassInfoScanner;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
 import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
@@ -12,11 +13,14 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- @author Luis-St */
+ *
+ * @author Luis-St
+ *
+ */
 
-class ClassFileScanner {
+public class ClassFileScanner {
 	
-	public static @NotNull Map.@Unmodifiable Entry<ClassInfo, ClassContent> scanClass(@NotNull Type type) {
+	public static @NotNull Map.Entry<ClassInfo, ClassContent> scanClass(@NotNull Type type) {
 		byte[] data = readClass(type);
 		ClassInfo info = scanClass(data, type, new ClassInfoScanner(), ClassInfoScanner::getClassInfo);
 		ClassContent content = scanClass(data, type, new ClassContentScanner(), ClassContentScanner::getClassContent);
@@ -29,10 +33,6 @@ class ClassFileScanner {
 	
 	public static @NotNull ClassContent scanClassContent(@NotNull Type type) {
 		return scanClass(type, new ClassContentScanner(), ClassContentScanner::getClassContent);
-	}
-	
-	public static @NotNull MethodContent scanMethodContent(@NotNull Type type, @NotNull MethodData method) {
-		return scanClass(type, new MethodContentScanner(method), MethodContentScanner::getMethodContent);
 	}
 	
 	//region Helper methods
