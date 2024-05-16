@@ -3,6 +3,7 @@ package net.luis;
 import net.luis.agent.annotation.Default;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
+import net.luis.agent.annotation.unused.Async;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -37,6 +39,7 @@ public final class Main {
 		
 		execute("ls", null, null);
 		validateIndex(1);
+		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
 		if (logger instanceof MyInterface my) {
 			System.out.println("LoggerConfiguration is an instance of MyInterface!");
 			System.out.println(my.build().getName());
@@ -74,5 +77,13 @@ public final class Main {
 	public static int validateIndex(@BelowEqual(1) int index) {
 		System.out.println("Index: " + index);
 		return index;
+	}
+	
+	@Async
+	public static void async(int i, @NotNull String str, @Default("[]") List<String> values) {
+		System.out.println("i: " + i);
+		System.out.println("str: " + str);
+		System.out.println("values: " + values);
+		System.out.println("Thread: " + Thread.currentThread().getName());
 	}
 }

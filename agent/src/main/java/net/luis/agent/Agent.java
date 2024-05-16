@@ -31,6 +31,7 @@ public class Agent {
 		inst.addTransformer(new AccessorImplementationTransformer(CONTEXT));
 		inst.addTransformer(new AssignorImplementationTransformer(CONTEXT));
 		inst.addTransformer(new InvokerImplementationTransformer(CONTEXT));
+		inst.addTransformer(new AsyncTransformer(CONTEXT));
 		inst.addTransformer(new PatternTransformer(CONTEXT));
 		inst.addTransformer(new NotNullTransformer(CONTEXT));
 		inst.addTransformer(new DefaultTransformer(CONTEXT));
