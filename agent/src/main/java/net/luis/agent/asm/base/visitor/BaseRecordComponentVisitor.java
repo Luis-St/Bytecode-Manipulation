@@ -12,11 +12,11 @@ import org.objectweb.asm.RecordComponentVisitor;
 
 public class BaseRecordComponentVisitor extends RecordComponentVisitor {
 	
-	protected BaseRecordComponentVisitor() {
+	public BaseRecordComponentVisitor() {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseRecordComponentVisitor(@NotNull RecordComponentVisitor visitor) {
+	public BaseRecordComponentVisitor(@NotNull RecordComponentVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
 	}
 }

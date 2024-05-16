@@ -37,10 +37,10 @@ public class AsyncTransformer extends BaseClassTransformer {
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
 		ClassContent content = this.context.getClassContent(type);
-		return new AsyncClasVisitor(writer, this.context, type, this.context.getClassContent(type), () -> this.modified = true);
+		return new AsyncClassVisitor(writer, this.context, type, this.context.getClassContent(type), () -> this.modified = true);
 	}
 	
-	private static class AsyncClasVisitor extends BaseClassVisitor {
+	private static class AsyncClassVisitor extends BaseClassVisitor {
 		
 		private static final Handle METAFACTORY = new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory",
 			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false);
@@ -50,7 +50,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 		private final ClassContent content;
 		private final Map<MethodData, String> methods = new HashMap<>();
 		
-		private AsyncClasVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull ClassContent content, @NotNull Runnable markModified) {
+		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull ClassContent content, @NotNull Runnable markModified) {
 			super(visitor, context, markModified);
 			this.type = type;
 			this.content = content;
@@ -66,18 +66,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 			String newName = "generated$" + name + "$async";
 			this.methods.put(method, newName);
 			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE, newName, descriptor, signature, exceptions);
-			return new BaseMethodVisitor(visitor) {
-				
-				@Override
-				public @Nullable AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
-					return null;
-				}
-				
-				@Override
-				public @Nullable AnnotationVisitor visitParameterAnnotation(int parameter, String annotationDescriptor, boolean visible) {
-					return null;
-				}
-			};
+			return new BaseMethodVisitor(visitor).skipAnnotation();
 		}
 		
 		@Override

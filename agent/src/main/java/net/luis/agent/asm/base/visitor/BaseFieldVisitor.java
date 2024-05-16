@@ -12,11 +12,11 @@ import org.objectweb.asm.Opcodes;
 
 public class BaseFieldVisitor extends FieldVisitor {
 	
-	protected BaseFieldVisitor() {
+	public BaseFieldVisitor() {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseFieldVisitor(@NotNull FieldVisitor visitor) {
+	public BaseFieldVisitor(@NotNull FieldVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
 	}
 }

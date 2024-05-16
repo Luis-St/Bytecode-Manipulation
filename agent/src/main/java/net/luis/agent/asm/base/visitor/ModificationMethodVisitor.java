@@ -13,21 +13,21 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
  *
  */
 
-public abstract class ModificationMethodVisitor extends BaseMethodVisitor {
+public class ModificationMethodVisitor extends BaseMethodVisitor {
 	
 	private final Runnable markModified;
 	protected final PreloadContext context;
 	protected final Type type;
 	protected final MethodData method;
 	
-	protected ModificationMethodVisitor(@NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
+	public ModificationMethodVisitor(@NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
 		this.context = context;
 		this.type = type;
 		this.method = method;
 		this.markModified = markModified;
 	}
 	
-	protected ModificationMethodVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
+	public ModificationMethodVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
 		super(visitor);
 		this.context = context;
 		this.type = type;

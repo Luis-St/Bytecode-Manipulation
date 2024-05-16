@@ -12,18 +12,18 @@ import org.objectweb.asm.Opcodes;
  *
  */
 
-public abstract class BaseClassVisitor extends ClassVisitor implements Instrumentations {
+public class BaseClassVisitor extends ClassVisitor implements Instrumentations {
 	
 	private final Runnable markModified;
 	protected final PreloadContext context;
 	
-	protected BaseClassVisitor(@NotNull PreloadContext context, @NotNull Runnable markModified) {
+	public BaseClassVisitor(@NotNull PreloadContext context, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9);
 		this.context = context;
 		this.markModified = markModified;
 	}
 	
-	protected BaseClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Runnable markModified) {
+	public BaseClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9, visitor);
 		this.context = context;
 		this.markModified = markModified;

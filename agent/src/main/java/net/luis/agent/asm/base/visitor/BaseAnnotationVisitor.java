@@ -10,13 +10,13 @@ import org.objectweb.asm.Opcodes;
  *
  */
 
-public abstract class BaseAnnotationVisitor extends AnnotationVisitor {
+public class BaseAnnotationVisitor extends AnnotationVisitor {
 	
-	protected BaseAnnotationVisitor() {
+	public BaseAnnotationVisitor() {
 		super(Opcodes.ASM9);
 	}
 	
-	protected BaseAnnotationVisitor(@NotNull AnnotationVisitor visitor) {
+	public BaseAnnotationVisitor(@NotNull AnnotationVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
 	}
 }
