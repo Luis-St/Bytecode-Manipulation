@@ -25,12 +25,7 @@ import static net.luis.agent.asm.Types.*;
 public class AsyncTransformer extends BaseClassTransformer {
 	
 	public AsyncTransformer(@NotNull PreloadContext context) {
-		super(context);
-	}
-	
-	@Override
-	protected int getClassWriterFlags() {
-		return ClassWriter.COMPUTE_FRAMES;
+		super(context, true);
 	}
 	
 	@Override

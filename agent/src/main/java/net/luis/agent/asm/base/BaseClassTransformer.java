@@ -29,21 +29,17 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 	);
 	
 	protected final PreloadContext context;
+	private final boolean computeFrames;
 	protected boolean modified;
 	
 	protected BaseClassTransformer(@NotNull PreloadContext context) {
+		this(context, false);
+	}
+	
+	protected BaseClassTransformer(@NotNull PreloadContext context, boolean computeFrames) {
 		this.context = context;
+		this.computeFrames = computeFrames;
 	}
-	
-	//region Flags
-	protected int getClassWriterFlags() {
-		return ClassWriter.COMPUTE_MAXS;
-	}
-	
-	protected int getClassReaderFlags() {
-		return ClassReader.EXPAND_FRAMES;
-	}
-	//endregion
 	
 	protected boolean shouldTransform(@NotNull Type type) {
 		for (String ignored : IGNORED_CLASSES) {
@@ -61,10 +57,10 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			return null;
 		}
 		ClassReader reader = new ClassReader(buffer);
-		ClassWriter writer = new ClassWriter(reader, this.getClassWriterFlags());
+		ClassWriter writer = new ClassWriter(reader, this.computeFrames ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
 		ClassVisitor visitor = this.visit(type, clazz, reader, writer);
 		try {
-			reader.accept(visitor, this.getClassReaderFlags());
+			reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 			byte[] bytes = writer.toByteArray();
 			if (this.modified) {
 				System.out.println("Transformed Class: " + type);

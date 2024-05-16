@@ -26,12 +26,7 @@ import static net.luis.agent.asm.Types.*;
 public class DefaultTransformer extends BaseClassTransformer {
 	
 	public DefaultTransformer(@NotNull PreloadContext context) {
-		super(context);
-	}
-	
-	@Override
-	protected int getClassWriterFlags() {
-		return ClassWriter.COMPUTE_FRAMES;
+		super(context, true);
 	}
 	
 	@Override

@@ -29,12 +29,7 @@ public class RangeTransformer extends BaseClassTransformer {
 	private static final Type[] ANNOS = { ABOVE, ABOVE_EQUAL, BELOW, BELOW_EQUAL };
 	
 	public RangeTransformer(@NotNull PreloadContext context) {
-		super(context);
-	}
-	
-	@Override
-	protected int getClassWriterFlags() {
-		return ClassWriter.COMPUTE_FRAMES;
+		super(context, true);
 	}
 	
 	@Override
