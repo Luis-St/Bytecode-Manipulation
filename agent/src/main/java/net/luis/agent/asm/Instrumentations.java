@@ -1,7 +1,14 @@
 package net.luis.agent.asm;
 
+import net.luis.agent.preload.data.AnnotationData;
+import net.luis.agent.preload.data.MethodData;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
+
+import java.util.List;
+import java.util.Map;
+
+import static net.luis.agent.asm.Types.*;
 
 /**
  *
@@ -11,80 +18,116 @@ import org.objectweb.asm.*;
 
 public interface Instrumentations {
 	
-	@NotNull MethodVisitor getDelegate();
-	
 	//region Number loading as
-	default void loadNumberAsInt(@NotNull Type type, int index) {
-		MethodVisitor mv = this.getDelegate();
-		mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+	default void loadNumberAsInt(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
+		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
 		if (type.equals(Type.LONG_TYPE)) {
-			mv.visitInsn(Opcodes.L2I);
+			visitor.visitInsn(Opcodes.L2I);
 		} else if (type.equals(Type.FLOAT_TYPE)) {
-			mv.visitInsn(Opcodes.F2I);
+			visitor.visitInsn(Opcodes.F2I);
 		} else if (type.equals(Type.DOUBLE_TYPE)) {
-			mv.visitInsn(Opcodes.D2I);
+			visitor.visitInsn(Opcodes.D2I);
 		}
 	}
 	
-	default void loadNumberAsLong(@NotNull Type type, int index) {
-		MethodVisitor mv = this.getDelegate();
-		mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+	default void loadNumberAsLong(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
+		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
 		if (type.equals(Type.BYTE_TYPE) || type.equals(Type.SHORT_TYPE) || type.equals(Type.INT_TYPE)) {
-			mv.visitInsn(Opcodes.I2L);
+			visitor.visitInsn(Opcodes.I2L);
 		} else if (type.equals(Type.FLOAT_TYPE)) {
-			mv.visitInsn(Opcodes.F2L);
+			visitor.visitInsn(Opcodes.F2L);
 		} else if (type.equals(Type.DOUBLE_TYPE)) {
-			mv.visitInsn(Opcodes.D2L);
+			visitor.visitInsn(Opcodes.D2L);
 		}
 	}
 	
-	default void loadNumberAsFloat(@NotNull Type type, int index) {
-		MethodVisitor mv = this.getDelegate();
-		mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+	default void loadNumberAsFloat(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
+		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
 		if (type.equals(Type.BYTE_TYPE) || type.equals(Type.SHORT_TYPE) || type.equals(Type.INT_TYPE)) {
-			mv.visitInsn(Opcodes.I2F);
+			visitor.visitInsn(Opcodes.I2F);
 		} else if (type.equals(Type.LONG_TYPE)) {
-			mv.visitInsn(Opcodes.L2F);
+			visitor.visitInsn(Opcodes.L2F);
 		} else if (type.equals(Type.DOUBLE_TYPE)) {
-			mv.visitInsn(Opcodes.D2F);
+			visitor.visitInsn(Opcodes.D2F);
 		}
 	}
 	
-	default void loadNumberAsDouble(@NotNull Type type, int index) {
-		MethodVisitor mv = this.getDelegate();
-		mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+	default void loadNumberAsDouble(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
+		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
 		if (type.equals(Type.BYTE_TYPE) || type.equals(Type.SHORT_TYPE) || type.equals(Type.INT_TYPE)) {
-			mv.visitInsn(Opcodes.I2D);
+			visitor.visitInsn(Opcodes.I2D);
 		} else if (type.equals(Type.LONG_TYPE)) {
-			mv.visitInsn(Opcodes.L2D);
+			visitor.visitInsn(Opcodes.L2D);
 		} else if (type.equals(Type.FLOAT_TYPE)) {
-			mv.visitInsn(Opcodes.F2D);
+			visitor.visitInsn(Opcodes.F2D);
 		}
 	}
 	//endregion
 	
-	default void instrumentThrownException(@NotNull Type type, @NotNull String message) {
-		MethodVisitor mv = this.getDelegate();
-		mv.visitTypeInsn(Opcodes.NEW, type.getInternalName());
-		mv.visitInsn(Opcodes.DUP);
-		mv.visitLdcInsn(message);
-		mv.visitMethodInsn(Opcodes.INVOKESPECIAL, type.getInternalName(), "<init>", "(Ljava/lang/String;)V", false);
-		mv.visitInsn(Opcodes.ATHROW);
+	//region Annotations
+	default void instrumentAnnotation(@NotNull AnnotationVisitor visitor, @NotNull AnnotationData annotation) {
+		for (Map.Entry<String, Object> entry : annotation.values().entrySet()) {
+			switch (entry.getValue()) {
+				case AnnotationData data -> {
+					AnnotationVisitor child = visitor.visitAnnotation(entry.getKey(), data.type().getDescriptor());
+					this.instrumentAnnotation(child, data);
+					child.visitEnd();
+				}
+				case Enum<?> value -> visitor.visitEnum(entry.getKey(), Type.getDescriptor(value.getClass()), value.name());
+				case List<?> values -> {
+					AnnotationVisitor array = visitor.visitArray(entry.getKey());
+					if (values.isEmpty()) {
+						array.visitEnd();
+						continue;
+					}
+					Object first = values.getFirst();
+					if (first instanceof Enum<?> enumValue) {
+						values.forEach(value -> array.visitEnum(null, Type.getDescriptor(value.getClass()), enumValue.name()));
+					} else {
+						values.forEach(value -> array.visit(null, value));
+					}
+				}
+				case null -> { break; }
+				default -> visitor.visit(entry.getKey(), entry.getValue());
+			}
+		}
+		visitor.visitEnd();
 	}
 	
-	default void instrumentPatternCheck(@NotNull String pattern, int index, @NotNull Label end) {
-		MethodVisitor mv = this.getDelegate();
-		mv.visitLdcInsn(pattern);
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/regex/Pattern", "compile", "(Ljava/lang/String;)Ljava/util/regex/Pattern;", false);
-		mv.visitVarInsn(Opcodes.ALOAD, index);
-		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/regex/Pattern", "matcher", "(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false);
-		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/regex/Matcher", "matches", "()Z", false);
-		mv.visitJumpInsn(Opcodes.IFNE, end);
+	default void instrumentMethodAnnotations(@NotNull MethodVisitor visitor, @NotNull MethodData method, boolean generated) {
+		method.getAnnotations().forEach(annotation -> {
+			this.instrumentAnnotation(visitor.visitAnnotation(annotation.type().getDescriptor(), true), annotation);
+		});
 	}
 	
-	default void instrumentNonNullCheck(@NotNull String message) {
-		MethodVisitor mv = this.getDelegate();
-		mv.visitLdcInsn(message);
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/Objects", "requireNonNull", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
+	default void instrumentParameterAnnotations(@NotNull MethodVisitor visitor, @NotNull MethodData method) {
+		method.parameters().forEach(parameter -> {
+			parameter.getAnnotations().forEach(annotation -> {
+				this.instrumentAnnotation(visitor.visitParameterAnnotation(parameter.index(), annotation.type().getDescriptor(), true), annotation);
+			});
+		});
+	}
+	//endregion
+	
+	default void instrumentThrownException(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull String message) {
+		visitor.visitTypeInsn(Opcodes.NEW, type.getInternalName());
+		visitor.visitInsn(Opcodes.DUP);
+		visitor.visitLdcInsn(message);
+		visitor.visitMethodInsn(Opcodes.INVOKESPECIAL, type.getInternalName(), "<init>", "(Ljava/lang/String;)V", false);
+		visitor.visitInsn(Opcodes.ATHROW);
+	}
+	
+	default void instrumentPatternCheck(@NotNull MethodVisitor visitor, @NotNull String pattern, int index, @NotNull Label end) {
+		visitor.visitLdcInsn(pattern);
+		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/regex/Pattern", "compile", "(Ljava/lang/String;)Ljava/util/regex/Pattern;", false);
+		visitor.visitVarInsn(Opcodes.ALOAD, index);
+		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/regex/Pattern", "matcher", "(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false);
+		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/regex/Matcher", "matches", "()Z", false);
+		visitor.visitJumpInsn(Opcodes.IFNE, end);
+	}
+	
+	default void instrumentNonNullCheck(@NotNull MethodVisitor visitor, @NotNull String message) {
+		visitor.visitLdcInsn(message);
+		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/Objects", "requireNonNull", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
 	}
 }

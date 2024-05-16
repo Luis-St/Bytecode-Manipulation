@@ -72,7 +72,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 			boolean isStatic = this.method.is(TypeModifier.STATIC);
 			for (ParameterData parameter : this.lookup) {
 				this.mv.visitVarInsn(Opcodes.ALOAD, isStatic ? parameter.index() : parameter.index() + 1);
-				this.instrumentNonNullCheck(this.getMessage(parameter));
+				this.instrumentNonNullCheck(this.mv, this.getMessage(parameter));
 				this.mv.visitInsn(Opcodes.POP);
 				this.markModified();
 			}
@@ -81,7 +81,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		@Override
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.isValidReturn()) {
-				this.instrumentNonNullCheck("Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " must not return null");
+				this.instrumentNonNullCheck(this.mv, "Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " must not return null");
 				this.mv.visitTypeInsn(Opcodes.CHECKCAST, this.method.getReturnType().getInternalName());
 				this.markModified();
 			}

@@ -135,17 +135,18 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 			this.generateAccessor(ifaceMethod, target, targetField);
 		}
 		
+		@SuppressWarnings("DuplicatedCode")
 		private void generateAccessor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
-			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
-			ASMUtils.addMethodAnnotations(method, ifaceMethod);
-			ASMUtils.addParameterAnnotations(method, ifaceMethod);
-			method.visitCode();
-			method.visitVarInsn(Opcodes.ALOAD, 0);
-			method.visitFieldInsn(Opcodes.GETFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
-			method.visitInsn(Opcodes.ARETURN);
-			method.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
-			method.visitMaxs(1, 1);
-			method.visitEnd();
+			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			this.instrumentMethodAnnotations(visitor, ifaceMethod, true);
+			this.instrumentParameterAnnotations(visitor, ifaceMethod);
+			visitor.visitCode();
+			visitor.visitVarInsn(Opcodes.ALOAD, 0);
+			visitor.visitFieldInsn(Opcodes.GETFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
+			visitor.visitInsn(Opcodes.ARETURN);
+			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
+			visitor.visitMaxs(0, 0);
+			visitor.visitEnd();
 			this.updateClass(ifaceMethod, target);
 			this.markModified();
 		}

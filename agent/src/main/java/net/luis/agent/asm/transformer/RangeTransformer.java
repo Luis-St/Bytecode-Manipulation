@@ -163,15 +163,15 @@ public class RangeTransformer extends BaseClassTransformer {
 				return;
 			}
 			if (above) {
-				this.loadNumberAsDouble(type, loadIndex);
-				this.loadNumberConstant(value);
+				this.loadNumberAsDouble(this.mv, type, loadIndex);
+				this.loadNumberConstant(this.mv, value);
 			} else {
-				this.loadNumberConstant(value);
-				this.loadNumberAsDouble(type, loadIndex);
+				this.loadNumberConstant(this.mv, value);
+				this.loadNumberAsDouble(this.mv, type, loadIndex);
 			}
 			this.mv.visitInsn(Opcodes.DCMPL);
 			this.mv.visitJumpInsn(compare, label);
-			this.instrumentThrownException(ILL_ARG, message + " " + value);
+			this.instrumentThrownException(this.mv, ILL_ARG, message + " " + value);
 			this.mv.visitJumpInsn(Opcodes.GOTO, label);
 			this.mv.visitLabel(label);
 		}

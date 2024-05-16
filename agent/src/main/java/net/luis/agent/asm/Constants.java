@@ -13,65 +13,59 @@ import org.objectweb.asm.Opcodes;
 @SuppressWarnings("FloatingPointEquality")
 public interface Constants {
 	
-	@NotNull MethodVisitor getDelegate();
-	
 	//region Internal constant loading
-	private void loadIntegerConstant(int i) {
-		MethodVisitor mv = this.getDelegate();
+	private void loadIntegerConstant(@NotNull MethodVisitor visitor, int i) {
 		if (i >= -1 && i <= 5) {
-			mv.visitInsn(Opcodes.ICONST_0 + i);
+			visitor.visitInsn(Opcodes.ICONST_0 + i);
 		} else if (i >= Byte.MIN_VALUE && i <= Byte.MAX_VALUE) {
-			mv.visitIntInsn(Opcodes.BIPUSH, i);
+			visitor.visitIntInsn(Opcodes.BIPUSH, i);
 		} else if (i >= Short.MIN_VALUE && i <= Short.MAX_VALUE) {
-			mv.visitIntInsn(Opcodes.SIPUSH, i);
+			visitor.visitIntInsn(Opcodes.SIPUSH, i);
 		} else {
-			mv.visitLdcInsn(i);
+			visitor.visitLdcInsn(i);
 		}
 	}
 	
-	private void loadLongConstant(long l) {
-		MethodVisitor mv = this.getDelegate();
+	private void loadLongConstant(@NotNull MethodVisitor visitor, long l) {
 		if (l == 0L || l == 1L) {
-			mv.visitInsn(Opcodes.LCONST_0 + (int) l);
+			visitor.visitInsn(Opcodes.LCONST_0 + (int) l);
 		} else {
-			mv.visitLdcInsn(l);
+			visitor.visitLdcInsn(l);
 		}
 	}
 	
-	private void loadFloatConstant(float f) {
-		MethodVisitor mv = this.getDelegate();
+	private void loadFloatConstant(@NotNull MethodVisitor visitor, float f) {
 		if (f == 0.0F) {
-			mv.visitInsn(Opcodes.FCONST_0);
+			visitor.visitInsn(Opcodes.FCONST_0);
 		} else if (f == 1.0F) {
-			mv.visitInsn(Opcodes.FCONST_1);
+			visitor.visitInsn(Opcodes.FCONST_1);
 		} else if (f == 2.0F) {
-			mv.visitInsn(Opcodes.FCONST_2);
+			visitor.visitInsn(Opcodes.FCONST_2);
 		} else {
-			mv.visitLdcInsn(f);
+			visitor.visitLdcInsn(f);
 		}
 	}
 	
-	private void loadDoubleConstant(double d) {
-		MethodVisitor mv = this.getDelegate();
+	private void loadDoubleConstant(@NotNull MethodVisitor visitor, double d) {
 		if (d == 0.0D) {
-			mv.visitInsn(Opcodes.DCONST_0);
+			visitor.visitInsn(Opcodes.DCONST_0);
 		} else if (d == 1.0D) {
-			mv.visitInsn(Opcodes.DCONST_1);
+			visitor.visitInsn(Opcodes.DCONST_1);
 		} else {
-			mv.visitLdcInsn(d);
+			visitor.visitLdcInsn(d);
 		}
 	}
 	//endregion
 	
-	default void loadNumberConstant(@NotNull Number number) {
+	default void loadNumberConstant(@NotNull MethodVisitor visitor, @NotNull Number number) {
 		if (number instanceof Byte || number instanceof Short || number instanceof Integer) {
-			this.loadIntegerConstant(number.intValue());
+			this.loadIntegerConstant(visitor, number.intValue());
 		} else if (number instanceof Long l) {
-			this.loadLongConstant(l);
+			this.loadLongConstant(visitor, l);
 		} else if (number instanceof Float f) {
-			this.loadFloatConstant(f);
+			this.loadFloatConstant(visitor, f);
 		} else if (number instanceof Double d) {
-			this.loadDoubleConstant(d);
+			this.loadDoubleConstant(visitor, d);
 		}
 	}
 }

@@ -136,22 +136,23 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 			this.generateAssignor(ifaceMethod, target, targetField);
 		}
 		
+		@SuppressWarnings("DuplicatedCode")
 		private void generateAssignor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
 			if (targetField.is(TypeModifier.FINAL)) {
 				this.unfinal.add(targetField.name());
 			}
-			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
-			ASMUtils.addMethodAnnotations(method, ifaceMethod);
-			ASMUtils.addParameterAnnotations(method, ifaceMethod);
-			method.visitCode();
-			method.visitVarInsn(Opcodes.ALOAD, 0);
-			method.visitVarInsn(Opcodes.ALOAD, 1);
-			method.visitFieldInsn(Opcodes.PUTFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
-			method.visitInsn(Opcodes.RETURN);
-			method.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
-			method.visitLocalVariable("arg0", targetField.type().getDescriptor(), null, new Label(), new Label(), 1);
-			method.visitMaxs(2, 2);
-			method.visitEnd();
+			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			this.instrumentMethodAnnotations(visitor, ifaceMethod, true);
+			this.instrumentParameterAnnotations(visitor, ifaceMethod);
+			visitor.visitCode();
+			visitor.visitVarInsn(Opcodes.ALOAD, 0);
+			visitor.visitVarInsn(Opcodes.ALOAD, 1);
+			visitor.visitFieldInsn(Opcodes.PUTFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
+			visitor.visitInsn(Opcodes.RETURN);
+			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
+			visitor.visitLocalVariable("arg0", targetField.type().getDescriptor(), null, new Label(), new Label(), 1);
+			visitor.visitMaxs(0, 0);
+			visitor.visitEnd();
 			this.updateClass(ifaceMethod, target, targetField);
 			this.markModified();
 		}

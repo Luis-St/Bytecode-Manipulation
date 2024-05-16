@@ -64,39 +64,6 @@ public class ASMUtils {
 		return signature.substring(start + 1, end);
 	}
 	
-	public static void addMethodAnnotations(@NotNull MethodVisitor methodVisitor, @NotNull MethodData method) {
-		addMethodAnnotations(methodVisitor, method, true);
-	}
-	
-	public static void addMethodAnnotations(@NotNull MethodVisitor methodVisitor, @NotNull MethodData method, boolean generated) {
-		if (generated) {
-			AnnotationVisitor annotationVisitor = methodVisitor.visitAnnotation(GENERATED.getDescriptor(), true);
-			if (annotationVisitor != null) {
-				annotationVisitor.visitEnd();
-			}
-		}
-		method.getAnnotations().forEach(annotation -> {
-			if (annotation.type().equals(GENERATED) || IMPLEMENTATION_ANNOTATIONS.contains(annotation.type())) {
-				return;
-			}
-			AnnotationVisitor annotationVisitor = methodVisitor.visitAnnotation(annotation.type().getDescriptor(), true);
-			if (annotationVisitor != null) {
-				annotationVisitor.visitEnd();
-			}
-		});
-	}
-	
-	public static void addParameterAnnotations(@NotNull MethodVisitor methodVisitor, @NotNull MethodData method) {
-		method.parameters().forEach(parameter -> {
-			parameter.getAnnotations().forEach(annotation -> {
-				AnnotationVisitor annotationVisitor = methodVisitor.visitParameterAnnotation(parameter.index(), annotation.type().getDescriptor(), true);
-				if (annotationVisitor != null) {
-					annotationVisitor.visitEnd();
-				}
-			});
-		});
-	}
-	
 	public static @NotNull String getSimpleName(@NotNull Type type) {
 		String name = type.getClassName();
 		int index = name.lastIndexOf('.');

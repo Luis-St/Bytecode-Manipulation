@@ -132,24 +132,24 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 			this.generateInvoker(ifaceMethod, target, targetMethod);
 		}
 		
+		@SuppressWarnings("DuplicatedCode")
 		private void generateInvoker(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull MethodData targetMethod) {
-			MethodVisitor method = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
-			ASMUtils.addMethodAnnotations(method, ifaceMethod);
-			ASMUtils.addParameterAnnotations(method, ifaceMethod);
-			method.visitCode();
-			method.visitVarInsn(Opcodes.ALOAD, 0);
+			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			this.instrumentMethodAnnotations(visitor, ifaceMethod, true);
+			this.instrumentParameterAnnotations(visitor, ifaceMethod);
+			visitor.visitCode();
+			visitor.visitVarInsn(Opcodes.ALOAD, 0);
 			for (int i = 0; i < ifaceMethod.getParameterCount(); i++) {
-				method.visitVarInsn(ifaceMethod.getParameterType(i).getOpcode(Opcodes.ILOAD), i + 1); // 0 is this
+				visitor.visitVarInsn(ifaceMethod.getParameterType(i).getOpcode(Opcodes.ILOAD), i + 1); // 0 is this
 			}
-			method.visitMethodInsn(Opcodes.INVOKEVIRTUAL, target.getInternalName(), targetMethod.name(), targetMethod.type().getDescriptor(), false);
-			method.visitInsn(ifaceMethod.getReturnType().getOpcode(Opcodes.IRETURN));
-			method.visitLocalVariable("this", target.getDescriptor(), ifaceMethod.signature(), new Label(), new Label(), 0);
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, target.getInternalName(), targetMethod.name(), targetMethod.type().getDescriptor(), false);
+			visitor.visitInsn(ifaceMethod.getReturnType().getOpcode(Opcodes.IRETURN));
+			visitor.visitLocalVariable("this", target.getDescriptor(), ifaceMethod.signature(), new Label(), new Label(), 0);
 			for (int i = 0; i < ifaceMethod.getParameterCount(); i++) {
-				method.visitLocalVariable("arg" + i, ifaceMethod.getParameterType(i).getDescriptor(), null, new Label(), new Label(), i + 1); // 0 is this
+				visitor.visitLocalVariable("arg" + i, ifaceMethod.getParameterType(i).getDescriptor(), null, new Label(), new Label(), i + 1); // 0 is this
 			}
-			int max = ifaceMethod.getParameterCount() + 1;
-			method.visitMaxs(max, max);
-			method.visitEnd();
+			visitor.visitMaxs(0, 0);
+			visitor.visitEnd();
 			this.updateClass(ifaceMethod, target);
 			this.markModified();
 		}

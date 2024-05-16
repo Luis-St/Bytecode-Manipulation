@@ -80,8 +80,8 @@ public class PatternTransformer extends BaseClassTransformer {
 					continue;
 				}
 				
-				this.instrumentPatternCheck(value, isStatic ? parameter.index() : parameter.index() + 1, label);
-				this.instrumentThrownException(ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
+				this.instrumentPatternCheck(this.mv, value, isStatic ? parameter.index() : parameter.index() + 1, label);
+				this.instrumentThrownException(this.mv, ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
 		
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
@@ -103,8 +103,8 @@ public class PatternTransformer extends BaseClassTransformer {
 				this.mv.visitLabel(start);
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
 		
-				this.instrumentPatternCheck(value, local, end);
-				this.instrumentThrownException(ILL_ARG, "Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
+				this.instrumentPatternCheck(this.mv, value, local, end);
+				this.instrumentThrownException(this.mv, ILL_ARG, "Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
 		
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.mv.visitLabel(end);

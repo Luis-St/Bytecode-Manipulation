@@ -1,8 +1,8 @@
 package net.luis.agent.asm.transformer;
 
-import net.luis.agent.annotation.Default;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.*;
+import net.luis.agent.asm.base.visitor.BaseClassVisitor;
+import net.luis.agent.asm.base.visitor.ModificationMethodVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
