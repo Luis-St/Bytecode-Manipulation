@@ -37,7 +37,7 @@ public class DefaultStringFactory implements StringFactory {
 	private final Mutable<BiFunction<Type, String, ?>> arrayFactory = new Mutable<>(this::createArray);
 	
 	private DefaultStringFactory() {
-		//region Primitives
+		//region Factories
 		this.directFactories.put(BOOLEAN, Boolean::parseBoolean);
 		this.directFactories.put(BYTE, Byte::parseByte);
 		this.directFactories.put(CHAR, value -> value.charAt(0));
@@ -47,11 +47,11 @@ public class DefaultStringFactory implements StringFactory {
 		this.directFactories.put(FLOAT, Float::parseFloat);
 		this.directFactories.put(DOUBLE, Double::parseDouble);
 		this.directFactories.put(STRING, Function.identity());
-		//endregion
 		this.directFactories.put(OPTIONAL, value -> Optional.empty());
 		this.inheritanceFactories.put(Type.getType(List.class), this::createList);
 		this.inheritanceFactories.put(Type.getType(Set.class), this::createSet);
 		this.inheritanceFactories.put(Type.getType(Map.class), this::createMap);
+		//endregion
 	}
 	
 	@Override

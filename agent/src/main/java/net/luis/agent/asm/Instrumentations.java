@@ -16,6 +16,52 @@ import java.util.Map;
 
 public interface Instrumentations {
 	
+	//region Internal
+	private void loadInteger(@NotNull MethodVisitor visitor, int i) {
+		if (i >= -1 && i <= 5) {
+			visitor.visitInsn(Opcodes.ICONST_0 + i);
+		} else if (i >= Byte.MIN_VALUE && i <= Byte.MAX_VALUE) {
+			visitor.visitIntInsn(Opcodes.BIPUSH, i);
+		} else if (i >= Short.MIN_VALUE && i <= Short.MAX_VALUE) {
+			visitor.visitIntInsn(Opcodes.SIPUSH, i);
+		} else {
+			visitor.visitLdcInsn(i);
+		}
+	}
+	
+	private void loadLong(@NotNull MethodVisitor visitor, long l) {
+		if (l == 0L || l == 1L) {
+			visitor.visitInsn(Opcodes.LCONST_0 + (int) l);
+		} else {
+			visitor.visitLdcInsn(l);
+		}
+	}
+	
+	@SuppressWarnings("FloatingPointEquality")
+	private void loadFloat(@NotNull MethodVisitor visitor, float f) {
+		if (f == 0.0F) {
+			visitor.visitInsn(Opcodes.FCONST_0);
+		} else if (f == 1.0F) {
+			visitor.visitInsn(Opcodes.FCONST_1);
+		} else if (f == 2.0F) {
+			visitor.visitInsn(Opcodes.FCONST_2);
+		} else {
+			visitor.visitLdcInsn(f);
+		}
+	}
+	
+	@SuppressWarnings("FloatingPointEquality")
+	private void loadDouble(@NotNull MethodVisitor visitor, double d) {
+		if (d == 0.0D) {
+			visitor.visitInsn(Opcodes.DCONST_0);
+		} else if (d == 1.0D) {
+			visitor.visitInsn(Opcodes.DCONST_1);
+		} else {
+			visitor.visitLdcInsn(d);
+		}
+	}
+	//endregion
+	
 	//region Number loading as
 	default void loadNumberAsInt(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
 		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
@@ -61,6 +107,18 @@ public interface Instrumentations {
 		}
 	}
 	//endregion
+	
+	default void loadNumber(@NotNull MethodVisitor visitor, @NotNull Number number) {
+		if (number instanceof Byte || number instanceof Short || number instanceof Integer) {
+			this.loadInteger(visitor, number.intValue());
+		} else if (number instanceof Long l) {
+			this.loadLong(visitor, l);
+		} else if (number instanceof Float f) {
+			this.loadFloat(visitor, f);
+		} else if (number instanceof Double d) {
+			this.loadDouble(visitor, d);
+		}
+	}
 	
 	//region Annotations
 	default void instrumentAnnotation(@NotNull AnnotationVisitor visitor, @NotNull AnnotationData annotation) {

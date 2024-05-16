@@ -1,4 +1,4 @@
-package net.luis.agent.asm.transformer;
+package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseClassVisitor;
@@ -166,9 +166,9 @@ public class RangeTransformer extends BaseClassTransformer {
 			}
 			if (above) {
 				this.loadNumberAsDouble(this.mv, type, loadIndex);
-				this.loadNumberConstant(this.mv, value);
+				this.loadNumber(this.mv, value);
 			} else {
-				this.loadNumberConstant(this.mv, value);
+				this.loadNumber(this.mv, value);
 				this.loadNumberAsDouble(this.mv, type, loadIndex);
 			}
 			this.mv.visitInsn(Opcodes.DCMPL);

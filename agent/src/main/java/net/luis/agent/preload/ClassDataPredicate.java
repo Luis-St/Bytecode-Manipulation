@@ -37,7 +37,7 @@ public interface ClassDataPredicate extends BiPredicate<ClassInfo, ClassContent>
 		return (info, content) -> info.interfaces().contains(type);
 	}
 	
-	static @NotNull ClassDataPredicate annotatedWith(@Nullable Type type) {
+	static @NotNull ClassDataPredicate annotatedWith(@NotNull Type type) {
 		return (info, content) -> info.isAnnotatedWith(type);
 	}
 	

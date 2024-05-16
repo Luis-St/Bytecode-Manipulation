@@ -1,6 +1,5 @@
 package net.luis.agent.asm.base.visitor;
 
-import net.luis.agent.asm.Constants;
 import net.luis.agent.asm.Instrumentations;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.MethodVisitor;
@@ -12,7 +11,7 @@ import org.objectweb.asm.Opcodes;
  *
  */
 
-public class BaseMethodVisitor extends MethodVisitor implements Instrumentations, Constants {
+public class BaseMethodVisitor extends MethodVisitor implements Instrumentations {
 	
 	protected BaseMethodVisitor() {
 		super(Opcodes.ASM9);
