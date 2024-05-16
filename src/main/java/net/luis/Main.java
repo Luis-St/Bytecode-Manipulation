@@ -3,7 +3,7 @@ package net.luis;
 import net.luis.agent.annotation.Default;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
-import net.luis.agent.annotation.unused.Async;
+import net.luis.agent.annotation.Async;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.commons.lang3.StringUtils;
