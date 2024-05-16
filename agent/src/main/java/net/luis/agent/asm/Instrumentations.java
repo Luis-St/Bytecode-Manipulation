@@ -8,8 +8,6 @@ import org.objectweb.asm.*;
 import java.util.List;
 import java.util.Map;
 
-import static net.luis.agent.asm.Types.*;
-
 /**
  *
  * @author Luis-St
@@ -87,7 +85,7 @@ public interface Instrumentations {
 						values.forEach(value -> array.visit(null, value));
 					}
 				}
-				case null -> { break; }
+				case null -> {break;}
 				default -> visitor.visit(entry.getKey(), entry.getValue());
 			}
 		}

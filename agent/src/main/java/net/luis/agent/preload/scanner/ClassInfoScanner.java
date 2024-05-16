@@ -1,6 +1,5 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.preload.data.AnnotationData;
 import net.luis.agent.preload.data.ClassInfo;
 import net.luis.agent.preload.type.*;

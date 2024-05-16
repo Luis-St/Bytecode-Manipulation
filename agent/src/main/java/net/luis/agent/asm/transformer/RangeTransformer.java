@@ -1,13 +1,15 @@
 package net.luis.agent.asm.transformer;
 
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.*;
+import net.luis.agent.asm.base.visitor.BaseClassVisitor;
+import net.luis.agent.asm.base.visitor.ModificationMethodVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
 import net.luis.agent.preload.type.TypeModifier;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
@@ -137,13 +139,13 @@ public class RangeTransformer extends BaseClassTransformer {
 					this.instrument(this.method.getAnnotation(ABOVE), type, local, true, Opcodes.IFGT, message + "above");
 				}
 				if (this.method.isAnnotatedWith(ABOVE_EQUAL)) {
-					this.instrument(this.method.getAnnotation(ABOVE_EQUAL), type, local, true, Opcodes.IFGE,  message + "above or equal to");
+					this.instrument(this.method.getAnnotation(ABOVE_EQUAL), type, local, true, Opcodes.IFGE, message + "above or equal to");
 				}
 				if (this.method.isAnnotatedWith(BELOW)) {
-					this.instrument(this.method.getAnnotation(BELOW), type, local, false, Opcodes.IFGT,  message + "below");
+					this.instrument(this.method.getAnnotation(BELOW), type, local, false, Opcodes.IFGT, message + "below");
 				}
 				if (this.method.isAnnotatedWith(BELOW_EQUAL)) {
-					this.instrument(this.method.getAnnotation(BELOW_EQUAL), type, local, false, Opcodes.IFGE,  message + "below or equal to");
+					this.instrument(this.method.getAnnotation(BELOW_EQUAL), type, local, false, Opcodes.IFGE, message + "below or equal to");
 				}
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);

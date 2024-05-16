@@ -37,6 +37,6 @@ public record ParameterData(@NotNull String name, @NotNull Type type, int index,
 		if (this.isNamed()) {
 			return Utils.capitalize(Utils.getSeparated(this.name));
 		}
-		return Utils.capitalize(Utils.getSeparated(ASMUtils.getSimpleName(this.type())))  + " (parameter #" + this.index() + ")";
+		return Utils.capitalize(Utils.getSeparated(ASMUtils.getSimpleName(this.type()))) + " (parameter #" + this.index() + ")";
 	}
 }

@@ -33,15 +33,15 @@ public abstract class ClassExample extends AbstractList<String> implements List<
 		return this.name;
 	}
 	
-	public @NotNull String getTestName() {
-		return Objects.requireNonNull(this.name, "Name cannot be null");
-	}
-	
 	public void setName(@NotNull String name) throws IllegalArgumentException {
 		if (name == null) {
 			throw new NullPointerException("Name cannot be null");
 		}
 		this.name = name;
+	}
+	
+	public @NotNull String getTestName() {
+		return Objects.requireNonNull(this.name, "Name cannot be null");
 	}
 	
 	public String someMethod(int index, @NotNull String value) {

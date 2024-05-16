@@ -4,14 +4,12 @@ import net.luis.agent.preload.ClassDataPredicate;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import org.jetbrains.annotations.NotNull;
-import org.objectweb.asm.*;
+import org.objectweb.asm.Type;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Stream;
-
-import static net.luis.agent.asm.Types.*;
 
 /**
  *

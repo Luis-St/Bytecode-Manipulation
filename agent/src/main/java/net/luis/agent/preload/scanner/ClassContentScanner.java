@@ -1,6 +1,7 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.asm.base.visitor.*;
+import net.luis.agent.asm.base.visitor.BaseFieldVisitor;
+import net.luis.agent.asm.base.visitor.BaseRecordComponentVisitor;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.*;
 import net.luis.agent.util.Mutable;

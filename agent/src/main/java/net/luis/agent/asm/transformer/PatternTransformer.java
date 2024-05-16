@@ -2,12 +2,12 @@ package net.luis.agent.asm.transformer;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.*;
+import net.luis.agent.asm.base.visitor.BaseClassVisitor;
+import net.luis.agent.asm.base.visitor.ModificationMethodVisitor;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
 import net.luis.agent.preload.type.TypeModifier;
-import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -82,7 +82,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				
 				this.instrumentPatternCheck(this.mv, value, isStatic ? parameter.index() : parameter.index() + 1, label);
 				this.instrumentThrownException(this.mv, ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
-		
+				
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
 				this.markModified();
@@ -102,10 +102,10 @@ public class PatternTransformer extends BaseClassTransformer {
 				int local = this.newLocal(this.method.getReturnType());
 				this.mv.visitLabel(start);
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
-		
+				
 				this.instrumentPatternCheck(this.mv, value, local, end);
 				this.instrumentThrownException(this.mv, ILL_ARG, "Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
-		
+				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.mv.visitLabel(end);
 				this.mv.visitVarInsn(Opcodes.ALOAD, local);
