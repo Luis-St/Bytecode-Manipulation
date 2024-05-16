@@ -50,7 +50,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class NotNullVisitor extends ModificationMethodVisitor {
+	private static class NotNullVisitor extends BaseMethodVisitor {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
@@ -74,9 +74,8 @@ public class NotNullTransformer extends BaseClassTransformer {
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
-			boolean isStatic = this.method.is(TypeModifier.STATIC);
 			for (ParameterData parameter : this.lookup) {
-				this.mv.visitVarInsn(Opcodes.ALOAD, isStatic ? parameter.index() : parameter.index() + 1);
+				this.visitVarInsn(Opcodes.ALOAD, parameter);
 				this.instrumentNonNullCheck(this.mv, this.getMessage(parameter));
 				this.mv.visitInsn(Opcodes.POP);
 				this.markModified();

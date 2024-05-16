@@ -51,7 +51,7 @@ public class RangeTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class RangeVisitor extends ModificationMethodVisitor {
+	private static class RangeVisitor extends BaseMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Unsupported Annotation Combination";
 		private static final Type ILL_ARG = Type.getType(IllegalArgumentException.class);

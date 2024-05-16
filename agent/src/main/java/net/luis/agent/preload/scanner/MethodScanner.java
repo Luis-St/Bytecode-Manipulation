@@ -6,8 +6,7 @@ import net.luis.agent.preload.data.ParameterData;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -19,7 +18,7 @@ import java.util.function.Consumer;
  *
  */
 
-public class MethodScanner extends BaseMethodVisitor {
+public class MethodScanner extends MethodVisitor {
 	
 	private final Type[] parameterTypes;
 	private final BiConsumer<Type, AnnotationData> annotationConsumer;
@@ -30,6 +29,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	private int parameterIndex = 0;
 	
 	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer, Consumer<Object> annotationDefaultConsumer) {
+		super(Opcodes.ASM9);
 		this.parameterTypes = parameterTypes;
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;

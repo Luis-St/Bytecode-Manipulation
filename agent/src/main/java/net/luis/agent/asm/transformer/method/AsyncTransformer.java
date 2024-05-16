@@ -38,7 +38,6 @@ public class AsyncTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		ClassContent content = this.context.getClassContent(type);
 		return new AsyncClassVisitor(writer, this.context, type, this.context.getClassContent(type), () -> this.modified = true);
 	}
 	
@@ -66,7 +65,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 			String newName = "generated$" + name + "$async";
 			this.methods.put(method, newName);
 			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE, newName, descriptor, signature, exceptions);
-			return new BaseMethodVisitor(visitor).skipAnnotation();
+			return new BaseMethodVisitor(visitor, this.context, this.type, method, this::markModified).skipAnnotation();
 		}
 		
 		@Override

@@ -49,7 +49,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class DefaultVisitor extends ModificationMethodVisitor {
+	private static class DefaultVisitor extends BaseMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid String Factory";
 		
@@ -63,10 +63,9 @@ public class DefaultTransformer extends BaseClassTransformer {
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
-			boolean isStatic = this.method.is(TypeModifier.STATIC);
 			for (ParameterData parameter : this.lookup) {
 				Label label = new Label();
-				this.mv.visitVarInsn(Opcodes.ALOAD, isStatic ? parameter.index() : parameter.index() + 1);
+				this.visitVarInsn(Opcodes.ALOAD, parameter);
 				this.mv.visitJumpInsn(Opcodes.IFNONNULL, label);
 				
 				String value = parameter.getAnnotation(DEFAULT).getOrDefault(this.context, "value");
@@ -82,7 +81,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 					this.mv.visitTypeInsn(Opcodes.CHECKCAST, parameter.type().getInternalName());
 				}
 				
-				this.mv.visitVarInsn(Opcodes.ASTORE, isStatic ? parameter.index() : parameter.index() + 1);
+				this.visitVarInsn(Opcodes.ASTORE, parameter);
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
 				this.markModified();
