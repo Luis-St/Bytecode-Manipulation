@@ -66,7 +66,7 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String name, @NotNull String descriptor) {
 		Map<String, Object> values = new HashMap<>();
-		this.consumer.accept(name, new AnnotationData(Type.getType(descriptor), values));
+		this.consumer.accept(name, new AnnotationData(Type.getType(descriptor), true, values));
 		return new AnnotationScanner(values::put);
 	}
 }

@@ -28,10 +28,10 @@ public class ClassContentScanner extends ClassVisitor {
 		super(Opcodes.ASM9);
 	}
 	
-	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, @NotNull BiConsumer<Type, AnnotationData> action) {
+	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, boolean visible, @NotNull BiConsumer<Type, AnnotationData> action) {
 		Map<String, Object> values = new HashMap<>();
 		Type type = Type.getType(descriptor);
-		action.accept(type, new AnnotationData(type, values));
+		action.accept(type, new AnnotationData(type, visible, values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -42,7 +42,7 @@ public class ClassContentScanner extends ClassVisitor {
 		return new BaseRecordComponentVisitor() {
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
-				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, annotations::put);
+				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, visible, annotations::put);
 			}
 		};
 	}
@@ -55,7 +55,7 @@ public class ClassContentScanner extends ClassVisitor {
 			
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
-				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, annotations::put);
+				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, visible, annotations::put);
 			}
 		};
 	}

@@ -45,7 +45,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
 		Type type = Type.getType(descriptor);
-		this.annotationConsumer.accept(type, new AnnotationData(type, values));
+		this.annotationConsumer.accept(type, new AnnotationData(type, visible, values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -61,7 +61,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	public @NotNull AnnotationVisitor visitParameterAnnotation(int parameter, @NotNull String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
 		Type type = Type.getType(descriptor);
-		this.parameterAnnotations.computeIfAbsent(parameter, p -> new HashMap<>()).put(type, new AnnotationData(type, values));
+		this.parameterAnnotations.computeIfAbsent(parameter, p -> new HashMap<>()).put(type, new AnnotationData(type, visible, values));
 		return new AnnotationScanner(values::put);
 	}
 	

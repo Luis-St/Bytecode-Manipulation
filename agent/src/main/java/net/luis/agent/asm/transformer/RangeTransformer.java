@@ -158,7 +158,10 @@ public class RangeTransformer extends BaseClassTransformer {
 		//region Helper methods
 		private void instrument(@NotNull AnnotationData annotation, @NotNull Type type, int loadIndex, boolean above, int compare, String message) {
 			Label label = new Label();
-			double value = annotation.get("value");
+			Double value = annotation.get("value");
+			if (value == null) {
+				return;
+			}
 			if (above) {
 				this.loadNumberAsDouble(type, loadIndex);
 				this.loadNumberConstant(value);

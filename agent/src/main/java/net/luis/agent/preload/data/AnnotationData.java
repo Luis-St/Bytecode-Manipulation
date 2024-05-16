@@ -13,8 +13,8 @@ import java.util.*;
  *
  */
 
-@SuppressWarnings({"unchecked", "ReturnOfNull", "DataFlowIssue"})
-public record AnnotationData(@NotNull Type type, @NotNull Map<String, Object> values) {
+@SuppressWarnings("unchecked")
+public record AnnotationData(@NotNull Type type, boolean visible, @NotNull Map<String, Object> values) {
 	
 	public boolean is(@NotNull Type type) {
 		return this.type.equals(type);
@@ -24,14 +24,14 @@ public record AnnotationData(@NotNull Type type, @NotNull Map<String, Object> va
 		return Arrays.stream(type).anyMatch(this::is);
 	}
 	
-	public <X> @NotNull X get(@NotNull String key) {
+	public <X> @Nullable X get(@NotNull String key) {
 		if (this.values.containsKey(key)) {
 			return (X) this.values.get(key);
 		}
 		return null;
 	}
 	
-	public <X> @NotNull X getDefault(@NotNull PreloadContext context, @NotNull String key) {
+	public <X> @Nullable X getDefault(@NotNull PreloadContext context, @NotNull String key) {
 		ClassContent content = context.getClassContent(this.type);
 		List<MethodData> methods = content.getMethods(key);
 		if (methods.size() != 1) {
@@ -40,6 +40,7 @@ public record AnnotationData(@NotNull Type type, @NotNull Map<String, Object> va
 		return (X) methods.getFirst().annotationDefault().get();
 	}
 	
+	@SuppressWarnings("DataFlowIssue")
 	public <X> @NotNull X getOrDefault(@NotNull PreloadContext context, @NotNull String key) {
 		return this.values.containsKey(key) ? this.get(key) : this.getDefault(context, key);
 	}

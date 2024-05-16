@@ -36,7 +36,7 @@ public class ClassInfoScanner extends ClassVisitor {
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
 		Type type = Type.getType(descriptor);
-		AnnotationData data = new AnnotationData(type, values);
+		AnnotationData data = new AnnotationData(type, visible, values);
 		this.classAnnotations.put(type, data);
 		return new AnnotationScanner(values::put);
 	}
