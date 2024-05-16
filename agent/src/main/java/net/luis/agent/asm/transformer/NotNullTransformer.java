@@ -78,10 +78,6 @@ public class NotNullTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private boolean isValidReturn() {
-			return this.method.is(MethodType.METHOD) && !this.method.returnsAny(PRIMITIVES) && this.method.isAnnotatedWith(NOT_NULL);
-		}
-		
 		@Override
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.isValidReturn()) {
@@ -91,5 +87,11 @@ public class NotNullTransformer extends BaseClassTransformer {
 			}
 			this.mv.visitInsn(opcode);
 		}
+		
+		//region Helper methods
+		private boolean isValidReturn() {
+			return this.method.is(MethodType.METHOD) && !this.method.returnsAny(PRIMITIVES) && this.method.isAnnotatedWith(NOT_NULL);
+		}
+		//endregion
 	}
 }

@@ -86,10 +86,6 @@ public class PatternTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private boolean isValidReturn() {
-			return this.method.is(MethodType.METHOD) && this.method.returns(STRING) && this.method.isAnnotatedWith(PATTERN);
-		}
-		
 		@Override
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.isValidReturn()) {
@@ -111,5 +107,11 @@ public class PatternTransformer extends BaseClassTransformer {
 			}
 			this.mv.visitInsn(opcode);
 		}
+		
+		//region Helper methods
+		private boolean isValidReturn() {
+			return this.method.is(MethodType.METHOD) && this.method.returns(STRING) && this.method.isAnnotatedWith(PATTERN);
+		}
+		//endregion
 	}
 }

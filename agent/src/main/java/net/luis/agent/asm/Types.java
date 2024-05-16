@@ -19,6 +19,7 @@ public interface Types {
 	Type[] PRIMITIVES = { Type.VOID_TYPE, Type.BOOLEAN_TYPE, Type.CHAR_TYPE, Type.BYTE_TYPE, Type.SHORT_TYPE, Type.INT_TYPE, Type.LONG_TYPE, Type.FLOAT_TYPE, Type.DOUBLE_TYPE };
 	Type[] NUMBERS = { Type.BYTE_TYPE, Type.SHORT_TYPE, Type.INT_TYPE, Type.LONG_TYPE, Type.FLOAT_TYPE, Type.DOUBLE_TYPE };
 	
+	Type VOID = Type.VOID_TYPE;
 	Type STRING = Type.getType(String.class);
 	Type TYPE = Type.getType(Type.class);
 	

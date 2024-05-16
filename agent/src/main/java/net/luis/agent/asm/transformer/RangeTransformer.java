@@ -99,23 +99,6 @@ public class RangeTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private void instrument(@NotNull AnnotationData annotation, @NotNull Type type, int loadIndex, boolean above, int compare, String message) {
-			Label label = new Label();
-			double value = annotation.get("value");
-			if (above) {
-				this.loadNumberAsDouble(type, loadIndex);
-				this.loadNumberConstant(value);
-			} else {
-				this.loadNumberConstant(value);
-				this.loadNumberAsDouble(type, loadIndex);
-			}
-			this.mv.visitInsn(Opcodes.DCMPL);
-			this.mv.visitJumpInsn(compare, label);
-			this.instrumentThrownException(ILL_ARG, message + " " + value);
-			this.mv.visitJumpInsn(Opcodes.GOTO, label);
-			this.mv.visitLabel(label);
-		}
-		
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
@@ -137,14 +120,6 @@ public class RangeTransformer extends BaseClassTransformer {
 				}
 				this.markModified();
 			}
-		}
-		
-		private boolean isValidOpcode(int opcode) {
-			return opcode == Opcodes.IRETURN || opcode == Opcodes.LRETURN || opcode == Opcodes.FRETURN || opcode == Opcodes.DRETURN;
-		}
-		
-		private boolean isValidReturn() {
-			return this.method.is(MethodType.METHOD) && this.method.returnsAny(NUMBERS) && this.method.isAnnotatedWithAny(ANNOS);
 		}
 		
 		@Override
@@ -179,5 +154,32 @@ public class RangeTransformer extends BaseClassTransformer {
 			}
 			this.mv.visitInsn(opcode);
 		}
+		
+		//region Helper methods
+		private void instrument(@NotNull AnnotationData annotation, @NotNull Type type, int loadIndex, boolean above, int compare, String message) {
+			Label label = new Label();
+			double value = annotation.get("value");
+			if (above) {
+				this.loadNumberAsDouble(type, loadIndex);
+				this.loadNumberConstant(value);
+			} else {
+				this.loadNumberConstant(value);
+				this.loadNumberAsDouble(type, loadIndex);
+			}
+			this.mv.visitInsn(Opcodes.DCMPL);
+			this.mv.visitJumpInsn(compare, label);
+			this.instrumentThrownException(ILL_ARG, message + " " + value);
+			this.mv.visitJumpInsn(Opcodes.GOTO, label);
+			this.mv.visitLabel(label);
+		}
+		
+		private boolean isValidOpcode(int opcode) {
+			return opcode == Opcodes.IRETURN || opcode == Opcodes.LRETURN || opcode == Opcodes.FRETURN || opcode == Opcodes.DRETURN;
+		}
+		
+		private boolean isValidReturn() {
+			return this.method.is(MethodType.METHOD) && this.method.returnsAny(NUMBERS) && this.method.isAnnotatedWithAny(ANNOS);
+		}
+		//endregion
 	}
 }

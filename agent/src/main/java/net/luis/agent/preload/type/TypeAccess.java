@@ -13,7 +13,7 @@ public enum TypeAccess {
 	
 	PUBLIC(Opcodes.ACC_PUBLIC),
 	PROTECTED(Opcodes.ACC_PROTECTED),
-	PACKAGE(-1),
+	PACKAGE(0),
 	PRIVATE(Opcodes.ACC_PRIVATE);
 	
 	private final int value;

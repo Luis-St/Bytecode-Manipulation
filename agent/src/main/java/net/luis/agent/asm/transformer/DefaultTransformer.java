@@ -67,24 +67,6 @@ public class DefaultTransformer extends BaseClassTransformer {
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(DEFAULT)).forEach(this.lookup::add);
 		}
 		
-		private @NotNull Type getFactory(@NotNull ParameterData parameter) {
-			AnnotationData annotation = parameter.getAnnotation(DEFAULT);
-			Type factory = annotation.getOrDefault(this.context, "factory");
-			ClassContent content = this.context.getClassContent(factory);
-			FieldData field = content.getField("INSTANCE");
-			if (field == null) {
-				throw CrashReport.create("Missing field INSTANCE in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
-			}
-			if (!field.is(TypeAccess.PUBLIC, TypeModifier.STATIC, TypeModifier.FINAL)) {
-				throw CrashReport.create("INSTANCE field in string factory class is not public static final", REPORT_CATEGORY).addDetail("Factory", factory).exception();
-			}
-			if (!field.is(factory)) {
-				throw CrashReport.create("INSTANCE field in string factory class has invalid type", REPORT_CATEGORY).addDetail("Factory", factory)
-					.addDetail("Expected Type", factory).addDetail("Actual Type", field.type()).exception();
-			}
-			return factory;
-		}
-		
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
@@ -113,5 +95,25 @@ public class DefaultTransformer extends BaseClassTransformer {
 				this.markModified();
 			}
 		}
+		
+		//region Helper methods
+		private @NotNull Type getFactory(@NotNull ParameterData parameter) {
+			AnnotationData annotation = parameter.getAnnotation(DEFAULT);
+			Type factory = annotation.getOrDefault(this.context, "factory");
+			ClassContent content = this.context.getClassContent(factory);
+			FieldData field = content.getField("INSTANCE");
+			if (field == null) {
+				throw CrashReport.create("Missing field INSTANCE in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
+			}
+			if (!field.is(TypeAccess.PUBLIC, TypeModifier.STATIC, TypeModifier.FINAL)) {
+				throw CrashReport.create("INSTANCE field in string factory class is not public static final", REPORT_CATEGORY).addDetail("Factory", factory).exception();
+			}
+			if (!field.is(factory)) {
+				throw CrashReport.create("INSTANCE field in string factory class has invalid type", REPORT_CATEGORY).addDetail("Factory", factory)
+					.addDetail("Expected Type", factory).addDetail("Actual Type", field.type()).exception();
+			}
+			return factory;
+		}
+		//endregion
 	}
 }
