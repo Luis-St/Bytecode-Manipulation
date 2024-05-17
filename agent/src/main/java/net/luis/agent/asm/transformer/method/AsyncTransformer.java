@@ -1,8 +1,10 @@
 package net.luis.agent.asm.transformer.method;
 
+import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
@@ -43,8 +45,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 	
 	private static class AsyncClassVisitor extends BaseClassVisitor {
 		
-		private static final Handle METAFACTORY = new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory",
-			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false);
+		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		private static final Type VOID_METHOD = Type.getMethodType(VOID);
 		
 		private final ClassContent content;
@@ -58,13 +59,21 @@ public class AsyncTransformer extends BaseClassTransformer {
 		@Override
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodData method = this.content.getMethod(name, Type.getMethodType(descriptor));
-			if (method == null || !method.is(MethodType.METHOD) || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(ASYNC)) {
+			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(ASYNC)) {
 				return super.visitMethod(access, name, descriptor, signature, exceptions);
 			}
+			//region Validation
+			if (!method.is(MethodType.METHOD)) {
+				throw CrashReport.create("Annotation @Async can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.name()).exception();
+			}
+			if (!method.returns(VOID)) {
+				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getMethodSignature()).addDetail("Return Type", method.type().getReturnType()).exception();
+			}
+			//endregion
 			access = access & ~method.access().getOpcode();
 			String newName = "generated$" + name + "$async";
 			this.methods.put(method, newName);
-			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE, newName, descriptor, signature, exceptions);
+			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC, newName, descriptor, signature, exceptions);
 			return new BaseMethodVisitor(visitor, this.context, this.type, method, this::markModified).skipAnnotation();
 		}
 		
@@ -85,7 +94,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 					visitor.visitVarInsn(parameter.type().getOpcode(Opcodes.ILOAD), index++);
 				}
 				//endregion
-				visitor.visitInvokeDynamicInsn("run", this.makeDescriptor(method), METAFACTORY, VOID_METHOD, this.createHandle(method, entry.getValue()), VOID_METHOD);
+				visitor.visitInvokeDynamicInsn("run", this.makeDescriptor(method), ASMUtils.METAFACTORY_HANDLE, VOID_METHOD, this.createHandle(method, entry.getValue()), VOID_METHOD);
 				visitor.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/concurrent/CompletableFuture", "runAsync", "(Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;", false);
 				visitor.visitInsn(Opcodes.POP);
 				visitor.visitInsn(Opcodes.RETURN);

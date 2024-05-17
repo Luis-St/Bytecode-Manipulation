@@ -92,10 +92,9 @@ public class DefaultTransformer extends BaseClassTransformer {
 		private @NotNull Type getFactory(@NotNull ParameterData parameter) {
 			AnnotationData annotation = parameter.getAnnotation(DEFAULT);
 			Type factory = annotation.getOrDefault(this.context, "factory");
-			ClassContent content = this.context.getClassContent(factory);
-			FieldData field = content.getField("INSTANCE");
+			FieldData field = this.context.getClassContent(factory).getField("INSTANCE");
 			if (field == null) {
-				throw CrashReport.create("Missing field INSTANCE in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
+				throw CrashReport.create("Missing INSTANCE field in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}
 			if (!field.is(TypeAccess.PUBLIC, TypeModifier.STATIC, TypeModifier.FINAL)) {
 				throw CrashReport.create("INSTANCE field in string factory class is not public static final", REPORT_CATEGORY).addDetail("Factory", factory).exception();

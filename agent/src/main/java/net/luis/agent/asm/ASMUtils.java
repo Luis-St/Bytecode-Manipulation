@@ -4,7 +4,7 @@ import net.luis.agent.preload.ClassDataPredicate;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import org.jetbrains.annotations.NotNull;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -18,6 +18,9 @@ import java.util.stream.Stream;
  */
 
 public class ASMUtils {
+	
+	private static final String METAFACTORY_DESCRIPTOR = "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;";
+	public static final Handle METAFACTORY_HANDLE = new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", METAFACTORY_DESCRIPTOR, false);
 	
 	public static void saveClass(@NotNull File file, byte @NotNull [] data) {
 		try {

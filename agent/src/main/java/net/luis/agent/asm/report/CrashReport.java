@@ -37,12 +37,12 @@ public class CrashReport {
 		return new CrashReport(message, null, exception);
 	}
 	
-	public static @NotNull CrashReport create(@NotNull String message, @NotNull String type) {
-		return new CrashReport(message, type, null);
+	public static @NotNull CrashReport create(@NotNull String message, @NotNull String category) {
+		return new CrashReport(message, category, null);
 	}
 	
-	public static @NotNull CrashReport create(@NotNull String message, @NotNull String type, @Nullable Throwable exception) {
-		return new CrashReport(message, type, exception);
+	public static @NotNull CrashReport create(@NotNull String message, @NotNull String category, @Nullable Throwable exception) {
+		return new CrashReport(message, category, exception);
 	}
 	//endregion
 	

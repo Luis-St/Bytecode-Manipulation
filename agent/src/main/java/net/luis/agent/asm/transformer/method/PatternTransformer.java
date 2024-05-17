@@ -4,6 +4,7 @@ import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
+import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
@@ -13,8 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static net.luis.agent.asm.Types.*;
 
@@ -40,7 +40,6 @@ public class PatternTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		ClassContent content = this.context.getClassContent(type);
 		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
 			
 			@Override
@@ -53,6 +52,7 @@ public class PatternTransformer extends BaseClassTransformer {
 	private static class PatternVisitor extends BaseMethodVisitor {
 		
 		private static final Type ILL_ARG = Type.getType(IllegalArgumentException.class);
+		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
@@ -67,10 +67,7 @@ public class PatternTransformer extends BaseClassTransformer {
 			boolean isStatic = this.method.is(TypeModifier.STATIC);
 			for (ParameterData parameter : this.lookup) {
 				Label label = new Label();
-				String value = parameter.getAnnotation(PATTERN).get("value");
-				if (value == null) {
-					continue;
-				}
+				String value = Objects.requireNonNull(parameter.getAnnotation(PATTERN).get("value"));
 				
 				this.instrumentPatternCheck(this.mv, value, isStatic ? parameter.index() : parameter.index() + 1, label);
 				this.instrumentThrownException(this.mv, ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
@@ -83,12 +80,9 @@ public class PatternTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitInsn(int opcode) {
-			if (opcode == Opcodes.ARETURN && this.isValidReturn()) {
-				String value = this.method.getAnnotation(PATTERN).get("value");
-				if (value == null) {
-					this.mv.visitInsn(opcode);
-					return;
-				}
+			if (opcode == Opcodes.ARETURN && this.method.isAnnotatedWith(PATTERN)) {
+				this.validateMethod();
+				String value = Objects.requireNonNull(this.method.getAnnotation(PATTERN).get("value"));
 				Label start = new Label();
 				Label end = new Label();
 				int local = this.newLocal(this.method.getReturnType());
@@ -107,9 +101,15 @@ public class PatternTransformer extends BaseClassTransformer {
 			this.mv.visitInsn(opcode);
 		}
 		
-		//region Helper methods
-		private boolean isValidReturn() {
-			return this.method.is(MethodType.METHOD) && this.method.returns(STRING) && this.method.isAnnotatedWith(PATTERN);
+		//region Validation
+		private void validateMethod() {
+			if (!this.method.is(MethodType.METHOD)) {
+				throw CrashReport.create("Annotation @Pattern can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.name()).exception();
+			}
+			if (!this.method.returns(STRING)) {
+				throw CrashReport.create("Method annotated with @Pattern must return a String", REPORT_CATEGORY).addDetail("Method", this.method.getMethodSignature())
+					.addDetail("Return Type", this.method.type().getReturnType()).exception();
+			}
 		}
 		//endregion
 	}

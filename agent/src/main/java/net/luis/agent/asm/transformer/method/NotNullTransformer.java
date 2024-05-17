@@ -2,11 +2,12 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.*;
+import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
+import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
-import net.luis.agent.preload.type.TypeModifier;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +41,6 @@ public class NotNullTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		ClassContent content = this.context.getClassContent(type);
 		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
 			
 			@Override
@@ -51,6 +51,8 @@ public class NotNullTransformer extends BaseClassTransformer {
 	}
 	
 	private static class NotNullVisitor extends BaseMethodVisitor {
+		
+		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
@@ -84,7 +86,8 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitInsn(int opcode) {
-			if (opcode == Opcodes.ARETURN && this.isValidReturn()) {
+			if (opcode == Opcodes.ARETURN && this.method.isAnnotatedWith(NOT_NULL)) {
+				this.validateMethod();
 				this.instrumentNonNullCheck(this.mv, "Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " must not return null");
 				this.mv.visitTypeInsn(Opcodes.CHECKCAST, this.method.getReturnType().getInternalName());
 				this.markModified();
@@ -92,9 +95,15 @@ public class NotNullTransformer extends BaseClassTransformer {
 			this.mv.visitInsn(opcode);
 		}
 		
-		//region Helper methods
-		private boolean isValidReturn() {
-			return this.method.is(MethodType.METHOD) && !this.method.returnsAny(PRIMITIVES) && this.method.isAnnotatedWith(NOT_NULL);
+		//region Validation
+		private void validateMethod() {
+			if (!this.method.is(MethodType.METHOD)) {
+				throw CrashReport.create("Annotation @NotNull can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.name()).exception();
+			}
+			if (this.method.returnsAny(PRIMITIVES)) {
+				throw CrashReport.create("Method annotated with @NotNull must not return a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getMethodSignature())
+					.addDetail("Return Type", this.method.getReturnType()).exception();
+			}
 		}
 		//endregion
 	}

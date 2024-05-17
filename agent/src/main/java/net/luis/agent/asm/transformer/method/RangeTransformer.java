@@ -53,43 +53,52 @@ public class RangeTransformer extends BaseClassTransformer {
 	
 	private static class RangeVisitor extends BaseMethodVisitor {
 		
-		private static final String REPORT_CATEGORY = "Unsupported Annotation Combination";
+		private static final String INVALID_CATEGORY = "Invalid Annotated Element";
+		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";
 		private static final Type ILL_ARG = Type.getType(IllegalArgumentException.class);
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
 		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markedModified) {
 			super(visitor, context, type, method, markedModified);
+			//region Parameter validation
 			for (ParameterData parameter : method.parameters()) {
 				if (parameter.isAnnotatedWithAny(ANNOS)) {
 					if (!parameter.isAny(NUMBERS)) {
-						throw CrashReport.create(REPORT_CATEGORY, "Parameter annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", method.getMethodSignature())
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", method.getMethodSignature())
 							.addDetail("Parameter", parameter.name()).addDetail("Parameter At", parameter.index()).addDetail("Parameter Type", parameter.type()).exception();
 					}
 					if (parameter.getAnnotations().stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-						throw CrashReport.create(REPORT_CATEGORY, "Parameter must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", method.getMethodSignature())
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", method.getMethodSignature())
 							.addDetail("Parameter At", parameter.index()).addDetail("Annotations", parameter.getAnnotations().stream().map(AnnotationData::type).toList()).exception();
 					}
 					if (parameter.getAnnotations().stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-						throw CrashReport.create(REPORT_CATEGORY, "Parameter must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", method.getMethodSignature())
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", method.getMethodSignature())
 							.addDetail("Parameter At", parameter.index()).addDetail("Annotations", parameter.getAnnotations().stream().map(AnnotationData::type).toList()).exception();
 					}
 					this.lookup.add(parameter);
 				}
 			}
+			//endregion
+			//region Method validation
 			if (method.isAnnotatedWithAny(ANNOS)) {
+				if (!this.method.is(MethodType.METHOD)) {
+					throw CrashReport.create(INVALID_CATEGORY, "Annotation @Above, @AboveEqual, @Below or @BelowEqual can not be applied to constructors and static initializers").addDetail("Method", method.name()).exception();
+				}
 				if (!method.returnsAny(NUMBERS)) {
-					throw CrashReport.create(REPORT_CATEGORY, "Method annotated with @Above, @AboveEqual, @Below or @BelowEqual must return a number type").addDetail("Method", method.getMethodSignature()).exception();
+					throw CrashReport.create(INVALID_CATEGORY, "Method annotated with @Above, @AboveEqual, @Below or @BelowEqual must return a number type").addDetail("Method", method.getMethodSignature())
+						.addDetail("Return Type", method.getReturnType()).exception();
 				}
 				if (method.getAnnotations().stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-					throw CrashReport.create(REPORT_CATEGORY, "Method must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", method.getMethodSignature())
+					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", method.getMethodSignature())
 						.addDetail("Annotations", method.getAnnotations().stream().map(AnnotationData::type).toList()).exception();
 				}
 				if (method.getAnnotations().stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-					throw CrashReport.create(REPORT_CATEGORY, "Method must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", method.getMethodSignature())
+					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", method.getMethodSignature())
 						.addDetail("Annotations", method.getAnnotations().stream().map(AnnotationData::type).toList()).exception();
 				}
 			}
+			//endregion
 		}
 		
 		@Override
@@ -117,7 +126,7 @@ public class RangeTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitInsn(int opcode) {
-			if (this.isValidOpcode(opcode) && this.isValidReturn()) {
+			if (this.isValidOpcode(opcode) && this.method.isAnnotatedWithAny(ANNOS)) {
 				Label start = new Label();
 				Label end = new Label();
 				Type type = this.method.getReturnType();
@@ -171,10 +180,6 @@ public class RangeTransformer extends BaseClassTransformer {
 		
 		private boolean isValidOpcode(int opcode) {
 			return opcode == Opcodes.IRETURN || opcode == Opcodes.LRETURN || opcode == Opcodes.FRETURN || opcode == Opcodes.DRETURN;
-		}
-		
-		private boolean isValidReturn() {
-			return this.method.is(MethodType.METHOD) && this.method.returnsAny(NUMBERS) && this.method.isAnnotatedWithAny(ANNOS);
 		}
 		//endregion
 	}
