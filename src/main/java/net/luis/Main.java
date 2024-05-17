@@ -4,6 +4,8 @@ import net.luis.agent.annotation.Default;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
 import net.luis.agent.annotation.Async;
+import net.luis.agent.annotation.Caught;
+import net.luis.agent.util.CaughtAction;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +41,7 @@ public final class Main {
 		execute("ls", null, null);
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
+		caught();
 		if (logger instanceof MyInterface my) {
 			System.out.println("LoggerConfiguration is an instance of MyInterface!");
 			System.out.println(my.build().getName());
@@ -84,5 +87,10 @@ public final class Main {
 		System.out.println("str: " + str);
 		System.out.println("values: " + values);
 		System.out.println("Thread: " + Thread.currentThread().getName());
+	}
+	
+	@Caught
+	public static void caught() {
+		System.out.println("Test Caught");
 	}
 }

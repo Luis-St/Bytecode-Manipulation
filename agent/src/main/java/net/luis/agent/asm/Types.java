@@ -3,6 +3,7 @@ package net.luis.agent.asm;
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.*;
 import net.luis.agent.annotation.Async;
+import net.luis.agent.annotation.Caught;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
@@ -42,4 +43,5 @@ public interface Types {
 	Type BELOW_EQUAL = Type.getType(BelowEqual.class);
 	
 	Type ASYNC = Type.getType(Async.class);
+	Type CAUGHT = Type.getType(Caught.class);
 }

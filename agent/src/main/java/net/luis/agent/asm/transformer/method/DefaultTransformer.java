@@ -72,13 +72,14 @@ public class DefaultTransformer extends BaseClassTransformer {
 				if (parameter.is(STRING)) {
 					this.mv.visitLdcInsn(value);
 				} else {
-					Type factory = this.getFactory(parameter);
-					this.mv.visitFieldInsn(Opcodes.GETSTATIC, factory.getInternalName(), "INSTANCE", factory.getDescriptor());
-					this.mv.visitLdcInsn(parameter.type().getDescriptor());
-					this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, TYPE.getInternalName(), "getType", "(Ljava/lang/String;)Lorg/objectweb/asm/Type;", false);
-					this.mv.visitLdcInsn(value);
-					this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, factory.getInternalName(), "create", "(Lorg/objectweb/asm/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
-					this.mv.visitTypeInsn(Opcodes.CHECKCAST, parameter.type().getInternalName());
+					this.instrumentFactoryCall(this.mv, this.getFactory(parameter), parameter.type(), value);
+					
+					//this.mv.visitFieldInsn(Opcodes.GETSTATIC, factory.getInternalName(), "INSTANCE", factory.getDescriptor());
+					//this.mv.visitLdcInsn(parameter.type().getDescriptor());
+					//this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, TYPE.getInternalName(), "getType", "(Ljava/lang/String;)Lorg/objectweb/asm/Type;", false);
+					//this.mv.visitLdcInsn(value);
+					//this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, factory.getInternalName(), "create", "(Lorg/objectweb/asm/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
+					//this.mv.visitTypeInsn(Opcodes.CHECKCAST, parameter.type().getInternalName());
 				}
 				
 				this.visitVarInsn(Opcodes.ASTORE, parameter);

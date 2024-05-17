@@ -39,13 +39,13 @@ public class DefaultStringFactory implements StringFactory {
 	private DefaultStringFactory() {
 		//region Factories
 		this.directFactories.put(BOOLEAN, Boolean::parseBoolean);
-		this.directFactories.put(BYTE, Byte::parseByte);
-		this.directFactories.put(CHAR, value -> value.charAt(0));
-		this.directFactories.put(SHORT, Short::parseShort);
-		this.directFactories.put(INTEGER, Integer::parseInt);
-		this.directFactories.put(LONG, Long::parseLong);
-		this.directFactories.put(FLOAT, Float::parseFloat);
-		this.directFactories.put(DOUBLE, Double::parseDouble);
+		this.directFactories.put(BYTE, value -> value.isBlank() ? 0 : Byte.parseByte(value));
+		this.directFactories.put(CHAR, value -> value.isBlank() ? '\0' : value.charAt(0));
+		this.directFactories.put(SHORT, value -> value.isBlank() ? 0 : Short.parseShort(value));
+		this.directFactories.put(INTEGER, value -> value.isBlank() ? 0 : Integer.parseInt(value));
+		this.directFactories.put(LONG, value -> value.isBlank() ? 0L : Long.parseLong(value));
+		this.directFactories.put(FLOAT, value -> value.isBlank() ? 0.0F : Float.parseFloat(value));
+		this.directFactories.put(DOUBLE, value -> value.isBlank() ? 0.0D : Double.parseDouble(value));
 		this.directFactories.put(STRING, Function.identity());
 		this.directFactories.put(OPTIONAL, value -> Optional.empty());
 		this.inheritanceFactories.put(Type.getType(List.class), this::createList);
