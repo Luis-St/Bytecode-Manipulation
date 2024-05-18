@@ -1,10 +1,8 @@
 package net.luis;
 
-import net.luis.agent.annotation.Default;
+import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
-import net.luis.agent.annotation.Async;
-import net.luis.agent.annotation.Caught;
 import net.luis.agent.util.CaughtAction;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
@@ -15,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  *
@@ -92,5 +91,11 @@ public final class Main {
 	@Caught
 	public static void caught() {
 		System.out.println("Test Caught");
+		throw new RuntimeException("Caught Exception");
+	}
+	
+	@Scheduled(1000)
+	public static void scheduled() {
+		System.out.println("Test Scheduled");
 	}
 }

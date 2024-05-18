@@ -34,7 +34,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldTransform(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return content.methods().stream().anyMatch(method -> method.returns(VOID) && method.isAnnotatedWith(ASYNC));
+		return content.methods().stream().anyMatch(method -> method.isAnnotatedWith(ASYNC));
 	}
 	//endregion
 	
@@ -46,7 +46,6 @@ public class AsyncTransformer extends BaseClassTransformer {
 	private static class AsyncClassVisitor extends BaseClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
-		private static final Type VOID_METHOD = Type.getMethodType(VOID);
 		
 		private final ClassContent content;
 		private final Map<MethodData, String> methods = new HashMap<>();
@@ -68,6 +67,12 @@ public class AsyncTransformer extends BaseClassTransformer {
 			}
 			if (!method.returns(VOID)) {
 				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getMethodSignature()).addDetail("Return Type", method.type().getReturnType()).exception();
+			}
+			if (method.getExceptionCount() > 0) {
+				throw CrashReport.create("Method annotated with @Async must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getMethodSignature()).addDetail("Exceptions", method.exceptions()).exception();
+			}
+			if (method.isAnnotatedWith(SCHEDULED)) {
+				throw CrashReport.create("Method annotated with @Async must not be annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", method.name()).exception();
 			}
 			//endregion
 			access = access & ~method.access().getOpcode();
@@ -94,7 +99,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 					visitor.visitVarInsn(parameter.type().getOpcode(Opcodes.ILOAD), index++);
 				}
 				//endregion
-				visitor.visitInvokeDynamicInsn("run", this.makeDescriptor(method), ASMUtils.METAFACTORY_HANDLE, VOID_METHOD, this.createHandle(method, entry.getValue()), VOID_METHOD);
+				visitor.visitInvokeDynamicInsn("run", this.makeDescriptor(method), METAFACTORY_HANDLE, VOID_METHOD, this.createHandle(method, entry.getValue()), VOID_METHOD);
 				visitor.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/concurrent/CompletableFuture", "runAsync", "(Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;", false);
 				visitor.visitInsn(Opcodes.POP);
 				visitor.visitInsn(Opcodes.RETURN);

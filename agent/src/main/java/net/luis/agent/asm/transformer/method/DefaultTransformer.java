@@ -39,7 +39,6 @@ public class DefaultTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		ClassContent content = this.context.getClassContent(type);
 		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
 			
 			@Override

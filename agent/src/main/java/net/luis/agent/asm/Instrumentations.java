@@ -18,6 +18,9 @@ import static net.luis.agent.asm.Types.*;
 
 public interface Instrumentations {
 	
+	String METAFACTORY_DESCRIPTOR = "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;";
+	Handle METAFACTORY_HANDLE = new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", METAFACTORY_DESCRIPTOR, false);
+	
 	//region Internal
 	private void loadInteger(@NotNull MethodVisitor visitor, int i) {
 		if (i >= -1 && i <= 5) {

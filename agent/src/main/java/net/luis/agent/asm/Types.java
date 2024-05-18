@@ -4,6 +4,7 @@ import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.*;
 import net.luis.agent.annotation.Async;
 import net.luis.agent.annotation.Caught;
+import net.luis.agent.annotation.Scheduled;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
@@ -25,6 +26,8 @@ public interface Types {
 	Type STRING = Type.getType(String.class);
 	Type TYPE = Type.getType(Type.class);
 	
+	Type VOID_METHOD = Type.getType("()V");
+	
 	Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
 	Type IMPLEMENTED = Type.getType(Implemented.class);
@@ -43,5 +46,6 @@ public interface Types {
 	Type BELOW_EQUAL = Type.getType(BelowEqual.class);
 	
 	Type ASYNC = Type.getType(Async.class);
+	Type SCHEDULED = Type.getType(Scheduled.class);
 	Type CAUGHT = Type.getType(Caught.class);
 }

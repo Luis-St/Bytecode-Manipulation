@@ -99,7 +99,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Accessor has void return type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			if (ifaceMethod.getParameterCount() > 0) {
-				throw CrashReport.create("Method annotated with @Accessor has parameters", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
+				throw CrashReport.create("Method annotated with @Accessor must not have parameters", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			if (ifaceMethod.getExceptionCount() > 0) {
 				throw CrashReport.create("Method annotated with @Accessor must not throw exceptions", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)

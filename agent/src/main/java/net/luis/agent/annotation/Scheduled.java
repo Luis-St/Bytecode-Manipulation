@@ -1,4 +1,6 @@
-package net.luis.agent.annotation.unused;
+package net.luis.agent.annotation;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
@@ -15,9 +17,9 @@ public @interface Scheduled {
 	
 	long initialDelay() default 0;
 	
-	long delay();
+	long value();
 	
-	TimeUnit unit() default TimeUnit.MILLISECONDS;
+	@NotNull TimeUnit unit() default TimeUnit.MILLISECONDS;
 	
 	boolean fixedRate() default true;
 }
