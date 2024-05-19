@@ -1,6 +1,6 @@
 package net.luis;
 
-import net.luis.agent.annotation.*;
+import net.luis.agent.annotation.implementation.*;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.logging.log4j.Level;
@@ -19,18 +19,19 @@ public interface MyInterface {
 	@Accessor // Makes the logger field accessible
 	@NotNull List<String> getLoggers();
 	
-	@Accessor(target = "allowedTypes") // Makes the allowedTypes field accessible (target required, because method name does not match)
+	@Accessor(method = "allowedTypes") // Makes the allowedTypes field accessible (target required, because method name does not match)
 	@NotNull Set<LoggingType> getTypes();
 	
-	@Assignor // Makes the logger field assignable
+	@Assignor
+		// Makes the logger field assignable
 	void setLoggers(@NotNull List<String> loggers);
 	
-	@Assignor(target = "allowedTypes") // Makes the allowedTypes field assignable (target required, because method name does not match)
+	@Assignor(method = "allowedTypes") // Makes the allowedTypes field assignable (target required, because method name does not match)
 	void setTypes(@NotNull Set<LoggingType> types);
 	
 	@Invoker // Invokes private method
 	@NotNull String invokeGetPattern(@NotNull LoggingType type, @NotNull Level level);
 	
-	@Invoker(target = "getPattern(LoggingType, Level)") // Invokes private method (target required, because method name does not match)
+	@Invoker(method = "getPattern(LoggingType, Level)") // Invokes private method (target required, because method name does not match)
 	@NotNull String getLoggingPattern(@NotNull LoggingType type, @NotNull Level level);
 }

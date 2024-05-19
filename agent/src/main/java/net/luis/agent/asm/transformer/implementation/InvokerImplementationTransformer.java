@@ -69,7 +69,7 @@ public class InvokerImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getInvokerName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(INVOKER);
-			String target = annotation.get("target");
+			String target = annotation.get("method");
 			if (target != null) {
 				return target;
 			}

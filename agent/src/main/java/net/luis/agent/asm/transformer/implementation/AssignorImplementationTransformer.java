@@ -70,7 +70,7 @@ public class AssignorImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getAssignorName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(ASSIGNOR);
-			String target = annotation.get("target");
+			String target = annotation.get("method");
 			if (target != null) {
 				return target;
 			}

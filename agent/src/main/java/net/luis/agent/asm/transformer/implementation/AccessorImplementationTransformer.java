@@ -69,7 +69,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getAccessorName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(ACCESSOR);
-			String target = annotation.get("target");
+			String target = annotation.get("method");
 			if (target != null) {
 				return target;
 			}

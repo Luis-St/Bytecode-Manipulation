@@ -1,4 +1,4 @@
-package net.luis.agent.annotation;
+package net.luis.agent.annotation.implementation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -14,5 +14,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.CLASS)
 public @interface Assignor {
 	
-	@NotNull String target() default "";
+	@NotNull String method() default "";
 }

@@ -1,4 +1,4 @@
-package net.luis.agent.annotation;
+package net.luis.agent.annotation.implementation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -10,9 +10,9 @@ import java.lang.annotation.*;
  *
  */
 
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
-public @interface InjectInterface {
+public @interface Invoker {
 	
-	@NotNull Class<?>[] targets();
+	@NotNull String method() default "";
 }
