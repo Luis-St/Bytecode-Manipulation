@@ -14,5 +14,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.CLASS)
 public @interface Accessor {
 	
-	@NotNull String method() default "";
+	@NotNull String target() default "";
 }

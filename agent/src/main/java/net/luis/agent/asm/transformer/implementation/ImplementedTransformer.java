@@ -17,24 +17,24 @@ import java.util.Map;
 
 import static net.luis.agent.asm.Types.*;
 
-public class ImplementedValidationTransformer extends BaseClassTransformer {
+public class ImplementedTransformer extends BaseClassTransformer {
 	
-	public ImplementedValidationTransformer(@NotNull PreloadContext context) {
+	public ImplementedTransformer(@NotNull PreloadContext context) {
 		super(context);
 	}
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new ImplementedValidationVisitor(writer, this.context, type, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
+		return new ImplementedVisitor(writer, this.context, type, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	
-	private static class ImplementedValidationVisitor extends BaseClassVisitor {
+	private static class ImplementedVisitor extends BaseClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Method Implementation Error";
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private ImplementedValidationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+		private ImplementedVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
 			super(writer, context, type, markModified);
 			this.lookup = lookup;
 		}
@@ -55,7 +55,7 @@ public class ImplementedValidationTransformer extends BaseClassTransformer {
 					for (MethodData method : ifaceContent.methods()) {
 						if (method.isAnnotatedWith(IMPLEMENTED)) {
 							this.validateMethod(iface, method, target, targetContent);
-						} else if (method.is(TypeAccess.PUBLIC, TypeModifier.ABSTRACT)) {
+						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
 							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {

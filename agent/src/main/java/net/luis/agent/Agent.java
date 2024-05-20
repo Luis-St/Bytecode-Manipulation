@@ -27,10 +27,10 @@ public class Agent {
 		//content.methods().forEach(method -> System.out.println(method.name() + ": " + method.signature()));
 		
 		inst.addTransformer(new InterfaceInjectionTransformer(CONTEXT));
-		inst.addTransformer(new ImplementedValidationTransformer(CONTEXT));
-		inst.addTransformer(new AccessorImplementationTransformer(CONTEXT));
-		inst.addTransformer(new AssignorImplementationTransformer(CONTEXT));
-		inst.addTransformer(new InvokerImplementationTransformer(CONTEXT));
+		inst.addTransformer(new ImplementedTransformer(CONTEXT));
+		inst.addTransformer(new AccessorTransformer(CONTEXT));
+		inst.addTransformer(new AssignorTransformer(CONTEXT));
+		inst.addTransformer(new InvokerTransformer(CONTEXT));
 		inst.addTransformer(new ScheduledTransformer(CONTEXT));
 		inst.addTransformer(new CaughtTransformer(CONTEXT));
 		inst.addTransformer(new AsyncTransformer(CONTEXT));

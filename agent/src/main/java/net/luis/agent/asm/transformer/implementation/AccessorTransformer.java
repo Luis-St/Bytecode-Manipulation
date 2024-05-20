@@ -17,24 +17,24 @@ import java.util.*;
 
 import static net.luis.agent.asm.Types.*;
 
-public class AccessorImplementationTransformer extends BaseClassTransformer {
+public class AccessorTransformer extends BaseClassTransformer {
 	
-	public AccessorImplementationTransformer(@NotNull PreloadContext context) {
+	public AccessorTransformer(@NotNull PreloadContext context) {
 		super(context);
 	}
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
-		return new AccessorImplementationVisitor(writer, this.context, type, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
+		return new AccessorVisitor(writer, this.context, type, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
 	}
 	
-	private static class AccessorImplementationVisitor extends BaseClassVisitor {
+	private static class AccessorVisitor extends BaseClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Accessor Implementation Error";
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private AccessorImplementationVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+		private AccessorVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
 			super(writer, context, type, markModified);
 			this.lookup = lookup;
 		}
@@ -55,7 +55,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 					for (MethodData method : ifaceContent.methods()) {
 						if (method.isAnnotatedWith(ACCESSOR)) {
 							this.validateMethod(iface, method, target, targetContent);
-						} else if (method.is(TypeAccess.PUBLIC, TypeModifier.ABSTRACT)) {
+						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
 							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
@@ -69,7 +69,7 @@ public class AccessorImplementationTransformer extends BaseClassTransformer {
 		
 		private @NotNull String getAccessorName(@NotNull MethodData ifaceMethod) {
 			AnnotationData annotation = ifaceMethod.getAnnotation(ACCESSOR);
-			String target = annotation.get("method");
+			String target = annotation.get("target");
 			if (target != null) {
 				return target;
 			}
