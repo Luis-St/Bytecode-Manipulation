@@ -1,6 +1,5 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseClassVisitor;
@@ -44,7 +43,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 	//endregion
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
 		return new ScheduledClassVisitor(writer, this.context, type, () -> this.modified = true);
 	}
 	

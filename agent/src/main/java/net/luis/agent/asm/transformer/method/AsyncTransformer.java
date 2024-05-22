@@ -1,6 +1,5 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
@@ -39,7 +38,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 	//endregion
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
 		return new AsyncClassVisitor(writer, this.context, type, this.context.getClassContent(type), () -> this.modified = true);
 	}
 	

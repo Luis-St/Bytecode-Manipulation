@@ -1,6 +1,5 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.annotation.Caught;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
@@ -37,7 +36,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 	//endregion
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassReader reader, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
 		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
 			
 			@Override
