@@ -57,6 +57,10 @@ public class Utils {
 		return builder.toString().toLowerCase();
 	}
 	
+	public static @NotNull String deleteWhitespace(@NotNull String string) {
+		return string.chars().filter(c -> !Character.isWhitespace(c)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
+	}
+	
 	//region Array to list
 	public static @NotNull List<Boolean> asList(boolean @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());

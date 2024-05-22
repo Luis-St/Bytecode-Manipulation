@@ -3,7 +3,9 @@ package net.luis.agent.asm;
 import net.luis.agent.preload.ClassDataPredicate;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
+import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.io.File;
@@ -134,15 +136,6 @@ public class ASMUtils {
 		}
 	}
 	
-	//matches
-	//matches(String, Type, String, Type)
-	//matches(java.lang.String, org.objectweb.asm.Type, java.lang.String, org.objectweb.asm.Type)
-	//matches(Ljava/lang/String;Lorg/objectweb/asm/Type;Ljava/lang/String;Lorg/objectweb/asm/Type;)Z
-	//ASMUtils#matches
-	//net.luis.agent.asm.ASMUtils#matches
-	//net.luis.agent.asm.ASMUtils#matches(String, Type, String, Type)
-	//net.luis.agent.asm.ASMUtils.matches(Ljava/lang/String;Lorg/objectweb/asm/Type;Ljava/lang/String;Lorg/objectweb/asm/Type;)Z
-	
 	public static boolean matchesTarget(@NotNull String target, @NotNull Type methodOwner, @NotNull String methodName, @NotNull Type methodDescriptor) {
 		boolean specifiesOwner = target.contains("#") && !target.startsWith("#");
 		boolean specifiesParameters = target.contains("(") && target.contains(")");
@@ -157,20 +150,38 @@ public class ASMUtils {
 			return false;
 		}
 		
-		List<String> targetParameters = specifiesParameters ? Stream.of(target.substring(target.indexOf('(') + 1, target.indexOf(')')).split(",")).map(String::strip).toList() : new ArrayList<>();
-		Type[] methodParameters = methodDescriptor.getArgumentTypes();
-		if (targetParameters.size() != methodParameters.length) {
-			return false;
-		}
-		for (int i = 0; i < methodParameters.length; i++) {
-			if (!isSameType(methodParameters[i], targetParameters.get(i))) {
+		if (specifiesParameters) {
+			String parameters = Utils.deleteWhitespace(target.substring(target.indexOf('(') + 1, target.indexOf(')')));
+			Type targetDescriptor = tryParseMethodType("(" + parameters + ")");
+			if (targetDescriptor != null && !Arrays.equals(methodDescriptor.getArgumentTypes(), targetDescriptor.getArgumentTypes())) {
 				return false;
+			} else if (targetDescriptor == null) {
+				List<String> targetParameters = Stream.of(parameters.split(",")).map(String::strip).toList();
+				Type[] methodParameters = methodDescriptor.getArgumentTypes();
+				if (targetParameters.size() != methodParameters.length) {
+					return false;
+				}
+				for (int i = 0; i < methodParameters.length; i++) {
+					if (!isSameType(methodParameters[i], targetParameters.get(i))) {
+						return false;
+					}
+				}
 			}
 		}
 		
 		boolean specifiesReturnType = specifiesParameters && !target.endsWith(")");
 		String targetReturnType = specifiesReturnType ? target.substring(target.indexOf(')') + 1).strip() : "";
 		return targetReturnType.isEmpty() || isSameType(methodDescriptor.getReturnType(), targetReturnType);
+	}
+	
+	private static @Nullable Type tryParseMethodType(@NotNull String type) {
+		try {
+			Type methodType = Type.getMethodType(type);
+			methodType.getArgumentTypes();
+			return methodType;
+		} catch (Exception e) {
+			return null;
+		}
 	}
 	
 	private static @NotNull String getTargetMethod(@NotNull String target, boolean specifiesOwner, boolean specifiesParameters) {
