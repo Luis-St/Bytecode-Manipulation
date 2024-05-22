@@ -4,7 +4,7 @@ import net.luis.agent.preload.ClassDataPredicate;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import org.jetbrains.annotations.NotNull;
-import org.objectweb.asm.*;
+import org.objectweb.asm.Type;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -12,10 +12,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- *
- * @author Luis-St
- *
- */
+ @author Luis-St */
 
 public class ASMUtils {
 	
@@ -135,5 +132,55 @@ public class ASMUtils {
 		} else {
 			return getSimpleName(type).equals(str);
 		}
+	}
+	
+	//matches
+	//matches(String, Type, String, Type)
+	//matches(java.lang.String, org.objectweb.asm.Type, java.lang.String, org.objectweb.asm.Type)
+	//matches(Ljava/lang/String;Lorg/objectweb/asm/Type;Ljava/lang/String;Lorg/objectweb/asm/Type;)Z
+	//ASMUtils#matches
+	//net.luis.agent.asm.ASMUtils#matches
+	//net.luis.agent.asm.ASMUtils#matches(String, Type, String, Type)
+	//net.luis.agent.asm.ASMUtils.matches(Ljava/lang/String;Lorg/objectweb/asm/Type;Ljava/lang/String;Lorg/objectweb/asm/Type;)Z
+	
+	public static boolean matchesTarget(@NotNull String target, @NotNull Type methodOwner, @NotNull String methodName, @NotNull Type methodDescriptor) {
+		boolean specifiesOwner = target.contains("#") && !target.startsWith("#");
+		boolean specifiesParameters = target.contains("(") && target.contains(")");
+		
+		String targetOwner = specifiesOwner ? target.substring(0, target.indexOf('#')).strip() : "";
+		if (!targetOwner.isEmpty() && !isSameType(methodOwner, targetOwner)) {
+			return false;
+		}
+		
+		String targetMethod = getTargetMethod(target, specifiesOwner, specifiesParameters).strip();
+		if (!methodName.equals(targetMethod)) {
+			return false;
+		}
+		
+		List<String> targetParameters = specifiesParameters ? Stream.of(target.substring(target.indexOf('(') + 1, target.indexOf(')')).split(",")).map(String::strip).toList() : new ArrayList<>();
+		Type[] methodParameters = methodDescriptor.getArgumentTypes();
+		if (targetParameters.size() != methodParameters.length) {
+			return false;
+		}
+		for (int i = 0; i < methodParameters.length; i++) {
+			if (!isSameType(methodParameters[i], targetParameters.get(i))) {
+				return false;
+			}
+		}
+		
+		boolean specifiesReturnType = specifiesParameters && !target.endsWith(")");
+		String targetReturnType = specifiesReturnType ? target.substring(target.indexOf(')') + 1).strip() : "";
+		return targetReturnType.isEmpty() || isSameType(methodDescriptor.getReturnType(), targetReturnType);
+	}
+	
+	private static @NotNull String getTargetMethod(@NotNull String target, boolean specifiesOwner, boolean specifiesParameters) {
+		if (specifiesOwner && specifiesParameters) {
+			return target.substring(target.indexOf('#') + 1, target.indexOf('('));
+		} else if (specifiesOwner) {
+			return target.substring(target.indexOf('#') + 1);
+		} else if (specifiesParameters) {
+			return target.substring(0, target.indexOf('('));
+		}
+		return target;
 	}
 }

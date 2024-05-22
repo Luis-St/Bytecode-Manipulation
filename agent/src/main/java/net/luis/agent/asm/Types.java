@@ -6,6 +6,7 @@ import net.luis.agent.annotation.range.*;
 import net.luis.agent.annotation.Async;
 import net.luis.agent.annotation.Caught;
 import net.luis.agent.annotation.Scheduled;
+import net.luis.agent.annotation.implementation.Injector;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
@@ -24,6 +25,7 @@ public interface Types {
 	Type[] NUMBERS = { Type.BYTE_TYPE, Type.SHORT_TYPE, Type.INT_TYPE, Type.LONG_TYPE, Type.FLOAT_TYPE, Type.DOUBLE_TYPE };
 	
 	Type VOID = Type.VOID_TYPE;
+	Type BOOLEAN = Type.BOOLEAN_TYPE;
 	Type STRING = Type.getType(String.class);
 	Type TYPE = Type.getType(Type.class);
 	
@@ -35,7 +37,8 @@ public interface Types {
 	Type ACCESSOR = Type.getType(Accessor.class);
 	Type ASSIGNOR = Type.getType(Assignor.class);
 	Type INVOKER = Type.getType(Invoker.class);
-	Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER);
+	Type INJECTOR = Type.getType(Injector.class);
+	Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER, INJECTOR);
 	
 	Type DEFAULT = Type.getType(Default.class);
 	Type NOT_NULL = Type.getType(NotNull.class);
