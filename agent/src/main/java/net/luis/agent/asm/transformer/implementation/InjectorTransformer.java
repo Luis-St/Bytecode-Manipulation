@@ -138,7 +138,13 @@ public class InjectorTransformer extends BaseClassTransformer {
 			}
 			String injectorTarget = Objects.requireNonNull(ifaceMethod.getAnnotation(INJECTOR).get("target"));
 			int ordinal = ifaceMethod.getAnnotation(INJECTOR).getOrDefault(this.context, "ordinal");
-			int line = ClassFileScanner.scanClass(this.type, new InjectorScanClassVisitor(injectorMethod, injectorTarget, ordinal), InjectorScanClassVisitor::getLine);
+			InjectorScanClassVisitor scanner = new InjectorScanClassVisitor(injectorMethod, injectorTarget, ordinal);
+			ClassFileScanner.scanClassCustom(this.type, scanner);
+			
+			if (!scanner.visitedTarget()) {
+				throw CrashReport.create("Could not find injector method during class scan", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature).exception();
+			}
+			int line = scanner.getLine();
 			if (line == -1) {
 				throw CrashReport.create("Could not find target method in method body of injector", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature).addDetail("Target", injectorTarget)
 					.addDetail("Ordinal", ordinal).exception();

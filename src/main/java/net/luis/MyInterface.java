@@ -5,6 +5,9 @@ import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -22,8 +25,7 @@ public interface MyInterface {
 	@Accessor(target = "allowedTypes") // Makes the allowedTypes field accessible (target required, because method name does not match)
 	@NotNull Set<LoggingType> getTypes();
 	
-	@Assignor
-		// Makes the logger field assignable
+	@Assignor // Makes the logger field assignable
 	void setLoggers(@NotNull List<String> loggers);
 	
 	@Assignor(target = "allowedTypes") // Makes the allowedTypes field assignable (target required, because method name does not match)
@@ -34,4 +36,16 @@ public interface MyInterface {
 	
 	@Invoker(target = "getPattern(LoggingType, Level)") // Invokes private method (target required, because method name does not match)
 	@NotNull String getLoggingPattern(@NotNull LoggingType type, @NotNull Level level);
+	
+	@Injector(target = "Set#contains")
+	default void injectBuild() {
+		System.out.println("Listener");
+	}
+	
+	@Injector(method = "build", target = "Set#contains")
+	default @NotNull Configuration resetBuild() {
+		ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
+		builder.setConfigurationName("RuntimeConfiguration");
+		return builder.build();
+	}
 }

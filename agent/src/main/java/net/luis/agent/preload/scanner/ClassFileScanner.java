@@ -33,8 +33,8 @@ public class ClassFileScanner {
 		return scanClass(type, new ClassContentScanner(), ClassContentScanner::getClassContent);
 	}
 	
-	public static <T extends ClassVisitor, X> void scanClass(@NotNull Type type, @NotNull T visitor) {
-		return scanClass(readClass(type), type, visitor, result);
+	public static <T extends ClassVisitor, X> void scanClassCustom(@NotNull Type type, @NotNull T visitor) {
+		scanClass(readClass(type), type, visitor, Function.identity());
 	}
 	
 	//region Helper methods
