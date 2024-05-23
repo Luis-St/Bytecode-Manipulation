@@ -100,6 +100,10 @@ public class NotNullTransformer extends BaseClassTransformer {
 			if (!this.method.is(MethodType.METHOD)) {
 				throw CrashReport.create("Annotation @NotNull can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.name()).exception();
 			}
+			
+			if (this.method.returns(VOID)) {
+				throw CrashReport.create("Method annotated with @NotNull must not return void", REPORT_CATEGORY).addDetail("Method", this.method.getMethodSignature()).exception();
+			}
 			if (this.method.returnsAny(PRIMITIVES)) {
 				throw CrashReport.create("Method annotated with @NotNull must not return a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getMethodSignature())
 					.addDetail("Return Type", this.method.getReturnType()).exception();

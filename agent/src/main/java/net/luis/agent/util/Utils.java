@@ -61,6 +61,15 @@ public class Utils {
 		return string.chars().filter(c -> !Character.isWhitespace(c)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
 	}
 	
+	public static <T> int indexOf(@NotNull T[] array, @NotNull T element) {
+		for (int i = 0; i < array.length; i++) {
+			if (Objects.equals(array[i], element)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
 	//region Array to list
 	public static @NotNull List<Boolean> asList(boolean @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());

@@ -2,7 +2,8 @@ package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.*;
+import net.luis.agent.asm.base.visitor.BaseClassVisitor;
+import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -106,8 +107,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 			return invokerTarget;
 		}
 		
-		// ToDo: ifaceMethod must return none primitive type -> must be nullable -> support for primitive return types -> convert between primitive and object types
-		
 		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
@@ -151,6 +150,13 @@ public class InjectorTransformer extends BaseClassTransformer {
 				if (!ifaceMethod.returns(VOID) && !ifaceMethod.returns(BOOLEAN)) {
 					throw CrashReport.create("Method annotated with @Injector specified a method which returns void, but injector method does not return void or boolean (cancellation)", REPORT_CATEGORY).addDetail("Interface", iface)
 						.addDetail("Injector", signature).addDetail("Injector Return Type", method.getReturnType()).addDetail("Method", method.getMethodSignature()).exception();
+				}
+			} else if (method.returnsAny(PRIMITIVES)) {
+				Type methodWrapper = convertToWrapper(method.getReturnType());
+				if (!ifaceMethod.returns(methodWrapper)) {
+					throw CrashReport.create("Method annotated with @Injector specified a method which returns a primitive type, but injector method does not return the corresponding wrapper type", REPORT_CATEGORY)
+						.addDetail("Interface", iface).addDetail("Injector", signature).addDetail("Injector Return Type", methodWrapper).addDetail("Method", method.getMethodSignature())
+						.addDetail("Method Return Type", method.getReturnType()).exception();
 				}
 			} else if (!ifaceMethod.returns(VOID) && !ifaceMethod.returns(method.getReturnType())) {
 				throw CrashReport.create("Method annotated with @Injector must either return void or the same type as the specified method", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature)
@@ -206,13 +212,13 @@ public class InjectorTransformer extends BaseClassTransformer {
 		private void instrumentInjector(@NotNull InjectorData injector) {
 			if (injector.ifaceMethod().returns(VOID)) {
 				this.instrumentInjectorAsListener(injector.iface(), injector.ifaceMethod());
-			} else if (injector.ifaceMethod().returns(injector.method().getReturnType())) {
+			} else if (injector.method().returns(convertToPrimitive(injector.ifaceMethod().getReturnType()))) {
 				this.instrumentInjectorAsCallback(injector.iface(), injector.ifaceMethod(), injector.method());
 			} else if (injector.ifaceMethod().returns(BOOLEAN)) {
 				this.instrumentInjectorAsCancellation(injector.iface(), injector.ifaceMethod());
 			} else {
 				throw CrashReport.create("Unknown how to implement injector, tried as listener, callback and cancellation but failed", REPORT_CATEGORY).addDetail("Injector", injector.ifaceMethod().getMethodSignature())
-					.addDetail("Method", injector.method().getMethodSignature()).addDetail("Mode", Utils.capitalize(injector.mode().name())).addDetail("Line", injector.line()).exception();
+					.addDetail("Method", injector.method().getMethodSignature()).addDetail("Mode", Utils.capitalize(injector.mode().name().toLowerCase())).addDetail("Line", injector.line()).exception();
 			}
 		}
 		
@@ -229,7 +235,11 @@ public class InjectorTransformer extends BaseClassTransformer {
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
 			this.mv.visitJumpInsn(Opcodes.IFNULL, label);
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
-			this.mv.visitInsn(Opcodes.ARETURN);
+			if (method.returnsAny(PRIMITIVES)) {
+				Type primitive = method.getReturnType();
+				this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ifaceMethod.getReturnType().getInternalName(), primitive.getClassName() + "Value", "()" + primitive.getDescriptor(), false);
+			}
+			this.mv.visitInsn(method.getReturnType().getOpcode(Opcodes.IRETURN));
 			this.mv.visitJumpInsn(Opcodes.GOTO, label);
 			this.mv.visitLabel(label);
 			this.markModified();
