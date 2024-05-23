@@ -2,15 +2,8 @@ package net.luis.agent.asm.base.visitor;
 
 import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.preload.PreloadContext;
-import net.luis.agent.preload.data.ClassContent;
-import net.luis.agent.preload.data.MethodData;
-import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.LocalVariablesSorter;
-
-import java.util.Objects;
 
 /**
  *

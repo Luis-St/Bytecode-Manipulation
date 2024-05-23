@@ -27,9 +27,8 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		"org/objectweb/asm/", // ASM
 		"net/luis/agent/" // Agent
 	);
-	
-	protected final PreloadContext context;
 	private final boolean computeFrames;
+	protected final PreloadContext context;
 	protected boolean modified;
 	
 	protected BaseClassTransformer(@NotNull PreloadContext context) {

@@ -6,7 +6,8 @@ import net.luis.agent.preload.data.ParameterData;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.*;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Type;
 
 import java.util.*;
 import java.util.function.BiConsumer;
