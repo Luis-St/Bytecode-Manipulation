@@ -107,7 +107,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 		
 		// ToDo: ifaceMethod must return none primitive type -> must be nullable -> support for primitive return types -> convert between primitive and object types
-		// ToDo: add support for inject into static methods
 		
 		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
 			String signature = ifaceMethod.getMethodSignature();

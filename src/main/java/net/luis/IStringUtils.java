@@ -5,7 +5,7 @@ import net.luis.agent.annotation.implementation.Injector;
 import net.luis.utils.lang.StringUtils;
 
 @InjectInterface(targets = StringUtils.class)
-public class IStringUtils {
+public interface IStringUtils {
 	
 	@Injector(target = "String#contains(CharSequence)", ordinal = 1)
 	public static void injectRemoveQuoted() {
