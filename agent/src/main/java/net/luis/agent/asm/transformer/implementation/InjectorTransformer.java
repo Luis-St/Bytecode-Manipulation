@@ -115,9 +115,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
 				throw CrashReport.create("Method annotated with @Injector must be public", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature).exception();
 			}
-			if (ifaceMethod.is(TypeModifier.STATIC)) {
-				throw CrashReport.create("Method annotated with @Injector must not be static", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature).exception();
-			}
 			if (ifaceMethod.is(TypeModifier.ABSTRACT)) {
 				throw CrashReport.create("Method annotated with @Injector must be default implemented", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature).exception();
 			}
@@ -142,6 +139,15 @@ public class InjectorTransformer extends BaseClassTransformer {
 					.addDetail("Possible Methods", possibleMethod.stream().map(MethodData::getMethodSignature).toList()).exception();
 			}
 			MethodData method = possibleMethod.getFirst();
+			if (ifaceMethod.is(TypeModifier.STATIC)) {
+				if (!method.is(TypeModifier.STATIC)) {
+					throw CrashReport.create("Method annotated with @Injector is declared static, but specified a none-static method", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature)
+						.addDetail("Method", method.getMethodSignature()).exception();
+				}
+			} else if (method.is(TypeModifier.STATIC)) {
+				throw CrashReport.create("Method annotated with @Injector is declared none-static, but specified a static method", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature)
+					.addDetail("Method", method.getMethodSignature()).exception();
+			}
 			if (method.returns(VOID)) {
 				if (!ifaceMethod.returns(VOID) && !ifaceMethod.returns(BOOLEAN)) {
 					throw CrashReport.create("Method annotated with @Injector specified a method which returns void, but injector method does not return void or boolean (cancellation)", REPORT_CATEGORY).addDetail("Interface", iface)
@@ -212,15 +218,13 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 		
 		private void instrumentInjectorAsListener(@NotNull Type iface, @NotNull MethodData ifaceMethod) {
-			this.mv.visitVarInsn(Opcodes.ALOAD, 0);
-			this.mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, iface.getInternalName(), ifaceMethod.name(), ifaceMethod.type().getDescriptor(), true);
+			this.instrumentMethodCall(this.mv, iface, ifaceMethod, true);
 			this.markModified();
 		}
 		
 		private void instrumentInjectorAsCallback(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull MethodData method) {
 			Label label = new Label();
-			this.mv.visitVarInsn(Opcodes.ALOAD, 0);
-			this.mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, iface.getInternalName(), ifaceMethod.name(), ifaceMethod.type().getDescriptor(), true);
+			this.instrumentMethodCall(this.mv, iface, ifaceMethod, true);
 			int local = this.newLocal(method.getReturnType());
 			this.mv.visitVarInsn(Opcodes.ASTORE, local);
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
@@ -234,8 +238,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 		
 		private void instrumentInjectorAsCancellation(@NotNull Type iface, @NotNull MethodData ifaceMethod) {
 			Label label = new Label();
-			this.mv.visitVarInsn(Opcodes.ALOAD, 0);
-			this.mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, iface.getInternalName(), ifaceMethod.name(), ifaceMethod.type().getDescriptor(), true);
+			this.instrumentMethodCall(this.mv, iface, ifaceMethod, true);
 			int local = this.newLocal(BOOLEAN);
 			this.mv.visitVarInsn(Opcodes.ISTORE, local);
 			this.mv.visitVarInsn(Opcodes.ILOAD, local);

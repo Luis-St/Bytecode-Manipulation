@@ -4,15 +4,17 @@ import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
 import net.luis.utils.collection.WeightCollection;
+import net.luis.utils.lang.StringUtils;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  *
@@ -30,6 +32,7 @@ public final class Main {
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
 		caught();
+		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
 		LoggerConfiguration logger = new LoggerConfiguration("*");
 		if (logger instanceof ILoggerConfiguration iLogger) {
 			System.out.println("LoggerConfiguration is an instance of ILoggerConfiguration!");
@@ -55,7 +58,7 @@ public final class Main {
 	
 	@Pattern("^.*$")
 	public static @NotNull String getExtension(@Nullable String file) {
-		String str = StringUtils.stripToEmpty(file);
+		String str = stripToEmpty(file);
 		int index = str.lastIndexOf(".");
 		if (index == -1) {
 			return "";

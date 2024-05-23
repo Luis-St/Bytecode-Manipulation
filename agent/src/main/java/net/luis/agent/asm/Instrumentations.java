@@ -2,6 +2,7 @@ package net.luis.agent.asm;
 
 import net.luis.agent.preload.data.AnnotationData;
 import net.luis.agent.preload.data.MethodData;
+import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 
@@ -185,6 +186,21 @@ public interface Instrumentations {
 		});
 	}
 	//endregion
+	
+	default void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Type owner, @NotNull MethodData method, boolean iface) {
+		this.instrumentMethodCall(visitor, owner, method, iface, 0);
+	}
+	
+	default void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Type owner, @NotNull MethodData method, boolean iface, int index) {
+		if (iface && !method.is(TypeModifier.STATIC)) {
+			visitor.visitVarInsn(Opcodes.ALOAD, index);
+			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, owner.getInternalName(), method.name(), method.type().getDescriptor(), true);
+		} else if (method.is(TypeModifier.STATIC)) {
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, owner.getInternalName(), method.name(), method.type().getDescriptor(), false);
+		} else {
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, owner.getInternalName(), method.name(), method.type().getDescriptor(), false);
+		}
+	}
 	
 	default void instrumentThrownException(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull String message) {
 		visitor.visitTypeInsn(Opcodes.NEW, type.getInternalName());
