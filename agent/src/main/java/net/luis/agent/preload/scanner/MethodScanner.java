@@ -29,6 +29,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	private int parameterIndex = 0;
 	
 	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer, Consumer<Object> annotationDefaultConsumer) {
+		super(() -> {});
 		this.parameterTypes = parameterTypes;
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;
