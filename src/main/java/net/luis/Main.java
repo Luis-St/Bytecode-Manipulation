@@ -19,17 +19,6 @@ import java.util.*;
  *
  */
 
-@Test(
-	testInt = -1,
-	testString = "Hello World!",
-	testBoolean = true,
-	testDouble = 0.5,
-	testClass = Main.class,
-	testIntArray = { 1, 2, 3 },
-	testStringArray = { "Hello", "World", "!" },
-	testClassArray = Main.class,
-	testAnnotation = @AnnotationExample("test")
-)
 public final class Main {
 	
 	public static void main(@Default @NotNull String[] args) {

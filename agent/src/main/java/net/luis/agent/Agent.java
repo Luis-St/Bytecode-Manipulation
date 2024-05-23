@@ -19,13 +19,6 @@ public class Agent {
 	
 	public static void premain(@NotNull String agentArgs, @NotNull Instrumentation inst) {
 		System.out.println("Agent loaded");
-		//ClassFileScanner.scanClass(Type.getType("Lnet/luis/Main;"));
-		//ClassContent content = ClassFileScanner.scanClassContent(Type.getType("Lnet/luis/ClassExample;"));
-		//ClassContent content = ClassFileScanner.scanClassContent(Type.getType("Lnet/luis/MyInterface;"));
-		//ClassContent content = ClassFileScanner.scanClassContent(Type.getType("Lnet/luis/Test;"));
-		//content.getFields().forEach(field -> System.out.println(field.name() + ": " + field.signature()));
-		//content.methods().forEach(method -> System.out.println(method.name() + ": " + method.signature()));
-		
 		inst.addTransformer(new InterfaceInjectionTransformer(CONTEXT));
 		inst.addTransformer(new ImplementedTransformer(CONTEXT));
 		inst.addTransformer(new AccessorTransformer(CONTEXT));
