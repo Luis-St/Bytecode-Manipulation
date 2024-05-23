@@ -144,7 +144,7 @@ public class InvokerTransformer extends BaseClassTransformer {
 		@SuppressWarnings("DuplicatedCode")
 		private void generateInvoker(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull MethodData targetMethod) {
 			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
-			this.instrumentMethodAnnotations(visitor, ifaceMethod, true);
+			this.instrumentMethodAnnotations(visitor, ifaceMethod);
 			this.instrumentParameterAnnotations(visitor, ifaceMethod);
 			visitor.visitCode();
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);

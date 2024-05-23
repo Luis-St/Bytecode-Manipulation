@@ -151,7 +151,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 				this.unfinal.add(targetField.name());
 			}
 			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
-			this.instrumentMethodAnnotations(visitor, ifaceMethod, true);
+			this.instrumentMethodAnnotations(visitor, ifaceMethod);
 			this.instrumentParameterAnnotations(visitor, ifaceMethod);
 			visitor.visitCode();
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);

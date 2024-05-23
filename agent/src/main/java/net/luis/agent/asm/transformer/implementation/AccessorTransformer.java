@@ -147,7 +147,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 		@SuppressWarnings("DuplicatedCode")
 		private void generateAccessor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
 			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
-			this.instrumentMethodAnnotations(visitor, ifaceMethod, true);
+			this.instrumentMethodAnnotations(visitor, ifaceMethod);
 			this.instrumentParameterAnnotations(visitor, ifaceMethod);
 			visitor.visitCode();
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);

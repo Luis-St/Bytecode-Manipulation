@@ -164,14 +164,14 @@ public interface Instrumentations {
 						values.forEach(value -> array.visit(null, value));
 					}
 				}
-				case null -> {break;}
+				case null -> {}
 				default -> visitor.visit(entry.getKey(), entry.getValue());
 			}
 		}
 		visitor.visitEnd();
 	}
 	
-	default void instrumentMethodAnnotations(@NotNull MethodVisitor visitor, @NotNull MethodData method, boolean generated) {
+	default void instrumentMethodAnnotations(@NotNull MethodVisitor visitor, @NotNull MethodData method) {
 		method.getAnnotations().forEach(annotation -> {
 			this.instrumentAnnotation(visitor.visitAnnotation(annotation.type().getDescriptor(), true), annotation);
 		});

@@ -87,7 +87,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 				MethodData method = entry.getKey();
 				MethodVisitor visitor = super.visitMethod(method.getOpcodes(), method.name(), method.type().getDescriptor(), method.signature(), null);
 				visitor.visitCode();
-				this.instrumentMethodAnnotations(visitor, method, true);
+				this.instrumentMethodAnnotations(visitor, method);
 				this.instrumentParameterAnnotations(visitor, method);
 				//region Parameter loading
 				int index = 0;
