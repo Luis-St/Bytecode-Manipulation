@@ -2,7 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.BaseClassVisitor;
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -78,7 +78,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 			String newName = "generated$" + name + "$async";
 			this.methods.put(method, newName);
 			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC, newName, descriptor, signature, exceptions);
-			return new BaseMethodVisitor(visitor, this.context, this.type, method, this::markModified).skipAnnotation();
+			return new ContextBasedMethodVisitor(visitor, this.context, this.type, method, this::markModified).skipAnnotation();
 		}
 		
 		@Override

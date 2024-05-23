@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  *
  */
 
-public class MethodScanner extends MethodVisitor {
+public class MethodScanner extends BaseMethodVisitor {
 	
 	private final Type[] parameterTypes;
 	private final BiConsumer<Type, AnnotationData> annotationConsumer;
@@ -29,7 +29,6 @@ public class MethodScanner extends MethodVisitor {
 	private int parameterIndex = 0;
 	
 	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer, Consumer<Object> annotationDefaultConsumer) {
-		super(Opcodes.ASM9);
 		this.parameterTypes = parameterTypes;
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;

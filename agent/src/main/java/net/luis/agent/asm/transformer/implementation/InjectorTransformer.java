@@ -1,17 +1,14 @@
 package net.luis.agent.asm.transformer.implementation;
 
-import com.sun.source.doctree.SystemPropertyTree;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.scanner.ClassFileScanner;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
-import net.luis.agent.util.InjectMode;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -167,10 +164,10 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class InjectorMethodVisitor extends BaseMethodVisitor { // ToDo: Simple and Base Method Visitor -> Simple = Current Base, Base = Only Basics in Constructor
+	private static class InjectorMethodVisitor extends BaseMethodVisitor {
 		
-		public InjectorMethodVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, type, method, markModified);
+		public InjectorMethodVisitor(@NotNull MethodVisitor methodVisitor) {
+			super(methodVisitor);
 		}
 	}
 	
@@ -217,7 +214,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class InjectorScanMethodVisitor extends MethodVisitor {
+	private static class InjectorScanMethodVisitor extends BaseMethodVisitor {
 		
 		private final String target;
 		private final int ordinal;
@@ -227,7 +224,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 		private int visited;
 		
 		private InjectorScanMethodVisitor(@NotNull String target, int ordinal) {
-			super(Opcodes.ASM9);
 			this.target = target;
 			this.ordinal = ordinal;
 		}

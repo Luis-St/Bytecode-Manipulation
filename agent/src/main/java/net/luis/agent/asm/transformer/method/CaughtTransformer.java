@@ -1,7 +1,7 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
@@ -51,7 +51,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class CaughtVisitor extends BaseMethodVisitor {
+	private static class CaughtVisitor extends ContextBasedMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		private static final Type RUN_EX = Type.getType(RuntimeException.class);

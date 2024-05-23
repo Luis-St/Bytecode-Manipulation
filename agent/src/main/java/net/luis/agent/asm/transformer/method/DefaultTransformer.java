@@ -48,7 +48,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class DefaultVisitor extends BaseMethodVisitor {
+	private static class DefaultVisitor extends ContextBasedMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid String Factory";
 		

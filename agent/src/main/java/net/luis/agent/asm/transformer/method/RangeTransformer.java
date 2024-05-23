@@ -51,7 +51,7 @@ public class RangeTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class RangeVisitor extends BaseMethodVisitor {
+	private static class RangeVisitor extends ContextBasedMethodVisitor {
 		
 		private static final String INVALID_CATEGORY = "Invalid Annotated Element";
 		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";

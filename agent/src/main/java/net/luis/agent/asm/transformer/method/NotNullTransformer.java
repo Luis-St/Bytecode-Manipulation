@@ -2,7 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
@@ -50,7 +50,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class NotNullVisitor extends BaseMethodVisitor {
+	private static class NotNullVisitor extends ContextBasedMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
