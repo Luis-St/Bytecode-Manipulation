@@ -39,19 +39,19 @@ public final class Main {
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
 		caught();
-		if (logger instanceof MyInterface my) {
-			System.out.println("LoggerConfiguration is an instance of MyInterface!");
-			System.out.println(my.build().getName());
-			List<String> loggers = my.getLoggers();
-			Set<LoggingType> types = my.getTypes();
+		if (logger instanceof ILoggerConfiguration iLogger) {
+			System.out.println("LoggerConfiguration is an instance of ILoggerConfiguration!");
+			System.out.println(iLogger.build().getName());
+			List<String> loggers = iLogger.getLoggers();
+			Set<LoggingType> types = iLogger.getTypes();
 			System.out.println(loggers);
 			System.out.println(types);
-			my.setLoggers(loggers);
-			my.setTypes(types);
-			System.out.println(my.invokeGetPattern(LoggingType.CONSOLE, Level.TRACE));
-			System.out.println(my.getLoggingPattern(LoggingType.FILE, Level.ERROR));
+			iLogger.setLoggers(loggers);
+			iLogger.setTypes(types);
+			System.out.println(iLogger.invokeGetPattern(LoggingType.CONSOLE, Level.TRACE));
+			System.out.println(iLogger.getLoggingPattern(LoggingType.FILE, Level.ERROR));
 		} else {
-			System.out.println("LoggerConfiguration is not an instance of MyInterface!");
+			System.out.println("LoggerConfiguration is not an instance of ILoggerConfiguration!");
 		}
 	}
 	

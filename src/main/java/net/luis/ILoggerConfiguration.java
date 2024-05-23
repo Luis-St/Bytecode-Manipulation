@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 @InjectInterface(targets = LoggerConfiguration.class)
-public interface MyInterface {
+public interface ILoggerConfiguration {
 	
 	@Implemented // Ignored, because implemented in the target
 	@NotNull Configuration build();
@@ -39,7 +39,7 @@ public interface MyInterface {
 	
 	@Injector(target = "Set#contains")
 	default void injectBuild() {
-		System.out.println("Listener");
+		System.out.println("Listener for Set#contains was injected!");
 	}
 	
 	@Injector(method = "build", target = "Set#contains")
