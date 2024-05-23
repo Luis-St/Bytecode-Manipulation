@@ -32,9 +32,9 @@ public class PatternTransformer extends BaseClassTransformer {
 	
 	//region Type filtering
 	@Override
-	protected boolean shouldTransform(@NotNull Type type) {
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return content.getParameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) || content.methods().stream().anyMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
+		return content.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) && content.methods().stream().noneMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
 	}
 	//endregion
 	

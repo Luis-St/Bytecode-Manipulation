@@ -31,6 +31,13 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 		this.lookup = ASMUtils.createTargetsLookup(context, INJECT_INTERFACE);
 	}
 	
+	//region Type filtering
+	@Override
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
+		return !this.lookup.containsKey(type.getInternalName());
+	}
+	//endregion
+	
 	@Override
 	@SuppressWarnings("UnqualifiedFieldAccess")
 	public @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {

@@ -31,9 +31,9 @@ public class DefaultTransformer extends BaseClassTransformer {
 	
 	//region Type filtering
 	@Override
-	protected boolean shouldTransform(@NotNull Type type) {
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return content.getParameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
+		return content.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
 	}
 	//endregion
 	
@@ -72,13 +72,6 @@ public class DefaultTransformer extends BaseClassTransformer {
 					this.mv.visitLdcInsn(value);
 				} else {
 					this.instrumentFactoryCall(this.mv, this.getFactory(parameter), parameter.type(), value);
-					
-					//this.mv.visitFieldInsn(Opcodes.GETSTATIC, factory.getInternalName(), "INSTANCE", factory.getDescriptor());
-					//this.mv.visitLdcInsn(parameter.type().getDescriptor());
-					//this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, TYPE.getInternalName(), "getType", "(Ljava/lang/String;)Lorg/objectweb/asm/Type;", false);
-					//this.mv.visitLdcInsn(value);
-					//this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, factory.getInternalName(), "create", "(Lorg/objectweb/asm/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
-					//this.mv.visitTypeInsn(Opcodes.CHECKCAST, parameter.type().getInternalName());
 				}
 				
 				this.visitVarInsn(Opcodes.ASTORE, parameter);

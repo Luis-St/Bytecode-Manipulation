@@ -33,9 +33,9 @@ public class NotNullTransformer extends BaseClassTransformer {
 	
 	//region Type filtering
 	@Override
-	protected boolean shouldTransform(@NotNull Type type) {
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return content.getParameters().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || content.methods().stream().anyMatch(method -> method.isAnnotatedWith(NOT_NULL));
+		return content.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) && content.methods().stream().noneMatch(method -> method.isAnnotatedWith(NOT_NULL));
 	}
 	//endregion
 	

@@ -29,9 +29,9 @@ public class CaughtTransformer extends BaseClassTransformer {
 	
 	//region Type filtering
 	@Override
-	protected boolean shouldTransform(@NotNull Type type) {
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		ClassContent content = this.context.getClassContent(type);
-		return content.methods().stream().anyMatch(method -> method.isAnnotatedWith(CAUGHT));
+		return content.methods().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
 	}
 	//endregion
 	

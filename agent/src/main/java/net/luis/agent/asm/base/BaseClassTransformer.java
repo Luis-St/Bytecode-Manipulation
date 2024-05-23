@@ -41,19 +41,23 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		this.computeFrames = computeFrames;
 	}
 	
-	protected boolean shouldTransform(@NotNull Type type) {
+	private boolean isInternalClass(@NotNull Type type) {
 		for (String ignored : IGNORED_CLASSES) {
 			if (type.getInternalName().startsWith(ignored)) {
-				return false;
+				return true;
 			}
 		}
-		return true;
+		return false;
+	}
+	
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
+		return false;
 	}
 	
 	@Override
 	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String className, @Nullable Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
 		Type type = Type.getObjectType(className);
-		if (!this.shouldTransform(type)) {
+		if (this.shouldIgnoreClass(type) || this.isInternalClass(type)) {
 			return null;
 		}
 		ClassReader reader = new ClassReader(buffer);

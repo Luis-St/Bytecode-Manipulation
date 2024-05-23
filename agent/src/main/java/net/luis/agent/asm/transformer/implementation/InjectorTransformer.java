@@ -36,10 +36,12 @@ public class InjectorTransformer extends BaseClassTransformer {
 		super(context, true);
 	}
 	
+	//region Type filtering
 	@Override
-	protected boolean shouldTransform(@NotNull Type type) {
-		return super.shouldTransform(type) || this.lookup.containsKey(type.getInternalName());
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
+		return !this.lookup.containsKey(type.getInternalName());
 	}
+	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
@@ -104,7 +106,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			return invokerTarget;
 		}
 		
-		// ToDo: ifaceMethod must return none primitive type -> must be nullable -> support for primitive return types
+		// ToDo: ifaceMethod must return none primitive type -> must be nullable -> support for primitive return types -> convert between primitive and object types
 		// ToDo: add support for inject into static methods
 		
 		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {

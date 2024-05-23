@@ -19,13 +19,22 @@ import static net.luis.agent.asm.Types.*;
 
 public class AccessorTransformer extends BaseClassTransformer {
 	
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE);
+	
 	public AccessorTransformer(@NotNull PreloadContext context) {
 		super(context);
 	}
 	
+	//region Type filtering
+	@Override
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
+		return !this.lookup.containsKey(type.getInternalName());
+	}
+	//endregion
+	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new AccessorVisitor(writer, this.context, type, () -> this.modified = true, ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE));
+		return new AccessorVisitor(writer, this.context, type, () -> this.modified = true, this.lookup);
 	}
 	
 	private static class AccessorVisitor extends BaseClassVisitor {
