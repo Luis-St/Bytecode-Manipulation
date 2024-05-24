@@ -1,5 +1,6 @@
 package net.luis.agent.preload.scanner;
 
+import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.preload.data.AnnotationData;
 import net.luis.agent.preload.data.ClassInfo;
 import net.luis.agent.preload.type.*;
@@ -15,7 +16,7 @@ import java.util.*;
  *
  */
 
-public class ClassInfoScanner extends ClassVisitor {
+public class ClassInfoScanner extends BaseClassVisitor {
 	
 	private final Map<Type, AnnotationData> classAnnotations = new HashMap<>();
 	private final Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
@@ -28,7 +29,7 @@ public class ClassInfoScanner extends ClassVisitor {
 	private Type superType;
 	
 	public ClassInfoScanner() {
-		super(Opcodes.ASM9);
+		super(() -> {});
 	}
 	
 	@Override

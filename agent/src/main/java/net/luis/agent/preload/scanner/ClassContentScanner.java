@@ -1,7 +1,6 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.asm.base.visitor.BaseFieldVisitor;
-import net.luis.agent.asm.base.visitor.BaseRecordComponentVisitor;
+import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.*;
 import net.luis.agent.util.Mutable;
@@ -19,14 +18,14 @@ import java.util.stream.Collectors;
  *
  */
 
-public class ClassContentScanner extends ClassVisitor {
+public class ClassContentScanner extends BaseClassVisitor {
 	
 	private final Map<String, RecordComponentData> recordComponents = new HashMap<>();
 	private final Map<String, FieldData> fields = new HashMap<>();
 	private final List<MethodData> methods = new ArrayList<>();
 	
 	public ClassContentScanner() {
-		super(Opcodes.ASM9);
+		super(() -> {});
 	}
 	
 	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, boolean visible, @NotNull BiConsumer<Type, AnnotationData> action) {
