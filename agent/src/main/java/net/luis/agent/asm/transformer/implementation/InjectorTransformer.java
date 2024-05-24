@@ -228,32 +228,39 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 		
 		private void instrumentInjectorAsCallback(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull MethodData method) {
-			Label label = new Label();
+			Label start = new Label();
+			Label end = new Label();
 			this.instrumentMethodCall(this.mv, iface, ifaceMethod, true);
 			int local = this.newLocal(method.getReturnType());
+			this.mv.visitLabel(start);
 			this.mv.visitVarInsn(Opcodes.ASTORE, local);
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
-			this.mv.visitJumpInsn(Opcodes.IFNULL, label);
+			this.mv.visitJumpInsn(Opcodes.IFNULL, end);
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
 			if (method.returnsAny(PRIMITIVES)) {
 				Type primitive = method.getReturnType();
 				this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ifaceMethod.getReturnType().getInternalName(), primitive.getClassName() + "Value", "()" + primitive.getDescriptor(), false);
 			}
 			this.mv.visitInsn(method.getReturnType().getOpcode(Opcodes.IRETURN));
-			this.mv.visitJumpInsn(Opcodes.GOTO, label);
-			this.mv.visitLabel(label);
+			this.mv.visitJumpInsn(Opcodes.GOTO, end);
+			this.mv.visitLabel(end);
+			this.mv.visitLocalVariable("generated$InjectorTransformer$Temp" + local, method.getReturnType().getDescriptor(), null, start, end, local);
 			this.markModified();
 		}
 		
 		private void instrumentInjectorAsCancellation(@NotNull Type iface, @NotNull MethodData ifaceMethod) {
-			Label label = new Label();
+			Label start = new Label();
+			Label end = new Label();
 			this.instrumentMethodCall(this.mv, iface, ifaceMethod, true);
 			int local = this.newLocal(BOOLEAN);
+			this.mv.visitLabel(start);
 			this.mv.visitVarInsn(Opcodes.ISTORE, local);
 			this.mv.visitVarInsn(Opcodes.ILOAD, local);
-			this.mv.visitJumpInsn(Opcodes.IFNE, label);
+			this.mv.visitJumpInsn(Opcodes.IFNE, end);
 			this.mv.visitInsn(Opcodes.RETURN);
-			this.mv.visitLabel(label);
+			this.mv.visitJumpInsn(Opcodes.GOTO, start);
+			this.mv.visitLabel(end);
+			this.mv.visitLocalVariable("generated$InjectorTransformer$Temp" + local, "Z", null, start, end, local);
 			this.markModified();
 		}
 	}

@@ -151,15 +151,19 @@ public class AssignorTransformer extends BaseClassTransformer {
 				this.unfinal.add(targetField.name());
 			}
 			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			Label start = new Label();
+			Label end = new Label();
 			this.instrumentMethodAnnotations(visitor, ifaceMethod);
 			this.instrumentParameterAnnotations(visitor, ifaceMethod);
 			visitor.visitCode();
+			visitor.visitLabel(start);
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);
 			visitor.visitVarInsn(Opcodes.ALOAD, 1);
 			visitor.visitFieldInsn(Opcodes.PUTFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
 			visitor.visitInsn(Opcodes.RETURN);
-			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), new Label(), new Label(), 0);
-			visitor.visitLocalVariable("arg0", targetField.type().getDescriptor(), null, new Label(), new Label(), 1);
+			visitor.visitLabel(end);
+			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), start, end, 0);
+			visitor.visitLocalVariable("generated$AssignorTransformer$Temp" + 1, targetField.type().getDescriptor(), null, start, end, 1);
 			visitor.visitMaxs(0, 0);
 			visitor.visitEnd();
 			this.updateClass(ifaceMethod, target, targetField);

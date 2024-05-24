@@ -144,18 +144,22 @@ public class InvokerTransformer extends BaseClassTransformer {
 		@SuppressWarnings("DuplicatedCode")
 		private void generateInvoker(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull MethodData targetMethod) {
 			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			Label start = new Label();
+			Label end = new Label();
 			this.instrumentMethodAnnotations(visitor, ifaceMethod);
 			this.instrumentParameterAnnotations(visitor, ifaceMethod);
 			visitor.visitCode();
+			visitor.visitLabel(start);
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);
 			for (int i = 0; i < ifaceMethod.getParameterCount(); i++) {
-				visitor.visitVarInsn(ifaceMethod.getParameterType(i).getOpcode(Opcodes.ILOAD), i + 1); // 0 is this
+				visitor.visitVarInsn(ifaceMethod.getParameterType(i).getOpcode(Opcodes.ILOAD), i + 1);
 			}
 			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, target.getInternalName(), targetMethod.name(), targetMethod.type().getDescriptor(), false);
 			visitor.visitInsn(ifaceMethod.getReturnType().getOpcode(Opcodes.IRETURN));
-			visitor.visitLocalVariable("this", target.getDescriptor(), ifaceMethod.signature(), new Label(), new Label(), 0);
+			visitor.visitLabel(end);
+			visitor.visitLocalVariable("this", target.getDescriptor(), ifaceMethod.signature(), start, end, 0);
 			for (int i = 0; i < ifaceMethod.getParameterCount(); i++) {
-				visitor.visitLocalVariable("arg" + i, ifaceMethod.getParameterType(i).getDescriptor(), null, new Label(), new Label(), i + 1); // 0 is this
+				visitor.visitLocalVariable("generated$InvokerTransformer$Temp" + (i + 1), ifaceMethod.getParameterType(i).getDescriptor(), null, start, end, i + 1);
 			}
 			visitor.visitMaxs(0, 0);
 			visitor.visitEnd();
