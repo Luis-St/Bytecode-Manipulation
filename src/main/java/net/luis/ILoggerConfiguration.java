@@ -1,6 +1,8 @@
 package net.luis;
 
 import net.luis.agent.annotation.implementation.*;
+import net.luis.agent.annotation.util.Target;
+import net.luis.agent.util.TargetType;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.logging.log4j.Level;
@@ -37,12 +39,14 @@ public interface ILoggerConfiguration {
 	@Invoker(target = "getPattern(LoggingType, Level)") // Invokes private method (target required, because method name does not match)
 	@NotNull String getLoggingPattern(@NotNull LoggingType type, @NotNull Level level);
 	
-	@Injector(target = "Set#contains")
+	@Injector(target = @Target(value = "Set#contains", type = TargetType.INVOKE))
 	default void injectBuild() {
 		System.out.println("Listener for Set#contains was injected!");
 	}
 	
-	@Injector(method = "build", target = "Set#contains")
+	@Injector(method = "build",
+		target = @Target(value = "Set#contains", type = TargetType.INVOKE, ordinal = 1)
+	)
 	default @NotNull Configuration resetBuild() {
 		ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
 		builder.setConfigurationName("RuntimeConfiguration");

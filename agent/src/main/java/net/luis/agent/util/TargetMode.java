@@ -6,7 +6,7 @@ package net.luis.agent.util;
  *
  */
 
-public enum InjectMode {
+public enum TargetMode {
 	
 	BEFORE, AFTER;
 }

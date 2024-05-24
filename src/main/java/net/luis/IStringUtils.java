@@ -2,6 +2,8 @@ package net.luis;
 
 import net.luis.agent.annotation.implementation.InjectInterface;
 import net.luis.agent.annotation.implementation.Injector;
+import net.luis.agent.annotation.util.Target;
+import net.luis.agent.util.TargetType;
 import net.luis.utils.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,12 +12,12 @@ import java.util.Random;
 @InjectInterface(targets = StringUtils.class)
 public interface IStringUtils {
 	
-	@Injector(target = "String#contains(CharSequence)", ordinal = 1)
+	@Injector(target = @Target(value = "String#contains(CharSequence)", type = TargetType.INVOKE, ordinal = 1))
 	public static void injectRemoveQuoted() {
 		System.out.println("Injecting StringUtils#removeQuoted method");
 	}
 	
-	@Injector(target = "List#isEmpty")
+	@Injector(target = @Target(value = "List#isEmpty", type = TargetType.INVOKE))
 	public static @Nullable Boolean injectIsAfterAllOccurrence() {
 		System.out.println("Injecting StringUtils#isAfterAllOccurrence method");
 		return new Random().nextBoolean() ? true : null;

@@ -1,6 +1,5 @@
 package net.luis.agent.annotation.implementation;
 
-import net.luis.agent.util.InjectMode;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
@@ -11,15 +10,11 @@ import java.lang.annotation.*;
  *
  */
 
-@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
+@java.lang.annotation.Target(ElementType.METHOD)
 public @interface Injector {
 	
 	@NotNull String method() default "";
 	
-	@NotNull String target();
-	
-	int ordinal() default 0;
-	
-	@NotNull InjectMode mode() default InjectMode.BEFORE;
+	@NotNull net.luis.agent.annotation.util.Target target();
 }

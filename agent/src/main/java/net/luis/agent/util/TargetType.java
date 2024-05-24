@@ -5,10 +5,7 @@ public enum TargetType {
 	// <empty string>
 	HEAD,
 	
-	// IllegalStateException#<init>(String)
-	NEW,
-	
-	// INVOKESPECIAL (exclude constructor calls), INVOKESTATIC, INVOKEVIRTUAL, INVOKEINTERFACE
+	// INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL, INVOKEINTERFACE
 	INVOKE,
 	
 	// ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
@@ -50,6 +47,8 @@ public enum TargetType {
 	// ~ ICONST_M1 + IXOR, LCONST_M1 + LXOR
 	NUMERIC_OPERAND,
 	
+	// All the following operations are followed by a jump instruction
+	// This means that the condition is inverted
 	// ==
 	//   int, short, byte, char, boolean -> IF_ICMPEQ
 	//   long, float, double -> LCMP, FCMPL, FCMPG, DCMPL, or DCMPG + IFEQ
@@ -73,8 +72,10 @@ public enum TargetType {
 	//   int, short, byte, char -> IF_ICMPGE
 	//   long, float, double -> LCMP, FCMPL, FCMPG, DCMPL, or DCMPG + IFGE
 	// instanceof
+	//   INSTANCEOF
 	COMPARE,
 	
-	// return IRETURN, LRETURN, FRETURN, DRETURN, ARETURN
+	// <empty string>
+	//   IRETURN, LRETURN, FRETURN, DRETURN, ARETURN
 	RETURN;
 }

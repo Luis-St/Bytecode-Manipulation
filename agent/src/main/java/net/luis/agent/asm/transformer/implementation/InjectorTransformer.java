@@ -10,7 +10,7 @@ import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.scanner.ClassFileScanner;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
-import net.luis.agent.util.InjectMode;
+import net.luis.agent.util.TargetMode;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -164,7 +164,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			}
 			String injectorTarget = Objects.requireNonNull(ifaceMethod.getAnnotation(INJECTOR).get("target"));
 			int ordinal = ifaceMethod.getAnnotation(INJECTOR).getOrDefault(this.context, "ordinal");
-			InjectMode mode = InjectMode.valueOf(ifaceMethod.getAnnotation(INJECTOR).getOrDefault(this.context, "mode"));
+			TargetMode mode = TargetMode.valueOf(ifaceMethod.getAnnotation(INJECTOR).getOrDefault(this.context, "mode"));
 			InjectorScanClassVisitor scanner = new InjectorScanClassVisitor(method, injectorTarget, ordinal);
 			ClassFileScanner.scanClassCustom(this.type, scanner);
 			
@@ -204,9 +204,9 @@ public class InjectorTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitLineNumber(int line, @NotNull Label start) {
-			this.injectors.getOrDefault(line, new ArrayList<>()).stream().filter(data -> data.mode() == InjectMode.BEFORE).forEach(this::instrumentInjector);
+			this.injectors.getOrDefault(line, new ArrayList<>()).stream().filter(data -> data.mode() == TargetMode.BEFORE).forEach(this::instrumentInjector);
 			super.visitLineNumber(line, start);
-			this.injectors.getOrDefault(line, new ArrayList<>()).stream().filter(data -> data.mode() == InjectMode.AFTER).forEach(this::instrumentInjector);
+			this.injectors.getOrDefault(line, new ArrayList<>()).stream().filter(data -> data.mode() == TargetMode.AFTER).forEach(this::instrumentInjector);
 		}
 		
 		private void instrumentInjector(@NotNull InjectorData injector) {
@@ -265,7 +265,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private record InjectorData(int line, @NotNull InjectMode mode, @NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type type, @NotNull MethodData method) {}
+	private record InjectorData(int line, @NotNull TargetMode mode, @NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type type, @NotNull MethodData method) {}
 	
 	//region Injector scan
 	private static class InjectorScanClassVisitor extends ClassVisitor {
