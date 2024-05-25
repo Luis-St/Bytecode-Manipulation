@@ -2,28 +2,44 @@ package net.luis.agent.util;
 
 public enum TargetType {
 	
-	// <empty string>
+	// <empty string> -> mode is ignored
 	HEAD,
 	
+	// INVOKESPECIAL, NEWARRAY, MULTIANEWARRAY
+	//  Type
+	//  Type[]
+	//  Type[][]
+	NEW,
+	
 	// INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL, INVOKEINTERFACE
+	//  Type#method(...)
+	//  Type#<clinit>
 	INVOKE,
 	
 	// ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
 	// GETSTATIC, GETFIELD
+	//  field
+	//  Type#field
+	//  name of parameter/variable (may not work properly)
+	//  index of parameter/variable
 	ACCESS,
 	
-	// IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD, SALOAD
+	// BALOAD (byte, boolean), CALOAD, SALOAD, IALOAD, LALOAD, FALOAD, DALOAD, AALOAD
 	ACCESS_ARRAY,
 	
 	// ISTORE, LSTORE, FSTORE, DSTORE, ASTORE
 	// PUTSTATIC, PUTFIELD
+	//  field
+	//  Type#field
+	//  name of parameter/variable (may not work properly)
+	//  index of parameter/variable
 	ASSIGN,
 	
-	// IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE
+	// BASTORE (byte, boolean), CASTORE, SASTORE, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE
 	ASSIGN_ARRAY,
 	
 	// ACONST_NULL
-	// ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5
+	// ICONST_M1, ICONST_0 (0 or false), ICONST_1 (1 or true), ICONST_2, ICONST_3, ICONST_4, ICONST_5
 	// LCONST_0, LCONST_1
 	// FCONST_0, FCONST_1, FCONST_2
 	// DCONST_0, DCONST_1
@@ -49,33 +65,33 @@ public enum TargetType {
 	
 	// All the following operations are followed by a jump instruction
 	// This means that the condition is inverted
-	// ==
+	// == (used for !=)
 	//   int, short, byte, char, boolean -> IF_ICMPEQ
 	//   long, float, double -> LCMP, FCMPL, FCMPG, DCMPL, or DCMPG + IFEQ
 	//   Full Array, Object -> IF_ACMPEQ
 	//   null -> IFNULL
-	// !=
+	// != (used for ==)
 	//   int, short, byte, char, boolean -> IF_ICMPNE
 	//   long, float, double -> LCMP, FCMPL, FCMPG, DCMPL, or DCMPG + IFNE
 	//   Full Array, Object -> IF_ACMPNE
 	//   null -> IFNONNULL
-	// <
+	// < (used for >=)
 	//   int, short, byte, char -> IF_ICMPLT
 	//   long, float, double -> LCMP, FCMPL, FCMPG, DCMPL, or DCMPG + IFLT
-	// <=
+	// <= (used for >)
 	//   int, short, byte, char -> IF_ICMPLE
 	//   long, float, double -> LCMP, FCMPL, FCMPG, DCMPL, or DCMPG + IFLE
-	// >
+	// > (used for <=)
 	//   int, short, byte, char -> IF_ICMPGT
 	//   long, float, double -> LCMP, FCMPL, FCMPG, DCMPL, or DCMPG + IFGT
-	// >=
+	// >= (used for <)
 	//   int, short, byte, char -> IF_ICMPGE
 	//   long, float, double -> LCMP, FCMPL, FCMPG, DCMPL, or DCMPG + IFGE
 	// instanceof
 	//   INSTANCEOF
 	COMPARE,
 	
-	// <empty string>
+	// <empty string> -> mode is ignored
 	//   IRETURN, LRETURN, FRETURN, DRETURN, ARETURN
 	RETURN;
 }
