@@ -2,7 +2,7 @@ package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
+import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -37,7 +37,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 		return new AccessorVisitor(writer, this.context, type, () -> this.modified = true, this.lookup);
 	}
 	
-	private static class AccessorVisitor extends BaseClassVisitor {
+	private static class AccessorVisitor extends ContextBasedClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Accessor Implementation Error";
 		

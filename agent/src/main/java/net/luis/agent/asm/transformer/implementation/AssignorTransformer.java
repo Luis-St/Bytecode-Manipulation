@@ -2,7 +2,7 @@ package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
+import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -37,7 +37,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 		return new AssignorVisitor(writer, this.context, type, () -> this.modified = true, this.lookup);
 	}
 	
-	private static class AssignorVisitor extends BaseClassVisitor {
+	private static class AssignorVisitor extends ContextBasedClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Assignor Implementation Error";
 		

@@ -2,8 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
-import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
+import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -47,7 +46,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		return new ScheduledClassVisitor(writer, this.context, type, () -> this.modified = true);
 	}
 	
-	private static class ScheduledClassVisitor extends BaseClassVisitor {
+	private static class ScheduledClassVisitor extends ContextBasedClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		

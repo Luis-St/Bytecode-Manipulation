@@ -2,7 +2,7 @@ package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
+import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.type.ClassType;
@@ -41,7 +41,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	@Override
 	@SuppressWarnings("UnqualifiedFieldAccess")
 	public @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new BaseClassVisitor(writer, this.context, type, () -> this.modified = true) {
+		return new ContextBasedClassVisitor(writer, this.context, type, () -> this.modified = true) {
 			private static final String REPORT_CATEGORY = "Interface Injection Error";
 			
 			@Override
@@ -62,7 +62,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			}
 			
 			private void updateClass(@NotNull List<Type> injects) {
-				this.context.getClassInfo(type).interfaces().addAll(injects);
+				this.context.getClassInfo(this.type).interfaces().addAll(injects);
 			}
 		};
 	}
