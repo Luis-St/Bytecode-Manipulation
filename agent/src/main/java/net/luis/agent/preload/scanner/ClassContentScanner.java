@@ -68,12 +68,14 @@ public class ClassContentScanner extends BaseClassVisitor {
 	
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exception) {
+		Set<TypeModifier> modifiers = TypeModifier.fromMethodAccess(access);
 		Map<Type, AnnotationData> annotations = new HashMap<>();
 		List<ParameterData> parameters = new ArrayList<>();
 		List<Type> exceptions = Optional.ofNullable(exception).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
+		Map<Integer, LocalVariableData> localVariables = new HashMap<>();
 		Mutable<Object> value = new Mutable<>();
-		this.methods.add(new MethodData(this.owner, name, Type.getType(descriptor), signature, TypeAccess.fromAccess(access), MethodType.fromName(name), TypeModifier.fromMethodAccess(access), annotations, parameters, exceptions, value));
-		return new MethodScanner(Type.getArgumentTypes(descriptor), annotations::put, parameters::add, value);
+		this.methods.add(new MethodData(this.owner, name, Type.getType(descriptor), signature, TypeAccess.fromAccess(access), MethodType.fromName(name), modifiers, annotations, parameters, exceptions, localVariables, value));
+		return new MethodScanner(modifiers.contains(TypeModifier.STATIC), Type.getArgumentTypes(descriptor), annotations::put, parameters::add, localVariables::put, value);
 	}
 	
 	public @NotNull ClassContent getClassContent() {

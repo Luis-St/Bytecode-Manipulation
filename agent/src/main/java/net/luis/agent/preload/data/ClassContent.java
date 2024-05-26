@@ -12,7 +12,7 @@ import java.util.Map;
  *
  */
 
-public record ClassContent(@NotNull Map</*Record Component Name*/String, RecordComponentData> recordComponents, @NotNull Map</*Field Name*/String, FieldData> fields, @NotNull List<MethodData> methods) {
+public record ClassContent(@NotNull Map<String, RecordComponentData> recordComponents, @NotNull Map<String, FieldData> fields, @NotNull List<MethodData> methods) {
 	
 	//region Record components
 	public @Unmodifiable @NotNull List<RecordComponentData> getRecordComponents() {

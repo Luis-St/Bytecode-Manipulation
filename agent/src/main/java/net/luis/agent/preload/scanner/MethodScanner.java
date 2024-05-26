@@ -1,13 +1,11 @@
 package net.luis.agent.preload.scanner;
 
 import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
-import net.luis.agent.preload.data.AnnotationData;
-import net.luis.agent.preload.data.ParameterData;
+import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -21,19 +19,24 @@ import java.util.function.Consumer;
 
 public class MethodScanner extends BaseMethodVisitor {
 	
+	private final boolean isStatic;
 	private final Type[] parameterTypes;
 	private final BiConsumer<Type, AnnotationData> annotationConsumer;
 	private final Consumer<ParameterData> parameterConsumer;
+	private final BiConsumer<Integer, LocalVariableData> variableConsumer;
 	private final Consumer<Object> annotationDefaultConsumer;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
 	private final Map<Integer, Map<Type, AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
-	public MethodScanner(Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer, Consumer<Object> annotationDefaultConsumer) {
+	public MethodScanner(boolean isStatic, Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer,
+						 @NotNull BiConsumer<Integer, LocalVariableData> variableConsumer, @NotNull Consumer<Object> annotationDefaultConsumer) {
 		super(() -> {});
+		this.isStatic = isStatic;
 		this.parameterTypes = parameterTypes;
 		this.annotationConsumer = annotationConsumer;
 		this.parameterConsumer = parameterConsumer;
+		this.variableConsumer = variableConsumer;
 		this.annotationDefaultConsumer = annotationDefaultConsumer;
 	}
 	
@@ -64,6 +67,15 @@ public class MethodScanner extends BaseMethodVisitor {
 		Type type = Type.getType(descriptor);
 		this.parameterAnnotations.computeIfAbsent(parameter, p -> new HashMap<>()).put(type, new AnnotationData(type, visible, values));
 		return new AnnotationScanner(values::put);
+	}
+	
+	@Override
+	public void visitLocalVariable(@NotNull String name, @NotNull String descriptor, @Nullable String signature, @NotNull Label start, @NotNull Label end, int index) {
+		int offset = this.parameters.size() + (this.isStatic ? 0 : 1);
+		if (index < offset) {
+			return;
+		}
+		this.variableConsumer.accept(index, new LocalVariableData(index, name, Type.getType(descriptor), signature));
 	}
 	
 	@Override

@@ -15,7 +15,8 @@ import java.util.*;
  */
 
 public record MethodData(@NotNull Type owner, @NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull TypeAccess access, @NotNull MethodType methodType, @NotNull Set<TypeModifier> modifiers,
-						 @NotNull Map<Type, AnnotationData> annotations, @NotNull List<ParameterData> parameters, @NotNull List<Type> exceptions, @NotNull Mutable<Object> annotationDefault) implements ASMData {
+						 @NotNull Map<Type, AnnotationData> annotations, @NotNull List<ParameterData> parameters, @NotNull List<Type> exceptions, @NotNull Map<Integer, LocalVariableData> localVariables,
+						 @NotNull Mutable<Object> annotationDefault) implements ASMData {
 	
 	public @NotNull String getMethodSignature() {
 		return this.name + this.type;
@@ -55,30 +56,34 @@ public record MethodData(@NotNull Type owner, @NotNull String name, @NotNull Typ
 		return this.exceptions.size();
 	}
 	
+	public @Nullable LocalVariableData getLocalVariable(int index) {
+		return this.localVariables.get(index);
+	}
+	
 	//region Copy
 	public @NotNull MethodData copy(@NotNull String name) {
 		return new MethodData(this.owner, name, this.type, this.signature, this.access, this.methodType, EnumSet.copyOf(this.modifiers), new HashMap<>(this.annotations), new ArrayList<>(this.parameters),
-			new ArrayList<>(this.exceptions), new Mutable<>());
+			new ArrayList<>(this.exceptions), new HashMap<>(this.localVariables), new Mutable<>());
 	}
 	
 	public @NotNull MethodData copy(@NotNull Type type, @NotNull List<ParameterData> parameters) {
 		return new MethodData(this.owner, this.name, type, this.signature, this.access, this.methodType, EnumSet.copyOf(this.modifiers), new HashMap<>(this.annotations), parameters,
-			new ArrayList<>(this.exceptions), new Mutable<>());
+			new ArrayList<>(this.exceptions), new HashMap<>(this.localVariables), new Mutable<>());
 	}
 	
 	public @NotNull MethodData copy(@NotNull TypeAccess access) {
 		return new MethodData(this.owner, this.name, this.type, this.signature, access, this.methodType, EnumSet.copyOf(this.modifiers), new HashMap<>(this.annotations), new ArrayList<>(this.parameters),
-			new ArrayList<>(this.exceptions), new Mutable<>());
+			new ArrayList<>(this.exceptions), new HashMap<>(this.localVariables), new Mutable<>());
 	}
 	
 	public @NotNull MethodData copy(@NotNull Set<TypeModifier> modifiers) {
 		return new MethodData(this.owner, this.name, this.type, this.signature, this.access, this.methodType, modifiers, new HashMap<>(this.annotations), new ArrayList<>(this.parameters),
-			new ArrayList<>(this.exceptions), new Mutable<>());
+			new ArrayList<>(this.exceptions), new HashMap<>(this.localVariables), new Mutable<>());
 	}
 	
 	public @NotNull MethodData copy(@NotNull Map<Type, AnnotationData> annotations) {
 		return new MethodData(this.owner, this.name, this.type, this.signature, this.access, this.methodType, EnumSet.copyOf(this.modifiers), annotations, new ArrayList<>(this.parameters),
-			new ArrayList<>(this.exceptions), new Mutable<>());
+			new ArrayList<>(this.exceptions), new HashMap<>(this.localVariables), new Mutable<>());
 	}
 	//endregion
 }
