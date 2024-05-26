@@ -14,4 +14,4 @@ import java.util.*;
  */
 
 public record ClassInfo(@NotNull String name, @NotNull Type type, String signature, @NotNull TypeAccess access, @NotNull ClassType classType, @NotNull Set<TypeModifier> modifiers,
-						@Nullable Type superType, @NotNull List<Type> interfaces, @NotNull Map<Type, AnnotationData> annotations) implements ASMData {}
+						@Nullable Type superType, @NotNull List<Type> interfaces, @NotNull List<Type> permittedSubclasses, @NotNull Map<Type, AnnotationData> annotations, @NotNull List<InnerClassData> innerClasses) implements ASMData {}
