@@ -46,7 +46,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new CaughtVisitor(visitor, this.context, this.type, method, this::markModified);
+				return new CaughtVisitor(visitor, this.context, method, this::markModified);
 			}
 		};
 	}
@@ -62,8 +62,8 @@ public class CaughtTransformer extends BaseClassTransformer {
 		private final CaughtAction action;
 		private final Type exceptionType;
 		
-		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, type, method, markModified);
+		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, context, method, markModified);
 			AnnotationData annotation = method.getAnnotation(CAUGHT);
 			this.action = CaughtAction.valueOf(annotation.getOrDefault(context, "value"));
 			this.exceptionType = annotation.getOrDefault(context, "exceptionType");

@@ -166,8 +166,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 		
 		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target) {
 			ClassContent content = this.context.getClassContent(target);
-			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, MethodType.METHOD, EnumSet.noneOf(TypeModifier.class), ifaceMethod.annotations(), new ArrayList<>(), new ArrayList<>(), new Mutable<>());
-			content.methods().add(method);
+			content.methods().add(ifaceMethod.copy(EnumSet.noneOf(TypeModifier.class)));
 		}
 	}
 }

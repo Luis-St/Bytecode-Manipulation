@@ -170,11 +170,9 @@ public class AssignorTransformer extends BaseClassTransformer {
 			this.markModified();
 		}
 		
-		@SuppressWarnings("DuplicatedCode")
 		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
 			ClassContent content = this.context.getClassContent(target);
-			MethodData method = new MethodData(ifaceMethod.name(), ifaceMethod.type(), ifaceMethod.signature(), TypeAccess.PUBLIC, MethodType.METHOD, EnumSet.noneOf(TypeModifier.class), ifaceMethod.annotations(), ifaceMethod.parameters(), new ArrayList<>(), new Mutable<>());
-			content.methods().add(method);
+			content.methods().add(ifaceMethod.copy(EnumSet.noneOf(TypeModifier.class)));
 			targetField.modifiers().remove(TypeModifier.FINAL);
 		}
 		

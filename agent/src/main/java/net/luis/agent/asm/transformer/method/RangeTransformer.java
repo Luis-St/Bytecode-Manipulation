@@ -42,12 +42,11 @@ public class RangeTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		ClassContent content = this.context.getClassContent(type);
 		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new RangeVisitor(visitor, this.context, this.type, method, this::markModified);
+				return new RangeVisitor(visitor, this.context, method, this::markModified);
 			}
 		};
 	}
@@ -60,8 +59,8 @@ public class RangeTransformer extends BaseClassTransformer {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
-		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markedModified) {
-			super(visitor, context, type, method, markedModified);
+		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markedModified) {
+			super(visitor, context, method, markedModified);
 			//region Parameter validation
 			for (ParameterData parameter : method.parameters()) {
 				if (parameter.isAnnotatedWithAny(ANNOS)) {
@@ -132,7 +131,7 @@ public class RangeTransformer extends BaseClassTransformer {
 				Label end = new Label();
 				Type type = this.method.getReturnType();
 				int local = this.newLocal(type);
-				String message = "Method " + this.type.getClassName() + "#" + this.method.name() + " return value must be ";
+				String message = "Method " + this.method.owner().getClassName() + "#" + this.method.name() + " return value must be ";
 				this.mv.visitLabel(start);
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
 				

@@ -44,7 +44,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new DefaultVisitor(visitor, this.context, this.type, method, this::markModified);
+				return new DefaultVisitor(visitor, this.context, method, this::markModified);
 			}
 		};
 	}
@@ -55,8 +55,8 @@ public class DefaultTransformer extends BaseClassTransformer {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
-		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, type, method, markModified);
+		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, context, method, markModified);
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(DEFAULT)).forEach(this.lookup::add);
 		}
 		

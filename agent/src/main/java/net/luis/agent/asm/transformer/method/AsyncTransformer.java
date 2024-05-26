@@ -77,7 +77,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 			String newName = "generated$" + name + "$async";
 			this.methods.put(method, newName);
 			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC, newName, descriptor, signature, exceptions);
-			return new ContextBasedMethodVisitor(visitor, this.context, this.type, method, this::markModified).skipAnnotation();
+			return new ContextBasedMethodVisitor(visitor, this.context, method, this::markModified).skipAnnotation();
 		}
 		
 		@Override

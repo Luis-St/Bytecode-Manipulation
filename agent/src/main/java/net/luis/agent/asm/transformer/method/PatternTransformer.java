@@ -44,7 +44,7 @@ public class PatternTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new PatternVisitor(visitor, this.context, this.type, method, this::markModified);
+				return new PatternVisitor(visitor, this.context, method, this::markModified);
 			}
 		};
 	}
@@ -56,8 +56,8 @@ public class PatternTransformer extends BaseClassTransformer {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
-		private PatternVisitor(@NotNull LocalVariablesSorter visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, type, method, markModified);
+		private PatternVisitor(@NotNull LocalVariablesSorter visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, context, method, markModified);
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(PATTERN)).forEach(this.lookup::add);
 		}
 		
@@ -90,7 +90,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
 				
 				this.instrumentPatternCheck(this.mv, value, local, end);
-				this.instrumentThrownException(this.mv, ILL_ARG, "Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
+				this.instrumentThrownException(this.mv, ILL_ARG, "Method " + ASMUtils.getSimpleName(this.method.owner()) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.mv.visitLabel(end);

@@ -98,7 +98,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			if (this.executor == null) {
 				this.cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR.getDescriptor(), null, null).visitEnd();
 				EnumSet<TypeModifier> modifiers = EnumSet.of(TypeModifier.STATIC, TypeModifier.FINAL);
-				this.executor = new FieldData("GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR, null, TypeAccess.PUBLIC, modifiers, new HashMap<>(), null);
+				this.executor = new FieldData(this.type, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR, null, TypeAccess.PUBLIC, modifiers, new HashMap<>(), null);
 				this.context.getClassContent(this.type).fields().put(this.executor.name(), this.executor);
 				this.generated = true;
 			}
@@ -117,9 +117,9 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		@Override
 		public void visitEnd() {
 			if (!this.initialized) {
-				MethodData method = new MethodData("<clinit>", Type.getType("()V"), null, TypeAccess.PACKAGE, MethodType.STATIC_INITIALIZER, EnumSet.of(TypeModifier.STATIC), new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new Mutable<>());
+				MethodData method = new MethodData(this.type, "<clinit>", VOID_METHOD, null, TypeAccess.PACKAGE, MethodType.STATIC_INITIALIZER, EnumSet.of(TypeModifier.STATIC), new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new Mutable<>());
 				this.context.getClassContent(this.type).methods().add(method);
-				MethodVisitor visitor = this.visitMethod(Opcodes.ACC_STATIC, "<clinit>", "()V", null, null);
+				MethodVisitor visitor = this.visitMethod(Opcodes.ACC_STATIC, "<clinit>", VOID_METHOD.getDescriptor(), null, null);
 				visitor.visitCode();
 				visitor.visitInsn(Opcodes.RETURN);
 				visitor.visitMaxs(0, 0);
@@ -130,14 +130,18 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class ScheduledMethodVisitor extends ContextBasedMethodVisitor implements Instrumentations {
+	private static class ScheduledMethodVisitor extends BaseMethodVisitor implements Instrumentations {
 		
+		private final PreloadContext context;
+		private final Type type;
 		private final List<MethodData> lookup;
 		private final FieldData executor;
 		private final boolean generated;
 		
 		private ScheduledMethodVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull List<MethodData> lookup, @NotNull FieldData executor, boolean generated) {
-			super(visitor, context, type, null, () -> {});
+			super(visitor, () -> {});
+			this.context = context;
+			this.type = type;
 			this.lookup = lookup;
 			this.executor = executor;
 			this.generated = generated;

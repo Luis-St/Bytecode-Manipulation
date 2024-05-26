@@ -45,7 +45,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new NotNullVisitor(visitor, this.context, this.type, method, this::markModified);
+				return new NotNullVisitor(visitor, this.context, method, this::markModified);
 			}
 		};
 	}
@@ -56,8 +56,8 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
-		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, type, method, markModified);
+		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, context, method, markModified);
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(NOT_NULL)).forEach(this.lookup::add);
 		}
 		
@@ -88,7 +88,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.method.isAnnotatedWith(NOT_NULL)) {
 				this.validateMethod();
-				this.instrumentNonNullCheck(this.mv, "Method " + ASMUtils.getSimpleName(this.type) + "#" + this.method.name() + " must not return null");
+				this.instrumentNonNullCheck(this.mv, "Method " + ASMUtils.getSimpleName(this.method.owner()) + "#" + this.method.name() + " must not return null");
 				this.mv.visitTypeInsn(Opcodes.CHECKCAST, this.method.getReturnType().getInternalName());
 				this.markModified();
 			}

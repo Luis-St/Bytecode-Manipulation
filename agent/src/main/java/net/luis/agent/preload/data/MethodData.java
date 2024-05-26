@@ -54,4 +54,31 @@ public record MethodData(@NotNull Type owner, @NotNull String name, @NotNull Typ
 	public int getExceptionCount() {
 		return this.exceptions.size();
 	}
+	
+	//region Copy
+	public @NotNull MethodData copy(@NotNull String name) {
+		return new MethodData(this.owner, name, this.type, this.signature, this.access, this.methodType, EnumSet.copyOf(this.modifiers), new HashMap<>(this.annotations), new ArrayList<>(this.parameters),
+			new ArrayList<>(this.exceptions), new Mutable<>());
+	}
+	
+	public @NotNull MethodData copy(@NotNull Type type, @NotNull List<ParameterData> parameters) {
+		return new MethodData(this.owner, this.name, type, this.signature, this.access, this.methodType, EnumSet.copyOf(this.modifiers), new HashMap<>(this.annotations), parameters,
+			new ArrayList<>(this.exceptions), new Mutable<>());
+	}
+	
+	public @NotNull MethodData copy(@NotNull TypeAccess access) {
+		return new MethodData(this.owner, this.name, this.type, this.signature, access, this.methodType, EnumSet.copyOf(this.modifiers), new HashMap<>(this.annotations), new ArrayList<>(this.parameters),
+			new ArrayList<>(this.exceptions), new Mutable<>());
+	}
+	
+	public @NotNull MethodData copy(@NotNull Set<TypeModifier> modifiers) {
+		return new MethodData(this.owner, this.name, this.type, this.signature, this.access, this.methodType, modifiers, new HashMap<>(this.annotations), new ArrayList<>(this.parameters),
+			new ArrayList<>(this.exceptions), new Mutable<>());
+	}
+	
+	public @NotNull MethodData copy(@NotNull Map<Type, AnnotationData> annotations) {
+		return new MethodData(this.owner, this.name, this.type, this.signature, this.access, this.methodType, EnumSet.copyOf(this.modifiers), annotations, new ArrayList<>(this.parameters),
+			new ArrayList<>(this.exceptions), new Mutable<>());
+	}
+	//endregion
 }
