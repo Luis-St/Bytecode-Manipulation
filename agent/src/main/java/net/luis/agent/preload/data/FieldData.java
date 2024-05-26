@@ -15,7 +15,7 @@ import java.util.Set;
  *
  */
 
-public record FieldData(@NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull TypeAccess access, @NotNull Set<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations,
+public record FieldData(@NotNull Type owner, @NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull TypeAccess access, @NotNull Set<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations,
 						@Nullable Object initialValue) implements ASMData {
 	
 	public @NotNull String getFieldSignature() {

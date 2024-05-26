@@ -14,7 +14,7 @@ import java.util.*;
  *
  */
 
-public record RecordComponentData(@NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull Map<Type, AnnotationData> annotations) implements ASMData {
+public record RecordComponentData(@NotNull Type owner, @NotNull String name, @NotNull Type type, @Nullable String signature, @NotNull Map<Type, AnnotationData> annotations) implements ASMData {
 	
 	@Override
 	public @NotNull TypeAccess access() {

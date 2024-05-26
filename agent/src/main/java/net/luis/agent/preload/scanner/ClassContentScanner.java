@@ -23,9 +23,15 @@ public class ClassContentScanner extends BaseClassVisitor {
 	private final Map<String, RecordComponentData> recordComponents = new HashMap<>();
 	private final Map<String, FieldData> fields = new HashMap<>();
 	private final List<MethodData> methods = new ArrayList<>();
+	private Type owner;
 	
 	public ClassContentScanner() {
 		super(() -> {});
+	}
+	
+	@Override
+	public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
+		this.owner = Type.getObjectType(name);
 	}
 	
 	private @NotNull AnnotationVisitor createAnnotationScanner(@NotNull String descriptor, boolean visible, @NotNull BiConsumer<Type, AnnotationData> action) {
@@ -38,7 +44,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 	@Override
 	public @NotNull RecordComponentVisitor visitRecordComponent(@NotNull String name, @NotNull String recordDescriptor, @Nullable String signature) {
 		Map<Type, AnnotationData> annotations = new HashMap<>();
-		this.recordComponents.put(name, new RecordComponentData(name, Type.getType(recordDescriptor), signature, annotations));
+		this.recordComponents.put(name, new RecordComponentData(this.owner, name, Type.getType(recordDescriptor), signature, annotations));
 		return new BaseRecordComponentVisitor() {
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
@@ -50,7 +56,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 	@Override
 	public @NotNull FieldVisitor visitField(int access, @NotNull String name, @NotNull String fieldDescriptor, @Nullable String signature, @Nullable Object initialValue) {
 		Map<Type, AnnotationData> annotations = new HashMap<>();
-		this.fields.put(name, new FieldData(name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), annotations, initialValue));
+		this.fields.put(name, new FieldData(this.owner, name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), annotations, initialValue));
 		return new BaseFieldVisitor() {
 			
 			@Override
@@ -66,7 +72,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 		List<ParameterData> parameters = new ArrayList<>();
 		List<Type> exceptions = Optional.ofNullable(exception).stream().flatMap(Arrays::stream).map(Type::getObjectType).collect(Collectors.toList());
 		Mutable<Object> value = new Mutable<>();
-		this.methods.add(new MethodData(name, Type.getType(descriptor), signature, TypeAccess.fromAccess(access), MethodType.fromName(name), TypeModifier.fromMethodAccess(access), annotations, parameters, exceptions, value));
+		this.methods.add(new MethodData(this.owner, name, Type.getType(descriptor), signature, TypeAccess.fromAccess(access), MethodType.fromName(name), TypeModifier.fromMethodAccess(access), annotations, parameters, exceptions, value));
 		return new MethodScanner(Type.getArgumentTypes(descriptor), annotations::put, parameters::add, value);
 	}
 	
