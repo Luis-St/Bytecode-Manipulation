@@ -17,8 +17,7 @@ public enum TargetType {
 	
 	// ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
 	// GETSTATIC, GETFIELD
-	//  field
-	//  Type#field
+	//  #field
 	//  name of parameter/variable (may not work properly)
 	//  index of parameter/variable
 	ACCESS,

@@ -8,6 +8,8 @@ import org.objectweb.asm.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 import static net.luis.agent.asm.Types.*;
 
@@ -65,6 +67,113 @@ public interface Instrumentations {
 		} else {
 			visitor.visitLdcInsn(d);
 		}
+	}
+	//endregion
+	
+	//region Opcodes
+	default boolean isLoad(int opcode) {
+		return Opcodes.ALOAD >= opcode && opcode >= Opcodes.ILOAD;
+	}
+	
+	default boolean isArrayLoad(int opcode) {
+		return Opcodes.SALOAD >= opcode && opcode >= Opcodes.IALOAD;
+	}
+	
+	default boolean isStore(int opcode) {
+		return Opcodes.ASTORE >= opcode && opcode >= Opcodes.ISTORE;
+	}
+	
+	default boolean isArrayStore(int opcode) {
+		return Opcodes.SASTORE >= opcode && opcode >= Opcodes.IASTORE;
+	}
+	
+	default boolean isConst(int opcode) {
+		return Opcodes.DCONST_1 >= opcode && opcode >= Opcodes.ACONST_NULL;
+	}
+	
+	default boolean isReturn(int opcode) {
+		return Opcodes.ARETURN >= opcode && opcode >= Opcodes.IRETURN;
+	}
+	
+	default boolean isNumericOperand(int opcode) {
+		return Opcodes.LXOR >= opcode && opcode >= Opcodes.IADD;
+	}
+	
+	default boolean isNumericOperand(int opcode, int lastOpcode, @NotNull String value) {
+		if (Opcodes.DADD >= opcode && opcode >= Opcodes.IADD) {
+			return "+".equals(value);
+		} else if (Opcodes.DSUB >= opcode && opcode >= Opcodes.ISUB) {
+			return "-".equals(value);
+		} else if (Opcodes.DMUL >= opcode && opcode >= Opcodes.IMUL) {
+			return "*".equals(value);
+		} else if (Opcodes.DDIV >= opcode && opcode >= Opcodes.IDIV) {
+			return "/".equals(value);
+		} else if (Opcodes.DREM >= opcode && opcode >= Opcodes.IREM) {
+			return "%".equals(value);
+		} else if (Opcodes.DNEG >= opcode && opcode >= Opcodes.INEG) {
+			return "neg".equals(value);
+		} else if (Opcodes.LAND >= opcode && opcode >= Opcodes.IAND) {
+			return "&".equals(value);
+		} else if (Opcodes.LOR >= opcode && opcode >= Opcodes.IOR) {
+			return "|".equals(value);
+		} else if (Opcodes.LXOR >= opcode && opcode >= Opcodes.IXOR) {
+			if (lastOpcode == Opcodes.ICONST_M1) {
+				return "~".equals(value);
+			}
+			return "^".equals(value);
+		} else if (Opcodes.LSHL >= opcode && opcode >= Opcodes.ISHL) {
+			return "<<".equals(value);
+		} else if (Opcodes.LSHR >= opcode && opcode >= Opcodes.ISHR) {
+			return ">>".equals(value);
+		} else if (Opcodes.LUSHR >= opcode && opcode >= Opcodes.IUSHR) {
+			return ">>>".equals(value);
+		}
+		return false;
+	}
+	
+	default boolean isConstant(int opcode, @NotNull String value) {
+		if (opcode == Opcodes.ACONST_NULL) {
+			return "null".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.ICONST_M1) {
+			return "-1".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.ICONST_0) {
+			return "0".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.ICONST_1) {
+			return "1".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value);
+		} else if (Opcodes.ICONST_5 >= opcode && opcode >= Opcodes.ICONST_2) {
+			return value.equalsIgnoreCase(String.valueOf(opcode - Opcodes.ICONST_0));
+		} else if (opcode == Opcodes.LCONST_0) {
+			return "0".equalsIgnoreCase(value) || "0L".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.LCONST_1) {
+			return "1".equalsIgnoreCase(value) || "1L".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.FCONST_0) {
+			return "0.0".equalsIgnoreCase(value) || "0.0F".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.FCONST_1) {
+			return "1.0".equalsIgnoreCase(value) || "1.0F".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.FCONST_2) {
+			return "2.0".equalsIgnoreCase(value) || "2.0F".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.DCONST_0) {
+			return "0.0".equalsIgnoreCase(value) || "0.0D".equalsIgnoreCase(value);
+		} else if (opcode == Opcodes.DCONST_1) {
+			return "1.0".equalsIgnoreCase(value) || "1.0D".equalsIgnoreCase(value);
+		}
+		return false;
+	}
+	
+	default boolean isCompare(@NotNull String compare, int opcode, int lastOpcode) {
+		boolean numericCompare = Opcodes.DCMPG >= lastOpcode && lastOpcode >= Opcodes.LCMP;
+		BiPredicate<Integer, Integer> numeric = (integerCompare, numberCompare) -> {
+			return (numericCompare && opcode == numberCompare) || opcode == integerCompare;
+		};
+		return switch (compare) {
+			case "==" -> numeric.test(Opcodes.IF_ICMPNE, Opcodes.IFNE) || opcode == Opcodes.IF_ACMPNE || opcode == Opcodes.IFNONNULL;
+			case "!=" -> numeric.test(Opcodes.IF_ICMPEQ, Opcodes.IFEQ) || opcode == Opcodes.IF_ACMPEQ || opcode == Opcodes.IFNULL;
+			case "<" -> numeric.test(Opcodes.IF_ICMPGE, Opcodes.IFGE);
+			case "<=" -> numeric.test(Opcodes.IF_ICMPGT, Opcodes.IFGT);
+			case ">" -> numeric.test(Opcodes.IF_ICMPLE, Opcodes.IFLE);
+			case ">=" -> numeric.test(Opcodes.IF_ICMPLT, Opcodes.IFLT);
+			default -> false;
+		};
 	}
 	//endregion
 	
