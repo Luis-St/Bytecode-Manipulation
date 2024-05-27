@@ -79,6 +79,28 @@ public class ASMUtils {
 		return type.getSort() >= Type.BOOLEAN && type.getSort() <= Type.DOUBLE;
 	}
 	
+	public static boolean isSameType(@NotNull Type type, @NotNull String str) {
+		boolean array = type.getSort() == Type.ARRAY;
+		if (array) {
+			String strElement = str;
+			if (str.contains("[")) {
+				strElement = str.substring(0, str.indexOf('['));
+			}
+			if (!isSameType(type.getElementType(), strElement)) {
+				return false;
+			}
+			return type.getDimensions() == (str.length() - strElement.length()) / 2;
+		} else if (str.contains("/")) {
+			return type.getDescriptor().equalsIgnoreCase(str) || type.getInternalName().equalsIgnoreCase(str);
+		} else if (str.contains(".")) {
+			return type.getClassName().equals(str);
+		} else if (isPrimitive(type) && str.length() == 1) {
+			return type.getDescriptor().equalsIgnoreCase(str);
+		} else {
+			return getSimpleName(type).equals(str);
+		}
+	}
+	
 	public static @NotNull List<MethodData> getBySignature(@NotNull String signature, @NotNull ClassContent content) {
 		List<MethodData> methods = new ArrayList<>();
 		boolean specific = signature.contains("(") && signature.contains(")");
@@ -113,51 +135,31 @@ public class ASMUtils {
 		return methods;
 	}
 	
-	private static boolean isSameType(@NotNull Type type, @NotNull String str) {
-		boolean array = type.getSort() == Type.ARRAY;
-		int dimensions = array ? type.getDimensions() : 0;
-		if (array) {
-			String strElement = str;
-			if (str.contains("[")) {
-				strElement = str.substring(0, str.indexOf('['));
-			}
-			if (!isSameType(type.getElementType(), strElement)) {
-				return false;
-			}
-			return dimensions == (str.length() - strElement.length()) / 2;
-		} else if (str.contains("/")) {
-			return type.getDescriptor().equalsIgnoreCase(str) || type.getInternalName().equalsIgnoreCase(str);
-		} else if (str.contains(".")) {
-			return type.getClassName().equals(str);
-		} else if (isPrimitive(type) && str.length() == 1) {
-			return type.getDescriptor().equalsIgnoreCase(str);
-		} else {
-			return getSimpleName(type).equals(str);
-		}
-	}
-	
-	public static boolean matchesTarget(@NotNull String target, @NotNull Type methodOwner, @NotNull String methodName, @NotNull Type methodDescriptor) {
+	public static boolean matchesTarget(@NotNull String target, @NotNull Type owner, @NotNull String name, @Nullable Type descriptor) {
 		boolean specifiesOwner = target.contains("#") && !target.startsWith("#");
 		boolean specifiesParameters = target.contains("(") && target.contains(")");
 		
 		String targetOwner = specifiesOwner ? target.substring(0, target.indexOf('#')).strip() : "";
-		if (!targetOwner.isEmpty() && !isSameType(methodOwner, targetOwner)) {
+		if (!targetOwner.isEmpty() && !isSameType(owner, targetOwner)) {
 			return false;
 		}
 		
 		String targetMethod = getTargetMethod(target, specifiesOwner, specifiesParameters).strip();
-		if (!methodName.equals(targetMethod)) {
+		if (!name.equals(targetMethod)) {
 			return false;
 		}
 		
 		if (specifiesParameters) {
+			if (descriptor == null) {
+				return false;
+			}
 			String parameters = Utils.deleteWhitespace(target.substring(target.indexOf('(') + 1, target.indexOf(')')));
 			Type targetDescriptor = tryParseMethodType("(" + parameters + ")");
-			if (targetDescriptor != null && !Arrays.equals(methodDescriptor.getArgumentTypes(), targetDescriptor.getArgumentTypes())) {
+			if (targetDescriptor != null && !Arrays.equals(descriptor.getArgumentTypes(), targetDescriptor.getArgumentTypes())) {
 				return false;
 			} else if (targetDescriptor == null) {
 				List<String> targetParameters = Stream.of(parameters.split(",")).map(String::strip).toList();
-				Type[] methodParameters = methodDescriptor.getArgumentTypes();
+				Type[] methodParameters = descriptor.getArgumentTypes();
 				if (targetParameters.size() != methodParameters.length) {
 					return false;
 				}
@@ -171,7 +173,7 @@ public class ASMUtils {
 		
 		boolean specifiesReturnType = specifiesParameters && !target.endsWith(")");
 		String targetReturnType = specifiesReturnType ? target.substring(target.indexOf(')') + 1).strip() : "";
-		return targetReturnType.isEmpty() || isSameType(methodDescriptor.getReturnType(), targetReturnType);
+		return targetReturnType.isEmpty() || isSameType(descriptor.getReturnType(), targetReturnType);
 	}
 	
 	private static @Nullable Type tryParseMethodType(@NotNull String type) {
