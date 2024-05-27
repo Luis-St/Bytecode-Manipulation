@@ -56,6 +56,10 @@ public record MethodData(@NotNull Type owner, @NotNull String name, @NotNull Typ
 		return this.exceptions.size();
 	}
 	
+	public boolean isLocalVariable(int index) {
+		return this.is(TypeModifier.STATIC) ? index >= this.parameters.size() : index > this.parameters.size();
+	}
+	
 	public @Nullable LocalVariableData getLocalVariable(int index) {
 		return this.localVariables.get(index);
 	}

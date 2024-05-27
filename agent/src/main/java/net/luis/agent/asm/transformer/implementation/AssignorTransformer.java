@@ -158,7 +158,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 			visitor.visitCode();
 			visitor.visitLabel(start);
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);
-			visitor.visitVarInsn(Opcodes.ALOAD, 1);
+			visitor.visitVarInsn(ifaceMethod.parameters().getFirst().type().getOpcode(Opcodes.ILOAD), 1);
 			visitor.visitFieldInsn(Opcodes.PUTFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
 			visitor.visitInsn(Opcodes.RETURN);
 			visitor.visitLabel(end);

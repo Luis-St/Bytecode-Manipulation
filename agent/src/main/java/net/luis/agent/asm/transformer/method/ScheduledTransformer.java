@@ -117,7 +117,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		@Override
 		public void visitEnd() {
 			if (!this.initialized) {
-				MethodData method = new MethodData(this.type, "<clinit>", VOID_METHOD, null, TypeAccess.PACKAGE, MethodType.STATIC_INITIALIZER, EnumSet.of(TypeModifier.STATIC), new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new Mutable<>());
+				MethodData method = new MethodData(this.type, "<clinit>", VOID_METHOD, null, TypeAccess.PACKAGE, MethodType.STATIC_INITIALIZER, EnumSet.of(TypeModifier.STATIC), new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new HashMap<>(), new Mutable<>());
 				this.context.getClassContent(this.type).methods().add(method);
 				MethodVisitor visitor = this.visitMethod(Opcodes.ACC_STATIC, "<clinit>", VOID_METHOD.getDescriptor(), null, null);
 				visitor.visitCode();

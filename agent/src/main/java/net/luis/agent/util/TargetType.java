@@ -2,10 +2,10 @@ package net.luis.agent.util;
 
 public enum TargetType {
 	
-	// <empty string> -> mode is ignored
+	// <empty string> -> value and mode are ignored
 	HEAD,
 	
-	// INVOKESPECIAL, NEWARRAY, MULTIANEWARRAY
+	// NEW, NEWARRAY, MULTIANEWARRAY
 	//  Type
 	//  Type[]
 	//  Type[][]
@@ -24,7 +24,7 @@ public enum TargetType {
 	//  index of parameter/variable
 	ACCESS,
 	
-	// BALOAD (byte, boolean), CALOAD, SALOAD, IALOAD, LALOAD, FALOAD, DALOAD, AALOAD
+	// BALOAD (byte, boolean), CALOAD, SALOAD, IALOAD, LALOAD, FALOAD, DALOAD, AALOAD -> value is ignored
 	ACCESS_ARRAY,
 	
 	// ISTORE, LSTORE, FSTORE, DSTORE, ASTORE
@@ -35,7 +35,7 @@ public enum TargetType {
 	//  index of parameter/variable
 	ASSIGN,
 	
-	// BASTORE (byte, boolean), CASTORE, SASTORE, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE
+	// BASTORE (byte, boolean), CASTORE, SASTORE, IASTORE, LASTORE, FASTORE, DASTORE, AASTORE -> value is ignored
 	ASSIGN_ARRAY,
 	
 	// ACONST_NULL
@@ -91,7 +91,7 @@ public enum TargetType {
 	//   INSTANCEOF
 	COMPARE,
 	
-	// <empty string> -> mode is ignored
-	//   IRETURN, LRETURN, FRETURN, DRETURN, ARETURN
+	// <empty string> -> value and mode are ignored
+	//   RETURN, IRETURN, LRETURN, FRETURN, DRETURN, ARETURN
 	RETURN;
 }

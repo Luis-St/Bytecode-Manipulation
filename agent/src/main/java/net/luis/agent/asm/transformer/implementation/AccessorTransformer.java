@@ -155,7 +155,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 			visitor.visitLabel(start);
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);
 			visitor.visitFieldInsn(Opcodes.GETFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
-			visitor.visitInsn(Opcodes.ARETURN);
+			visitor.visitInsn(ifaceMethod.getReturnType().getOpcode(Opcodes.IRETURN));
 			visitor.visitLabel(end);
 			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), start, end, 0);
 			visitor.visitMaxs(0, 0);
