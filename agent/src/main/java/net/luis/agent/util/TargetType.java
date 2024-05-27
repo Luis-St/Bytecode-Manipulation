@@ -13,7 +13,6 @@ public enum TargetType {
 	
 	// INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL, INVOKEINTERFACE
 	//  Type#method(...)
-	//  Type#<clinit>
 	INVOKE,
 	
 	// ILOAD, LLOAD, FLOAD, DLOAD, ALOAD

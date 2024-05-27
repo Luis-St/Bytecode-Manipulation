@@ -24,7 +24,7 @@ import static net.luis.agent.asm.Types.*;
 public class CaughtTransformer extends BaseClassTransformer {
 	
 	public CaughtTransformer(@NotNull PreloadContext context) {
-		super(context);
+		super(context, true);
 	}
 	
 	//region Type filtering
@@ -80,6 +80,9 @@ public class CaughtTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
+		public void visitMaxs(int maxStack, int maxLocals) {}
+		
+		@Override
 		public void visitEnd() {
 			this.mv.visitLabel(this.end);
 			this.mv.visitJumpInsn(Opcodes.GOTO, this.handler);
@@ -100,6 +103,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 				this.loadDefaultConst(this.mv, type);
 				this.mv.visitInsn(type.getOpcode(Opcodes.IRETURN));
 			}
+			this.mv.visitMaxs(0, 0);
 			this.mv.visitEnd();
 			this.markModified();
 		}

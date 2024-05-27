@@ -22,7 +22,7 @@ public interface IWeightCollection {
 		return true;
 	}
 	
-	@Injector(target = @Target(value = "IllegalStateException#<init>(String)", type = TargetType.INVOKE))
+	@Injector(target = @Target(value = "IllegalStateException", type = TargetType.NEW))
 	default void injectNext() {
 		System.out.println("Injecting next cancellation in WeightCollection#next");
 	}
