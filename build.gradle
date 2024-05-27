@@ -34,3 +34,7 @@ tasks.register("run", JavaExec) {
 	getMainClass().set("net.luis.Main")
 	jvmArgs("-javaagent:${projectDir}/agent/build/libs/agent.jar")
 }
+
+compileJava {
+	options.compilerArgs << "-parameters"
+}

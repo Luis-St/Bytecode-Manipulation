@@ -80,7 +80,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	
 	@Override
 	public void visitEnd() {
-		for (int i = this.parameterIndex; i < this.parameterTypes.length; i++) {
+		for (int i = 0; i < this.parameterTypes.length; i++) {
 			Map.Entry<String, Set<TypeModifier>> entry = this.parameters.getOrDefault(i, Map.entry("arg" + i, EnumSet.noneOf(TypeModifier.class)));
 			Map<Type, AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, new HashMap<>());
 			this.parameterConsumer.accept(new ParameterData(entry.getKey(), this.parameterTypes[i], i, entry.getValue(), annotations));
