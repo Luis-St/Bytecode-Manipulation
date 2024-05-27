@@ -28,6 +28,8 @@ public final class Main {
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
 		
+		new InjectorTest().test(1);
+		
 		execute("ls", null, null);
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
