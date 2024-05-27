@@ -18,6 +18,7 @@ public enum TargetType {
 	// ILOAD, LLOAD, FLOAD, DLOAD, ALOAD
 	// GETSTATIC, GETFIELD
 	//  #field
+	//  Type#field
 	//  name of parameter/variable (may not work properly)
 	//  index of parameter/variable
 	ACCESS,
@@ -27,7 +28,7 @@ public enum TargetType {
 	
 	// ISTORE, LSTORE, FSTORE, DSTORE, ASTORE
 	// PUTSTATIC, PUTFIELD
-	//  field
+	//  #field
 	//  Type#field
 	//  name of parameter/variable (may not work properly)
 	//  index of parameter/variable

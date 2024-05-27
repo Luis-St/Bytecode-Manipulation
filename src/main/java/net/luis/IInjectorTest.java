@@ -86,4 +86,11 @@ public interface IInjectorTest {
 		System.out.println("Access Variable by Index");
 	}
 	//endregion
+	
+	//region ACCESS_ARRAY
+	@Injector(method = "test(int)", target = @Target(type = TargetType.ACCESS_ARRAY))
+	default void injectAccessArray() {
+		System.out.println("Access array");
+	}
+	//endregion
 }

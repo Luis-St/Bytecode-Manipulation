@@ -309,8 +309,6 @@ public class TargetClassScanner extends BaseClassVisitor {
 					this.target();
 				}
 			} else {
-				System.out.println("Index: " + index);
-				System.out.println("Value: " + this.value);
 				ParameterData parameter = this.method.parameters().get(this.method.is(TypeModifier.STATIC) ? index : index - 1);
 				if (parameter == null) {
 					throw CrashReport.create("Parameter not found", NOT_FOUND).addDetail("Method", this.method.getMethodSignature())
