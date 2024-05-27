@@ -2,16 +2,16 @@ package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
 import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.scanner.ClassFileScanner;
+import net.luis.agent.preload.scanner.TargetClassScanner;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
-import net.luis.agent.util.TargetMode;
-import net.luis.agent.util.Utils;
+import net.luis.agent.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -49,7 +49,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 		return new InjectorClassVisitor(writer, this.context, type, () -> this.modified = true, this.lookup);
 	}
 	
-	private static class InjectorClassVisitor extends BaseClassVisitor {
+	private static class InjectorClassVisitor extends ContextBasedClassVisitor {
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		private final Map</*Method Signature*/String, List<InjectorData>> injectors = new HashMap<>();
@@ -162,12 +162,10 @@ public class InjectorTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Injector must either return void or the same type as the specified method", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature)
 					.addDetail("Injector Return Type", ifaceMethod.getReturnType()).addDetail("Method", method.getMethodSignature()).addDetail("Method Return Type", method.getReturnType()).exception();
 			}
-			String injectorTarget = Objects.requireNonNull(ifaceMethod.getAnnotation(INJECTOR).get("target"));
-			int ordinal = ifaceMethod.getAnnotation(INJECTOR).getOrDefault(this.context, "ordinal");
-			TargetMode mode = TargetMode.valueOf(ifaceMethod.getAnnotation(INJECTOR).getOrDefault(this.context, "mode"));
-			InjectorScanClassVisitor scanner = new InjectorScanClassVisitor(method, injectorTarget, ordinal);
-			ClassFileScanner.scanClassCustom(this.type, scanner);
 			
+			AnnotationData annotation = Objects.requireNonNull(ifaceMethod.getAnnotation(INJECTOR).get("target"));
+			TargetClassScanner scanner = new TargetClassScanner(this.context, method, annotation);
+			ClassFileScanner.scanClassCustom(this.type, scanner);
 			if (!scanner.visitedTarget()) {
 				throw CrashReport.create("Could not find method specified in injector during scan of its own class", REPORT_CATEGORY).addDetail("Scanner", scanner).addDetail("Interface", iface)
 					.addDetail("Injector", signature).addDetail("Scanned Class", target).addDetail("Method", method.getMethodSignature()).exception();
@@ -175,9 +173,11 @@ public class InjectorTransformer extends BaseClassTransformer {
 			int line = scanner.getLine();
 			if (line == -1) {
 				throw CrashReport.create("Could not find target method in method body of method specified in injector", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature)
-					.addDetail("Method", method.getMethodSignature()).addDetail("Target", injectorTarget).addDetail("Ordinal", ordinal).exception();
+					.addDetail("Method", method.getMethodSignature()).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type")).addDetail("Target Mode", annotation.getOrDefault(this.context, "mode"))
+					.addDetail("Target Ordinal", annotation.getOrDefault(this.context, "ordinal")).addDetail("Target Offset", annotation.getOrDefault(this.context, "offset")).exception();
 			}
-			this.injectors.computeIfAbsent(method.getMethodSignature(), m -> new ArrayList<>()).add(new InjectorData(line, mode, iface, ifaceMethod, target, method));
+			
+			this.injectors.computeIfAbsent(method.getMethodSignature(), m -> new ArrayList<>()).add(new InjectorData(line, iface, ifaceMethod, method));
 		}
 		
 		@Override
@@ -193,6 +193,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 	private static class InjectorMethodVisitor extends BaseMethodVisitor {
 		
 		private final Map</*Line Number*/Integer, List<InjectorData>> injectors;
+		private int lastLine = -1;
 		
 		private InjectorMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull List<InjectorData> injectors, @NotNull Runnable markModified) {
 			super(visitor, markModified);
@@ -204,9 +205,14 @@ public class InjectorTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitLineNumber(int line, @NotNull Label start) {
-			this.injectors.getOrDefault(line, new ArrayList<>()).stream().filter(data -> data.mode() == TargetMode.BEFORE).forEach(this::instrumentInjector);
 			super.visitLineNumber(line, start);
-			this.injectors.getOrDefault(line, new ArrayList<>()).stream().filter(data -> data.mode() == TargetMode.AFTER).forEach(this::instrumentInjector);
+			if (this.lastLine != -1 && line - this.lastLine > 1) {
+				for (int i = this.lastLine + 1; i < line; i++) {
+					this.injectors.getOrDefault(i, new ArrayList<>()).forEach(this::instrumentInjector);
+				}
+			}
+			this.injectors.getOrDefault(line, new ArrayList<>()).forEach(this::instrumentInjector);
+			this.lastLine = line;
 		}
 		
 		private void instrumentInjector(@NotNull InjectorData injector) {
@@ -218,7 +224,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 				this.instrumentInjectorAsCancellation(injector.iface(), injector.ifaceMethod());
 			} else {
 				throw CrashReport.create("Unknown how to implement injector, tried as listener, callback and cancellation but failed", REPORT_CATEGORY).addDetail("Injector", injector.ifaceMethod().getMethodSignature())
-					.addDetail("Method", injector.method().getMethodSignature()).addDetail("Mode", Utils.capitalize(injector.mode().name().toLowerCase())).addDetail("Line", injector.line()).exception();
+					.addDetail("Method", injector.method().getMethodSignature()).addDetail("Line", injector.line()).exception();
 			}
 		}
 		
@@ -265,76 +271,5 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private record InjectorData(int line, @NotNull TargetMode mode, @NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type type, @NotNull MethodData method) {}
-	
-	//region Injector scan
-	private static class InjectorScanClassVisitor extends ClassVisitor {
-		
-		private final MethodData injectorMethod;
-		private final String target;
-		private final int ordinal;
-		private InjectorScanMethodVisitor visitor;
-		
-		private InjectorScanClassVisitor(@NotNull MethodData injectorMethod, @NotNull String target, int ordinal) {
-			super(Opcodes.ASM9);
-			this.injectorMethod = injectorMethod;
-			this.target = target;
-			this.ordinal = ordinal;
-		}
-		
-		@Override
-		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-			if (this.injectorMethod.getMethodSignature().equals(name + descriptor)) {
-				this.visitor = new InjectorScanMethodVisitor(this.target, this.ordinal);
-				return this.visitor;
-			}
-			return super.visitMethod(access, name, descriptor, signature, exceptions);
-		}
-		
-		public boolean visitedTarget() {
-			return this.visitor != null;
-		}
-		
-		public int getLine() {
-			return this.visitor == null ? -1 : this.visitor.getLine();
-		}
-	}
-	
-	private static class InjectorScanMethodVisitor extends BaseMethodVisitor {
-		
-		private final String target;
-		private final int ordinal;
-		private int targetLine = -1;
-		private int currentLine;
-		private int visited;
-		
-		private InjectorScanMethodVisitor(@NotNull String target, int ordinal) {
-			super(() -> {});
-			this.target = target;
-			this.ordinal = ordinal;
-		}
-		
-		@Override
-		public void visitLineNumber(int line, @NotNull Label start) {
-			super.visitLineNumber(line, start);
-			this.currentLine = line;
-		}
-		
-		@Override
-		public void visitMethodInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor, boolean isInterface) {
-			super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
-			if (ASMUtils.matchesTarget(this.target, Type.getObjectType(owner), name, Type.getType(descriptor))) {
-				if (this.visited == this.ordinal && this.targetLine == -1) {
-					this.targetLine = this.currentLine;
-				} else {
-					this.visited++;
-				}
-			}
-		}
-		
-		public int getLine() {
-			return this.targetLine;
-		}
-	}
-	//endregion
+	private record InjectorData(int line, @NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull MethodData method) {}
 }
