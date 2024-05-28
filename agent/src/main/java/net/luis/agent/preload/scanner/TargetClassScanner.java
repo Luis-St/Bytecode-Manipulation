@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Luis-St
@@ -135,6 +137,28 @@ public class TargetClassScanner extends BaseClassVisitor {
 			}
 			if (this.type == TargetType.INVOKE && ASMUtils.matchesTarget(this.value, Type.getObjectType(owner), name, Type.getType(descriptor))) {
 				this.target();
+			}
+		}
+		
+		// CONSTANT
+		@Override
+		public void visitInvokeDynamicInsn(@NotNull String name, @NotNull String descriptor, @NotNull Handle handle, Object... arguments) {
+			if (this.targetLine != -1) {
+				return;
+			}
+			this.lastOpcode = Opcodes.INVOKEDYNAMIC;
+			if (this.type != TargetType.CONSTANT) {
+				return;
+			}
+			for (Object argument : arguments) {
+				if (argument instanceof String str) {
+					String[] parts = str.split("\\u0001");
+					for (String part : parts) {
+						if (this.value.equals(part)) {
+							this.target();
+						}
+					}
+				}
 			}
 		}
 		
