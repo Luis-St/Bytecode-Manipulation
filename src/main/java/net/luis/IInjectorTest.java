@@ -93,4 +93,60 @@ public interface IInjectorTest {
 		System.out.println("Access array");
 	}
 	//endregion
+	
+	//region ASSIGN
+	@Injector(method = "test(int)", target = @Target(value = "#i", type = TargetType.ASSIGN))
+	default void injectAssignFieldByName() {
+		System.out.println("Assign Field by Name");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "InjectorTest#i", type = TargetType.ASSIGN, mode = TargetMode.AFTER))
+	default void injectAssignFieldByType() {
+		System.out.println("Assign Field by Type#Name");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "index", type = TargetType.ASSIGN/* , mode = TargetMode.AFTER*/)) // ToDo: modify placement
+	default void injectAssignParameterByName() {
+		System.out.println("Assign Parameter by Name");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "1", type = TargetType.ASSIGN, ordinal = 1))
+	default void injectAssignParameterByIndex() {
+		System.out.println("Assign Parameter by Index");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "5", type = TargetType.ASSIGN))
+	default void injectAssignVariableByName() {
+		System.out.println("Assign Variable by Name");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "i", type = TargetType.ASSIGN, ordinal = 1))
+	default void injectAssignVariableByIndex() {
+		System.out.println("Assign Variable by Index");
+	}
+	//endregion
+	
+	//region ASSIGN_ARRAY
+	@Injector(method = "test(int)", target = @Target(type = TargetType.ASSIGN_ARRAY, ordinal = 11))
+	default void injectAssignArray() {
+		System.out.println("Assign array");
+	}
+	//endregion
+	
+	//region CONSTANT
+	@Injector(method = "test(int)", target = @Target(value = "String ", type = TargetType.CONSTANT))
+	default void injectConstantString() {
+		System.out.println("Constant with Value 'String '");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "100", type = TargetType.CONSTANT))
+	default void injectConstant100() {
+		System.out.println("Constant with Value '100'");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "0", type = TargetType.CONSTANT, ordinal = 3))
+	default void injectConstant0() {
+		System.out.println("Constant with Value '0'");
+	}
+	//endregion
 }

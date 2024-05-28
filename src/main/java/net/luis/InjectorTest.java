@@ -2,8 +2,7 @@ package net.luis;
 
 import net.luis.agent.annotation.Caught;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  *
@@ -29,12 +28,12 @@ public class InjectorTest {
 		
 		if (index >= array.length) {
 			int i = index % array.length;
-			string = "String" + i;
+			string = "String " + i + " value with index " + index + " is out of bounds";
 			index = i;
 		}
 		if (index < 0) {
 			int i = array.length + index;
-			string = "String" + i;
+			string = "String " + i;
 			index = i;
 		}
 		System.out.println(string);
@@ -45,6 +44,7 @@ public class InjectorTest {
 		}
 		if (i != 8192) {
 			System.out.println("!10000");
+			i = (int) (8192 * new Random().nextDouble());
 		}
 		
 		this.validate();
