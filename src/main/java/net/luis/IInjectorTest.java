@@ -148,5 +148,121 @@ public interface IInjectorTest {
 	default void injectConstant0() {
 		System.out.println("Constant with Value '0'");
 	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "null", type = TargetType.CONSTANT))
+	default void injectConstantNull() {
+		System.out.println("Constant with Value 'null'");
+	}
+	//endregion
+	
+	//region NUMERIC_OPERAND
+	@Injector(method = "test(int)", target = @Target(value = "+", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandAdd() {
+		System.out.println("Numeric Operand Add");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "-", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandSub() {
+		System.out.println("Numeric Operand Sub");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "*", type = TargetType.NUMERIC_OPERAND, ordinal = 1))
+	default void injectNumericOperandMul() {
+		System.out.println("Numeric Operand Mul");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "/", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandDiv() {
+		System.out.println("Numeric Operand Div");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "%", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandRem() {
+		System.out.println("Numeric Operand Rem");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "neg", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandNeg() {
+		System.out.println("Numeric Operand Neg");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "&", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandAnd() {
+		System.out.println("Numeric Operand And");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "|", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandOr() {
+		System.out.println("Numeric Operand Or");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "^", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandXor() {
+		System.out.println("Numeric Operand Xor");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "<<", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandShl() {
+		System.out.println("Numeric Operand Shl");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = ">>", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandShr() {
+		System.out.println("Numeric Operand Shr");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = ">>>", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandUshr() {
+		System.out.println("Numeric Operand Ushr");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "~", type = TargetType.NUMERIC_OPERAND))
+	default void injectNumericOperandNot() {
+		System.out.println("Numeric Operand Not");
+	}
+	//endregion
+	
+	//region COMPARE
+	@Injector(method = "test(int)", target = @Target(value = "==", type = TargetType.COMPARE))
+	default void injectCompareEqual() {
+		System.out.println("Compare Equal");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "!=", type = TargetType.COMPARE))
+	default void injectCompareNotEqual() {
+		System.out.println("Compare Not Equal");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "<", type = TargetType.COMPARE)) // ToDo: Not targetable
+	default void injectCompareLess() {
+		System.out.println("Compare Less");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "<=", type = TargetType.COMPARE))
+	default void injectCompareLessEqual() {
+		System.out.println("Compare Less Equal");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = ">", type = TargetType.COMPARE))
+	default void injectCompareGreater() {
+		System.out.println("Compare Greater");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = ">=", type = TargetType.COMPARE))
+	default void injectCompareGreaterEqual() {
+		System.out.println("Compare Greater Equal");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "instanceof", type = TargetType.COMPARE))
+	default void injectCompareInstanceOf() {
+		System.out.println("Compare Instance Of");
+	}
+	//endregion
+	
+	//region RETURN
+	@Injector(method = "test(int)", target = @Target(type = TargetType.RETURN))
+	default void injectReturn() { // ToDo: Break everything
+		System.out.println("Return");
+	}
 	//endregion
 }

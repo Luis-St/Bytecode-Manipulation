@@ -47,7 +47,11 @@ public class TargetClassScanner extends BaseClassVisitor {
 		if (this.visitor == null) {
 			return -1;
 		}
-		int line = this.visitor.getLine() + this.offset;
+		int line = this.visitor.getLine();
+		if (line == -1) {
+			return -1;
+		}
+		line += this.offset;
 		if (this.mode == TargetMode.AFTER) {
 			line++;
 		}
@@ -215,6 +219,7 @@ public class TargetClassScanner extends BaseClassVisitor {
 			if (this.type == TargetType.CONSTANT && this.isConstant(opcode, this.value)) {
 				this.target();
 			} else if (this.type == TargetType.RETURN && this.isReturn(opcode)) {
+				System.out.println("Found return in line " + this.currentLine);
 				this.target();
 			} else if (this.type == TargetType.NUMERIC_OPERAND && this.isNumericOperand(opcode, this.lastOpcode, this.value)) {
 				this.target();

@@ -31,7 +31,7 @@ public class InjectorTest {
 			string = "String " + i + " value with index " + index + " is out of bounds";
 			index = i;
 		}
-		if (index < 0) {
+		if (index < 0) { // ToDo: Allow targeting, uses IFGE and not IF_ICMPGE bcause of simplification
 			int i = array.length + index;
 			string = "String " + i;
 			index = i;
