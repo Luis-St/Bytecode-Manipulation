@@ -13,4 +13,4 @@ import java.util.Set;
  *
  */
 
-public record InnerClassData(@Nullable String name, @NotNull Type type, @NotNull TypeAccess access, @NotNull InnerClassType classType, @NotNull Set<TypeModifier> modifier) {}
+public record InnerClassData(@NotNull Type owner, @Nullable String name, @NotNull Type type, @NotNull TypeAccess access, @NotNull InnerClassType classType, @NotNull Set<TypeModifier> modifier) {}

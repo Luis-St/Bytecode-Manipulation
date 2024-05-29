@@ -71,7 +71,7 @@ public class ClassInfoScanner extends BaseClassVisitor {
 		InnerClassType classType = InnerClassType.fromNames(outerName, innerName);
 		TypeAccess typeAccess = classType == InnerClassType.INNER ? TypeAccess.fromAccess(access) : TypeAccess.PRIVATE;
 		Set<TypeModifier> modifiers = classType == InnerClassType.INNER ? TypeModifier.fromClassAccess(access) : EnumSet.noneOf(TypeModifier.class);
-		this.innerClasses.add(new InnerClassData(innerName, Type.getObjectType(name), typeAccess, classType, modifiers));
+		this.innerClasses.add(new InnerClassData(this.type, innerName, Type.getObjectType(name), typeAccess, classType, modifiers));
 	}
 	
 	public @NotNull ClassInfo getClassInfo() {

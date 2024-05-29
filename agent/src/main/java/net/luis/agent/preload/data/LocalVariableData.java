@@ -10,4 +10,4 @@ import org.objectweb.asm.Type;
  *
  */
 
-public record LocalVariableData(int index, @NotNull String name, @NotNull Type type, @Nullable String signature) {}
+public record LocalVariableData(@NotNull MethodData owner, int index, @NotNull String name, @NotNull Type type, @Nullable String signature) {}

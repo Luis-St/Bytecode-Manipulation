@@ -8,8 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -17,7 +16,7 @@ import java.util.Set;
  *
  */
 
-public record ParameterData(@NotNull String name, @NotNull Type type, int index, @NotNull Set<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations) implements ASMData {
+public record ParameterData(@NotNull MethodData owner, @NotNull String name, @NotNull Type type, int index, @NotNull Set<TypeModifier> modifiers, @NotNull Map<Type, AnnotationData> annotations) implements ASMData {
 	
 	@Override
 	public @NotNull TypeAccess access() {
@@ -38,5 +37,10 @@ public record ParameterData(@NotNull String name, @NotNull Type type, int index,
 			return Utils.capitalize(Utils.getSeparated(this.name));
 		}
 		return Utils.capitalize(Utils.getSeparated(ASMUtils.getSimpleName(this.type()))) + " (parameter #" + this.index() + ")";
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.name, this.type, this.index, this.modifiers, this.annotations);
 	}
 }

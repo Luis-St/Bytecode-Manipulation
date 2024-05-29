@@ -19,37 +19,26 @@ import java.util.function.Consumer;
 
 public class MethodScanner extends BaseMethodVisitor {
 	
-	private final boolean isStatic;
-	private final Type[] parameterTypes;
-	private final BiConsumer<Type, AnnotationData> annotationConsumer;
-	private final Consumer<ParameterData> parameterConsumer;
-	private final BiConsumer<Integer, LocalVariableData> variableConsumer;
-	private final Consumer<Object> annotationDefaultConsumer;
+	private final MethodData method;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
 	private final Map<Integer, Map<Type, AnnotationData>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex = 0;
 	
-	public MethodScanner(boolean isStatic, Type @NotNull [] parameterTypes, @NotNull BiConsumer<Type, AnnotationData> annotationConsumer, @NotNull Consumer<ParameterData> parameterConsumer,
-						 @NotNull BiConsumer<Integer, LocalVariableData> variableConsumer, @NotNull Consumer<Object> annotationDefaultConsumer) {
+	public MethodScanner(@NotNull MethodData method) {
 		super(() -> {});
-		this.isStatic = isStatic;
-		this.parameterTypes = parameterTypes;
-		this.annotationConsumer = annotationConsumer;
-		this.parameterConsumer = parameterConsumer;
-		this.variableConsumer = variableConsumer;
-		this.annotationDefaultConsumer = annotationDefaultConsumer;
+		this.method = method;
 	}
 	
 	@Override
 	public AnnotationVisitor visitAnnotationDefault() {
-		return new AnnotationScanner((name, value) -> this.annotationDefaultConsumer.accept(value));
+		return new AnnotationScanner((name, value) -> this.method.annotationDefault().accept(value));
 	}
 	
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
 		Map<String, Object> values = new HashMap<>();
 		Type type = Type.getType(descriptor);
-		this.annotationConsumer.accept(type, new AnnotationData(type, visible, values));
+		this.method.annotations().put(type, new AnnotationData(type, visible, values));
 		return new AnnotationScanner(values::put);
 	}
 	
@@ -71,19 +60,20 @@ public class MethodScanner extends BaseMethodVisitor {
 	
 	@Override
 	public void visitLocalVariable(@NotNull String name, @NotNull String descriptor, @Nullable String signature, @NotNull Label start, @NotNull Label end, int index) {
-		int offset = this.parameters.size() + (this.isStatic ? 0 : 1);
+		int offset = this.parameters.size() + (this.method.is(TypeModifier.STATIC) ? 0 : 1);
 		if (index < offset) {
 			return;
 		}
-		this.variableConsumer.accept(index, new LocalVariableData(index, name, Type.getType(descriptor), signature));
+		this.method.localVariables().put(index, new LocalVariableData(this.method, index, name, Type.getType(descriptor), signature));
 	}
 	
 	@Override
 	public void visitEnd() {
-		for (int i = 0; i < this.parameterTypes.length; i++) {
+		Type[] types = this.method.type().getArgumentTypes();
+		for (int i = 0; i < types.length; i++) {
 			Map.Entry<String, Set<TypeModifier>> entry = this.parameters.getOrDefault(i, Map.entry("arg" + i, EnumSet.noneOf(TypeModifier.class)));
 			Map<Type, AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, new HashMap<>());
-			this.parameterConsumer.accept(new ParameterData(entry.getKey(), this.parameterTypes[i], i, entry.getValue(), annotations));
+			this.method.parameters().add(new ParameterData(this.method, entry.getKey(), types[i], i, entry.getValue(), annotations));
 		}
 	}
 }
