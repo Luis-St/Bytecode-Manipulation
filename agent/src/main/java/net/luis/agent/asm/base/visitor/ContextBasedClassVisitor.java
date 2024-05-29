@@ -13,9 +13,9 @@ import org.objectweb.asm.*;
 
 public class ContextBasedClassVisitor extends ClassVisitor implements Instrumentations {
 	
+	private final Runnable markModified;
 	protected final PreloadContext context;
 	protected final Type type;
-	private final Runnable markModified;
 	
 	public ContextBasedClassVisitor(@NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9);

@@ -16,6 +16,11 @@ public class InjectorTest {
 	
 	private int i = 0;
 	
+	@Caught
+	private static void silentThrow() {
+		throw new RuntimeException("Silent Throw");
+	}
+	
 	public void test(int index) {
 		List<Object> list = new ArrayList<>();
 		list.add(List.of(1 + index, 2 - index, 3));
@@ -80,10 +85,5 @@ public class InjectorTest {
 	
 	private void validate() {
 		System.out.println("Validate");
-	}
-	
-	@Caught
-	private static void silentThrow() {
-		throw new RuntimeException("Silent Throw");
 	}
 }

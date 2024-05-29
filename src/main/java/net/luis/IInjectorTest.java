@@ -1,6 +1,7 @@
 package net.luis;
 
-import net.luis.agent.annotation.implementation.*;
+import net.luis.agent.annotation.implementation.InjectInterface;
+import net.luis.agent.annotation.implementation.Injector;
 import net.luis.agent.annotation.util.*;
 import net.luis.agent.util.TargetMode;
 import net.luis.agent.util.TargetType;
@@ -107,7 +108,7 @@ public interface IInjectorTest {
 		System.out.println("Assign Field by Type#Name");
 	}
 	
-	@Injector(method = "test(int)", target = @Target(value = "index", type = TargetType.ASSIGN , mode = TargetMode.AFTER))
+	@Injector(method = "test(int)", target = @Target(value = "index", type = TargetType.ASSIGN, mode = TargetMode.AFTER))
 	default void injectAssignParameterByName() {
 		System.out.println("Assign Parameter by Name");
 	}

@@ -13,7 +13,6 @@ public enum InnerClassType {
 	
 	INNER, LOCAL, ANONYMOUS;
 	
-	
 	public static @NotNull InnerClassType fromNames(@Nullable String outerName, @Nullable String innerName) {
 		if (outerName == null && innerName == null) {
 			return ANONYMOUS;

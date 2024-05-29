@@ -1,7 +1,7 @@
 package net.luis.agent.annotation.util;
 
-import java.lang.annotation.*;
 import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  *

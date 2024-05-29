@@ -18,9 +18,9 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 
 public class ContextBasedMethodVisitor extends MethodVisitor implements Instrumentations {
 	
+	private final Runnable markModified;
 	protected final PreloadContext context;
 	protected final MethodData method;
-	private final Runnable markModified;
 	private boolean skipAnnotation;
 	
 	public ContextBasedMethodVisitor(@NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {

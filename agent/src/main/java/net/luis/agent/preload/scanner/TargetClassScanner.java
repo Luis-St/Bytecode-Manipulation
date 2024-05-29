@@ -23,9 +23,9 @@ public class TargetClassScanner extends ClassVisitor {
 	private final PreloadContext context;
 	private final MethodData method;
 	private final AnnotationData target;
-	private TargetMethodScanner visitor;
 	private final TargetMode mode;
 	private final int offset;
+	private TargetMethodScanner visitor;
 	
 	public TargetClassScanner(@NotNull PreloadContext context, @NotNull MethodData method, @NotNull AnnotationData target) {
 		super(Opcodes.ASM9);
