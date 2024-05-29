@@ -16,6 +16,7 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import java.util.*;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -69,8 +70,8 @@ public class PatternTransformer extends BaseClassTransformer {
 				Label label = new Label();
 				String value = Objects.requireNonNull(parameter.getAnnotation(PATTERN).get("value"));
 				
-				this.instrumentPatternCheck(this.mv, value, isStatic ? parameter.index() : parameter.index() + 1, label);
-				this.instrumentThrownException(this.mv, ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
+				instrumentPatternCheck(this.mv, value, isStatic ? parameter.index() : parameter.index() + 1, label);
+				instrumentThrownException(this.mv, ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
@@ -89,8 +90,8 @@ public class PatternTransformer extends BaseClassTransformer {
 				this.mv.visitLabel(start);
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
 				
-				this.instrumentPatternCheck(this.mv, value, local, end);
-				this.instrumentThrownException(this.mv, ILL_ARG, "Method " + ASMUtils.getSimpleName(this.method.owner()) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
+				instrumentPatternCheck(this.mv, value, local, end);
+				instrumentThrownException(this.mv, ILL_ARG, "Method " + ASMUtils.getSimpleName(this.method.owner()) + "#" + this.method.name() + " return value must match pattern '" + value + "'");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.mv.visitLabel(end);

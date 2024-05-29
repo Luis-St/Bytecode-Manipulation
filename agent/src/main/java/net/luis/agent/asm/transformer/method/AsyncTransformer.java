@@ -15,6 +15,7 @@ import org.objectweb.asm.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -87,8 +88,8 @@ public class AsyncTransformer extends BaseClassTransformer {
 				MethodData method = entry.getKey();
 				MethodVisitor visitor = super.visitMethod(method.getOpcodes(), method.name(), method.type().getDescriptor(), method.signature(), null);
 				visitor.visitCode();
-				this.instrumentMethodAnnotations(visitor, method);
-				this.instrumentParameterAnnotations(visitor, method);
+				instrumentMethodAnnotations(visitor, method);
+				instrumentParameterAnnotations(visitor, method);
 				//region Parameter loading
 				int index = 0;
 				if (!method.is(TypeModifier.STATIC)) {

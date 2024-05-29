@@ -200,7 +200,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class InjectorMethodVisitor extends MethodVisitor implements Instrumentations {
+	private static class InjectorMethodVisitor extends MethodVisitor {
 		
 		private static final int FLAG_LINE_NUMBER = 128;
 		private static final Field LABEL_LINE;
@@ -303,7 +303,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			Label start = new Label();
 			Label end = new Label();
 			this.instrumentMethodCall(ifaceMethod, method);
-			int local = this.newLocal(this.mv, method.getReturnType());
+			int local = Instrumentations.newLocal(this.mv, method.getReturnType());
 			this.mv.visitLabel(start);
 			this.mv.visitVarInsn(Opcodes.ASTORE, local);
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
@@ -324,7 +324,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			Label start = new Label();
 			Label end = new Label();
 			this.instrumentMethodCall(ifaceMethod, method);
-			int local = this.newLocal(this.mv, BOOLEAN);
+			int local = Instrumentations.newLocal(this.mv, BOOLEAN);
 			this.mv.visitLabel(start);
 			this.mv.visitVarInsn(Opcodes.ISTORE, local);
 			this.mv.visitVarInsn(Opcodes.ILOAD, local);

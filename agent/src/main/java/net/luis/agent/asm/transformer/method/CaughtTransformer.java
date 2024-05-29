@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -93,14 +94,14 @@ public class CaughtTransformer extends BaseClassTransformer {
 			if (this.action == CaughtAction.NOTHING) {
 				this.mv.visitInsn(Opcodes.RETURN);
 			} else if (this.action == CaughtAction.THROW) {
-				this.instrumentThrownException(this.mv, RUN_EX, local);
+				instrumentThrownException(this.mv, RUN_EX, local);
 			} else if (this.action == CaughtAction.DEFAULT) {
 				Type type = this.method.getReturnType();
-				this.instrumentFactoryCall(this.mv, Type.getType(DefaultStringFactory.class), type, "");
+				instrumentFactoryCall(this.mv, Type.getType(DefaultStringFactory.class), type, "");
 				this.mv.visitInsn(type.getOpcode(Opcodes.IRETURN));
 			} else {
 				Type type = this.method.getReturnType();
-				this.loadDefaultConst(this.mv, type);
+				loadDefaultConst(this.mv, type);
 				this.mv.visitInsn(type.getOpcode(Opcodes.IRETURN));
 			}
 			this.mv.visitMaxs(0, 0);

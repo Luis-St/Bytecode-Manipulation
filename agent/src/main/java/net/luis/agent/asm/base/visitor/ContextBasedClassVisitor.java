@@ -1,6 +1,5 @@
 package net.luis.agent.asm.base.visitor;
 
-import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.preload.PreloadContext;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
@@ -11,7 +10,7 @@ import org.objectweb.asm.*;
  *
  */
 
-public class ContextBasedClassVisitor extends ClassVisitor implements Instrumentations {
+public class ContextBasedClassVisitor extends ClassVisitor {
 	
 	private final Runnable markModified;
 	protected final PreloadContext context;

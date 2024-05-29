@@ -1,7 +1,6 @@
 package net.luis.agent.preload.scanner;
 
 import net.luis.agent.asm.ASMUtils;
-import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -11,6 +10,8 @@ import net.luis.agent.util.TargetType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
+
+import static net.luis.agent.asm.Instrumentations.*;
 
 /**
  *
@@ -71,7 +72,7 @@ public class TargetClassScanner extends ClassVisitor {
 		return super.visitMethod(access, name, descriptor, signature, exceptions);
 	}
 	
-	private static class TargetMethodScanner extends MethodVisitor implements Instrumentations {
+	private static class TargetMethodScanner extends MethodVisitor {
 		
 		private static final String MISSING_INFORMATION = "Missing Debug Information";
 		private static final String NOT_FOUND = "Not Found";
@@ -194,9 +195,9 @@ public class TargetClassScanner extends ClassVisitor {
 			}
 			this.lastOpcode = opcode;
 			if (!this.value.contains("#")) {
-				if (this.type == TargetType.ACCESS && this.isLoad(opcode)) {
+				if (this.type == TargetType.ACCESS && isLoad(opcode)) {
 					this.checkVariableIndex(index);
-				} else if (this.type == TargetType.ASSIGN && this.isStore(opcode)) {
+				} else if (this.type == TargetType.ASSIGN && isStore(opcode)) {
 					this.checkVariableIndex(index);
 				}
 			}
@@ -212,15 +213,15 @@ public class TargetClassScanner extends ClassVisitor {
 			if (this.targetLine != -1) {
 				return;
 			}
-			if (this.type == TargetType.CONSTANT && this.isConstant(opcode, this.value)) {
+			if (this.type == TargetType.CONSTANT && isConstant(opcode, this.value)) {
 				this.target();
-			} else if (this.type == TargetType.RETURN && this.isReturn(opcode)) {
+			} else if (this.type == TargetType.RETURN && isReturn(opcode)) {
 				this.target();
-			} else if (this.type == TargetType.NUMERIC_OPERAND && this.isNumericOperand(opcode, this.lastOpcode, this.value)) {
+			} else if (this.type == TargetType.NUMERIC_OPERAND && isNumericOperand(opcode, this.lastOpcode, this.value)) {
 				this.target();
-			} else if (this.type == TargetType.ACCESS_ARRAY && this.isArrayLoad(opcode)) {
+			} else if (this.type == TargetType.ACCESS_ARRAY && isArrayLoad(opcode)) {
 				this.target();
-			} else if (this.type == TargetType.ASSIGN_ARRAY && this.isArrayStore(opcode)) {
+			} else if (this.type == TargetType.ASSIGN_ARRAY && isArrayStore(opcode)) {
 				this.target();
 			}
 			this.lastOpcode = opcode;
@@ -308,7 +309,7 @@ public class TargetClassScanner extends ClassVisitor {
 			if (this.targetLine != -1) {
 				return;
 			}
-			if (this.type == TargetType.COMPARE && this.isCompare(this.value, opcode)) {
+			if (this.type == TargetType.COMPARE && isCompare(this.value, opcode)) {
 				this.target();
 			}
 			this.lastOpcode = opcode;

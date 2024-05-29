@@ -16,6 +16,7 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -165,15 +166,15 @@ public class RangeTransformer extends BaseClassTransformer {
 				return;
 			}
 			if (above) {
-				this.loadNumberAsDouble(this.mv, type, loadIndex);
-				this.loadNumber(this.mv, value);
+				loadNumberAsDouble(this.mv, type, loadIndex);
+				loadNumber(this.mv, value);
 			} else {
-				this.loadNumber(this.mv, value);
-				this.loadNumberAsDouble(this.mv, type, loadIndex);
+				loadNumber(this.mv, value);
+				loadNumberAsDouble(this.mv, type, loadIndex);
 			}
 			this.mv.visitInsn(Opcodes.DCMPL);
 			this.mv.visitJumpInsn(compare, label);
-			this.instrumentThrownException(this.mv, ILL_ARG, message + " " + value);
+			instrumentThrownException(this.mv, ILL_ARG, message + " " + value);
 			this.mv.visitJumpInsn(Opcodes.GOTO, label);
 			this.mv.visitLabel(label);
 		}

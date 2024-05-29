@@ -1,6 +1,5 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
@@ -15,6 +14,7 @@ import org.objectweb.asm.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -130,7 +130,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class ScheduledMethodVisitor extends MethodVisitor implements Instrumentations {
+	private static class ScheduledMethodVisitor extends MethodVisitor {
 		
 		private final PreloadContext context;
 		private final Type type;
@@ -160,7 +160,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			if (this.generated) {
 				this.mv.visitTypeInsn(Opcodes.NEW, SCHEDULED_EXECUTOR_POOL.getInternalName());
 				this.mv.visitInsn(Opcodes.DUP);
-				this.loadNumber(this.mv, Math.min(4, this.lookup.size()));
+				loadNumber(this.mv, Math.min(4, this.lookup.size()));
 				this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, SCHEDULED_EXECUTOR_POOL.getInternalName(), "<init>", "(I)V", false);
 				this.mv.visitFieldInsn(Opcodes.PUTSTATIC, this.type.getInternalName(), this.executor.name(), this.executor.type().getDescriptor());
 			}
@@ -173,8 +173,8 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				
 				this.mv.visitFieldInsn(Opcodes.GETSTATIC, this.type.getInternalName(), this.executor.name(), this.executor.type().getDescriptor());
 				this.mv.visitInvokeDynamicInsn("run", "()Ljava/lang/Runnable;", METAFACTORY_HANDLE, VOID_METHOD, this.createHandle(method), VOID_METHOD);
-				this.loadNumber(this.mv, initialDelay);
-				this.loadNumber(this.mv, delay);
+				loadNumber(this.mv, initialDelay);
+				loadNumber(this.mv, delay);
 				this.mv.visitFieldInsn(Opcodes.GETSTATIC, TIME_UNIT.getInternalName(), unit, TIME_UNIT.getDescriptor());
 				this.instrumentScheduleInvoke(fixedRate ? "scheduleAtFixedRate" : "scheduleWithFixedDelay");
 				this.mv.visitInsn(Opcodes.POP);

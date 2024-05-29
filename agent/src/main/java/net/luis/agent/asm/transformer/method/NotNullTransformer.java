@@ -17,6 +17,7 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -78,7 +79,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 			this.mv.visitCode();
 			for (ParameterData parameter : this.lookup) {
 				this.visitVarInsn(Opcodes.ALOAD, parameter);
-				this.instrumentNonNullCheck(this.mv, this.getMessage(parameter));
+				instrumentNonNullCheck(this.mv, this.getMessage(parameter));
 				this.mv.visitInsn(Opcodes.POP);
 				this.markModified();
 			}
@@ -88,7 +89,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.method.isAnnotatedWith(NOT_NULL)) {
 				this.validateMethod();
-				this.instrumentNonNullCheck(this.mv, "Method " + ASMUtils.getSimpleName(this.method.owner()) + "#" + this.method.name() + " must not return null");
+				instrumentNonNullCheck(this.mv, "Method " + ASMUtils.getSimpleName(this.method.owner()) + "#" + this.method.name() + " must not return null");
 				this.mv.visitTypeInsn(Opcodes.CHECKCAST, this.method.getReturnType().getInternalName());
 				this.markModified();
 			}

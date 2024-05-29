@@ -1,6 +1,5 @@
 package net.luis.agent.asm.base.visitor;
 
-import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.MethodData;
 import net.luis.agent.preload.data.ParameterData;
@@ -16,7 +15,7 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
  *
  */
 
-public class ContextBasedMethodVisitor extends MethodVisitor implements Instrumentations {
+public class ContextBasedMethodVisitor extends MethodVisitor {
 	
 	private final Runnable markModified;
 	protected final PreloadContext context;

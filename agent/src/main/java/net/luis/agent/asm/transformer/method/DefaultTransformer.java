@@ -16,6 +16,7 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -72,7 +73,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 				if (parameter.is(STRING)) {
 					this.mv.visitLdcInsn(value);
 				} else {
-					this.instrumentFactoryCall(this.mv, this.getFactory(parameter), parameter.type(), value);
+					instrumentFactoryCall(this.mv, this.getFactory(parameter), parameter.type(), value);
 				}
 				
 				this.visitVarInsn(Opcodes.ASTORE, parameter);

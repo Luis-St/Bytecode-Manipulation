@@ -1,6 +1,7 @@
 package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.asm.ASMUtils;
+import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
@@ -153,8 +154,8 @@ public class AssignorTransformer extends BaseClassTransformer {
 			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
 			Label start = new Label();
 			Label end = new Label();
-			this.instrumentMethodAnnotations(visitor, ifaceMethod);
-			this.instrumentParameterAnnotations(visitor, ifaceMethod);
+			Instrumentations.instrumentMethodAnnotations(visitor, ifaceMethod);
+			Instrumentations.instrumentParameterAnnotations(visitor, ifaceMethod);
 			visitor.visitCode();
 			visitor.visitLabel(start);
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);
