@@ -142,10 +142,11 @@ public class CrashReport {
 		return writer.toString();
 	}
 	
-	private @NotNull String getDetailString(@NotNull String key, @NotNull Object value) {
+	private @NotNull String getDetailString(@NotNull String key, @Nullable Object value) {
 		return switch (value) {
 			case List<?> list -> key + ": " + this.getListString(list);
 			case Map<?, ?> map -> key + ": " + this.getMapString(map);
+			case null -> key + ": null\n";
 			default -> key + ": " + value + "\n";
 		};
 	}

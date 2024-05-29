@@ -13,8 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
-import java.util.Arrays;
-
 /**
  *
  * @author Luis-St
@@ -95,7 +93,6 @@ public class TargetClassScanner extends BaseClassVisitor {
 			this.value = target.getOrDefault(context, "value");
 			this.type = TargetType.valueOf(target.get("type"));
 			this.ordinal = target.getOrDefault(context, "ordinal");
-			
 		}
 		
 		private void target() {
@@ -119,7 +116,7 @@ public class TargetClassScanner extends BaseClassVisitor {
 		}
 		
 		@Override
-		public void visitLineNumber(int line, @NotNull Label start) {
+		public void visitLineNumber(int line, @NotNull Label label) {
 			this.currentLine = line;
 			if (this.firstLine == -1) {
 				this.firstLine = line;
@@ -207,7 +204,7 @@ public class TargetClassScanner extends BaseClassVisitor {
 		}
 		
 		// CONSTANT -> ACONST_NULL, ICONST_M1, ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5, LCONST_0, LCONST_1, FCONST_0, FCONST_1, FCONST_2, DCONST_0, DCONST_1
-		// RETURN -> IRETURN, LRETURN, FRETURN, DRETURN, ARETURN
+		// RETURN -> RETURN, IRETURN, LRETURN, FRETURN, DRETURN, ARETURN
 		// NUMERIC_OPERAND -> (ILFD)ADD, (ILFD)SUB, (ILFD)MUL, (ILFD)DIV, (ILFD)REM, (ILFD)NEG, (IL)AND, (IL)OR, (IL)XOR, (IL)SHL, (IL)SHR, (IL)USHR
 		// ACCESS_ARRAY -> IALOAD, LALOAD, FALOAD, DALOAD, AALOAD, BALOAD, CALOAD, SALOAD
 		// ASSIGN_ARRAY -> IASTORE, LASTORE, FASTORE, DASTORE, AASTORE, BASTORE, CASTORE, SASTORE
@@ -219,7 +216,6 @@ public class TargetClassScanner extends BaseClassVisitor {
 			if (this.type == TargetType.CONSTANT && this.isConstant(opcode, this.value)) {
 				this.target();
 			} else if (this.type == TargetType.RETURN && this.isReturn(opcode)) {
-				System.out.println("Found return in line " + this.currentLine);
 				this.target();
 			} else if (this.type == TargetType.NUMERIC_OPERAND && this.isNumericOperand(opcode, this.lastOpcode, this.value)) {
 				this.target();
@@ -313,7 +309,7 @@ public class TargetClassScanner extends BaseClassVisitor {
 			if (this.targetLine != -1) {
 				return;
 			}
-			if (this.type == TargetType.COMPARE && this.isCompare(this.value, opcode, this.lastOpcode)) {
+			if (this.type == TargetType.COMPARE && this.isCompare(this.value, opcode)) {
 				this.target();
 			}
 			this.lastOpcode = opcode;

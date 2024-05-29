@@ -105,7 +105,7 @@ public interface IInjectorTest {
 		System.out.println("Assign Field by Type#Name");
 	}
 	
-	@Injector(method = "test(int)", target = @Target(value = "index", type = TargetType.ASSIGN/* , mode = TargetMode.AFTER*/)) // ToDo: modify placement
+	@Injector(method = "test(int)", target = @Target(value = "index", type = TargetType.ASSIGN , mode = TargetMode.AFTER))
 	default void injectAssignParameterByName() {
 		System.out.println("Assign Parameter by Name");
 	}
@@ -233,7 +233,7 @@ public interface IInjectorTest {
 		System.out.println("Compare Not Equal");
 	}
 	
-	@Injector(method = "test(int)", target = @Target(value = "<", type = TargetType.COMPARE)) // ToDo: Not targetable
+	@Injector(method = "test(int)", target = @Target(value = "<", type = TargetType.COMPARE))
 	default void injectCompareLess() {
 		System.out.println("Compare Less");
 	}
@@ -261,7 +261,7 @@ public interface IInjectorTest {
 	
 	//region RETURN
 	@Injector(method = "test(int)", target = @Target(type = TargetType.RETURN))
-	default void injectReturn() { // ToDo: Break everything
+	default void injectReturn() {
 		System.out.println("Return");
 	}
 	//endregion

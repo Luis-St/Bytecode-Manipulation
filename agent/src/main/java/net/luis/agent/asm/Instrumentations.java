@@ -8,8 +8,6 @@ import org.objectweb.asm.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 import static net.luis.agent.asm.Types.*;
 
@@ -92,7 +90,7 @@ public interface Instrumentations {
 	}
 	
 	default boolean isReturn(int opcode) {
-		return Opcodes.ARETURN >= opcode && opcode >= Opcodes.IRETURN;
+		return Opcodes.RETURN >= opcode && opcode >= Opcodes.IRETURN;
 	}
 	
 	default boolean isNumericOperand(int opcode) {
@@ -160,18 +158,14 @@ public interface Instrumentations {
 		return false;
 	}
 	
-	default boolean isCompare(@NotNull String compare, int opcode, int lastOpcode) {
-		boolean numericCompare = Opcodes.DCMPG >= lastOpcode && lastOpcode >= Opcodes.LCMP;
-		BiPredicate<Integer, Integer> numeric = (integerCompare, numberCompare) -> {
-			return (numericCompare && opcode == numberCompare) || opcode == integerCompare;
-		};
+	default boolean isCompare(@NotNull String compare, int opcode) {
 		return switch (compare) {
-			case "==" -> numeric.test(Opcodes.IF_ICMPNE, Opcodes.IFNE) || opcode == Opcodes.IF_ACMPNE || opcode == Opcodes.IFNONNULL;
-			case "!=" -> numeric.test(Opcodes.IF_ICMPEQ, Opcodes.IFEQ) || opcode == Opcodes.IF_ACMPEQ || opcode == Opcodes.IFNULL;
-			case "<" -> numeric.test(Opcodes.IF_ICMPGE, Opcodes.IFGE);
-			case "<=" -> numeric.test(Opcodes.IF_ICMPGT, Opcodes.IFGT);
-			case ">" -> numeric.test(Opcodes.IF_ICMPLE, Opcodes.IFLE);
-			case ">=" -> numeric.test(Opcodes.IF_ICMPLT, Opcodes.IFLT);
+			case "==" -> opcode == Opcodes.IF_ICMPNE || opcode == Opcodes.IFNE || opcode == Opcodes.IF_ACMPNE || opcode == Opcodes.IFNONNULL;
+			case "!=" -> opcode == Opcodes.IF_ICMPEQ || opcode == Opcodes.IFEQ || opcode == Opcodes.IF_ACMPEQ || opcode == Opcodes.IFNULL;
+			case "<" -> opcode == Opcodes.IF_ICMPGE || opcode == Opcodes.IFGE;
+			case "<=" -> opcode == Opcodes.IF_ICMPGT || opcode == Opcodes.IFGT;
+			case ">" -> opcode == Opcodes.IF_ICMPLE || opcode == Opcodes.IFLE;
+			case ">=" -> opcode == Opcodes.IF_ICMPLT || opcode == Opcodes.IFLT;
 			default -> false;
 		};
 	}

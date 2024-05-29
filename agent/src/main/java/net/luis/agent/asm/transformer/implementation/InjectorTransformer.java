@@ -11,12 +11,13 @@ import net.luis.agent.preload.scanner.ClassFileScanner;
 import net.luis.agent.preload.scanner.TargetClassScanner;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
-import net.luis.agent.util.*;
+import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static net.luis.agent.asm.Types.*;
@@ -172,7 +173,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			}
 			int line = scanner.getLine();
 			if (line == -1) {
-				throw CrashReport.create("Could not find target method in method body of method specified in injector", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature)
+				throw CrashReport.create("Could not find target in method body of method specified in injector", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Injector", signature)
 					.addDetail("Method", method.getMethodSignature()).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type")).addDetail("Target Mode", annotation.getOrDefault(this.context, "mode"))
 					.addDetail("Target Ordinal", annotation.getOrDefault(this.context, "ordinal")).addDetail("Target Offset", annotation.getOrDefault(this.context, "offset")).exception();
 			}
@@ -192,6 +193,10 @@ public class InjectorTransformer extends BaseClassTransformer {
 	
 	private static class InjectorMethodVisitor extends BaseMethodVisitor {
 		
+		private static final int FLAG_LINE_NUMBER = 128;
+		private static final Field LABEL_LINE;
+		private static final Field LABEL_FLAGS;
+		
 		private final Map</*Line Number*/Integer, List<InjectorData>> injectors;
 		private int lastLine = -1;
 		
@@ -203,15 +208,60 @@ public class InjectorTransformer extends BaseClassTransformer {
 			}
 		}
 		
+		private void instrumentInLine(int line) {
+			List<InjectorData> injectors = this.injectors.remove(line);
+			if (injectors != null) {
+				injectors.forEach(this::instrumentInjector);
+			}
+		}
+		
+		@Override
+		public void visitLabel(@NotNull Label label) {
+			int line = -1;
+			try {
+				short flags = LABEL_FLAGS.getShort(label);
+				if ((flags & FLAG_LINE_NUMBER) != 0) {
+					line = LABEL_LINE.getInt(label);
+				}
+			} catch (Exception ignored) {}
+			if (line != -1) {
+				if (this.lastLine != -1 && line - this.lastLine > 1) {
+					for (int i = this.lastLine + 1; i < line; i++) {
+						this.instrumentInLine(i);
+					}
+				}
+			}
+			super.visitLabel(label);
+		}
+		
 		@Override
 		public void visitLineNumber(int line, @NotNull Label start) {
 			super.visitLineNumber(line, start);
 			if (this.lastLine != -1 && line - this.lastLine > 1) {
 				for (int i = this.lastLine + 1; i < line; i++) {
-					this.injectors.getOrDefault(i, new ArrayList<>()).forEach(this::instrumentInjector);
+					if (this.injectors.containsKey(i)) {
+						List<InjectorData> injectors = this.injectors.get(i);
+						if (injectors.size() == 1) {
+							InjectorData injector = injectors.getFirst();
+							throw CrashReport.create("Injector was not instrumented correctly, because no label was found", REPORT_CATEGORY).addDetail("Line", i).addDetail("Interface", injector.iface().getInternalName())
+								.addDetail("Injector", injector.ifaceMethod().getMethodSignature()).addDetail("Method", injector.method().getMethodSignature()).exception();
+						} else {
+							CrashReport report = CrashReport.create("Injectors were not instrumented correctly, because no label was found", REPORT_CATEGORY);
+							
+							List<Map<String, Object>> details = new ArrayList<>();
+							for (InjectorData injector : injectors) {
+								Map<String, Object> detail = new HashMap<>();
+								detail.put("Interface", injector.iface().getInternalName());
+								detail.put("Injector", injector.ifaceMethod().getMethodSignature());
+								detail.put("Method", injector.method().getMethodSignature());
+								details.add(detail);
+							}
+							throw report.addDetail("Line", i).addDetail("Injectors", details).exception();
+						}
+					}
 				}
 			}
-			this.injectors.getOrDefault(line, new ArrayList<>()).forEach(this::instrumentInjector);
+			this.instrumentInLine(line);
 			this.lastLine = line;
 		}
 		
@@ -268,6 +318,17 @@ public class InjectorTransformer extends BaseClassTransformer {
 			this.mv.visitLabel(end);
 			this.mv.visitLocalVariable("generated$InjectorTransformer$Temp" + local, "Z", null, start, end, local);
 			this.markModified();
+		}
+		
+		static {
+			try {
+				LABEL_LINE = Label.class.getDeclaredField("lineNumber");
+				LABEL_LINE.setAccessible(true);
+				LABEL_FLAGS = Label.class.getDeclaredField("flags");
+				LABEL_FLAGS.setAccessible(true);
+			} catch (NoSuchFieldException e) {
+				throw new ExceptionInInitializerError(e);
+			}
 		}
 	}
 	
