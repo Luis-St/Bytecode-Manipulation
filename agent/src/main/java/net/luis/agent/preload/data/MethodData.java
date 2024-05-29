@@ -2,8 +2,7 @@ package net.luis.agent.preload.data;
 
 import net.luis.agent.preload.type.*;
 import net.luis.agent.util.Mutable;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 import org.objectweb.asm.Type;
 
 import java.util.*;
@@ -56,8 +55,16 @@ public record MethodData(@NotNull Type owner, @NotNull String name, @NotNull Typ
 		return this.exceptions.size();
 	}
 	
+	public int getLocalVariableCount() {
+		return this.localVariables.size();
+	}
+	
 	public boolean isLocalVariable(int index) {
 		return this.is(TypeModifier.STATIC) ? index >= this.parameters.size() : index > this.parameters.size();
+	}
+	
+	public @Unmodifiable @NotNull List<LocalVariableData> getLocalVariables() {
+		return List.copyOf(this.localVariables.values());
 	}
 	
 	public @Nullable LocalVariableData getLocalVariable(int index) {

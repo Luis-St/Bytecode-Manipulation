@@ -323,7 +323,8 @@ public class TargetClassScanner extends BaseClassVisitor {
 				}
 			} else if (this.method.isLocalVariable(index)) {
 				if (this.method.localVariables().isEmpty()) {
-					throw CrashReport.create("Class was compiled without debug information, unable to find local variable by name", MISSING_INFORMATION).addDetail("Method", this.method.getMethodSignature()).exception();
+					throw CrashReport.create("Unable to find local variable by name, because the local variable name was not included into the class file during compilation", MISSING_INFORMATION)
+						.addDetail("Method", this.method.getMethodSignature()).exception();
 				}
 				LocalVariableData local = this.method.getLocalVariable(index);
 				if (local == null) {
@@ -340,7 +341,7 @@ public class TargetClassScanner extends BaseClassVisitor {
 						.addDetail("Parameter Index", index).addDetail("Parameter Indexes", this.method.parameters().stream().map(ParameterData::index).toList()).exception();
 				}
 				if (!parameter.isNamed()) {
-					throw CrashReport.create("Class was compiled without debug information, unable to find parameter by name", MISSING_INFORMATION).addDetail("Method", this.method.getMethodSignature())
+					throw CrashReport.create("Unable to find parameter by name, because the parameter name was not included into the class file during compilation", MISSING_INFORMATION).addDetail("Method", this.method.getMethodSignature())
 						.addDetail("Parameter Index", parameter.index()).addDetail("Parameter Type", parameter.type()).exception();
 				}
 				if (parameter.name().equals(this.value)) {

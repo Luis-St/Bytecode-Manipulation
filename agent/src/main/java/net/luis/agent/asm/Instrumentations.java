@@ -290,18 +290,18 @@ public interface Instrumentations {
 	}
 	//endregion
 	
-	default void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Type owner, @NotNull MethodData method, boolean iface) {
-		this.instrumentMethodCall(visitor, owner, method, iface, 0);
+	default void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull MethodData method, boolean iface) {
+		this.instrumentMethodCall(visitor, method, iface, 0);
 	}
 	
-	default void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Type owner, @NotNull MethodData method, boolean iface, int index) {
+	default void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull MethodData method, boolean iface, int index) {
 		if (iface && !method.is(TypeModifier.STATIC)) {
 			visitor.visitVarInsn(Opcodes.ALOAD, index);
-			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, owner.getInternalName(), method.name(), method.type().getDescriptor(), true);
+			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), true);
 		} else if (method.is(TypeModifier.STATIC)) {
-			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, owner.getInternalName(), method.name(), method.type().getDescriptor(), false);
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), false);
 		} else {
-			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, owner.getInternalName(), method.name(), method.type().getDescriptor(), false);
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), false);
 		}
 	}
 	

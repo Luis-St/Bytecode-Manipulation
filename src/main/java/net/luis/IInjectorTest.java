@@ -1,9 +1,11 @@
 package net.luis;
 
 import net.luis.agent.annotation.implementation.*;
-import net.luis.agent.annotation.util.Target;
+import net.luis.agent.annotation.util.*;
 import net.luis.agent.util.TargetMode;
 import net.luis.agent.util.TargetType;
+
+import java.util.List;
 
 /**
  *
@@ -16,14 +18,14 @@ public interface IInjectorTest {
 	
 	//region HEAD
 	@Injector(method = "test(int)", target = @Target(type = TargetType.HEAD))
-	default void injectHead() {
+	default void injectHead(@Local int index) {
 		System.out.println("Head");
 	}
 	//endregion
 	
 	//region NEW
 	@Injector(method = "test(int)", target = @Target(value = "ArrayList", type = TargetType.NEW))
-	default void injectNewType() {
+	default void injectNewType(@This InjectorTest test) {
 		System.out.println("New Type");
 	}
 	
@@ -50,7 +52,7 @@ public interface IInjectorTest {
 	}
 	
 	@Injector(method = "test(int)", target = @Target(value = "List#add", type = TargetType.INVOKE, mode = TargetMode.AFTER, ordinal = 2))
-	default void injectInvokeInstance() {
+	default void injectInvokeInstance(@Local List<Object> list, @Local int[] array, @Local int[][] multiArray) {
 		System.out.println("Invoke Private");
 	}
 	//endregion
@@ -77,7 +79,7 @@ public interface IInjectorTest {
 	}
 	
 	@Injector(method = "test(int)", target = @Target(value = "5", type = TargetType.ACCESS))
-	default void injectAccessVariableByName() {
+	default void injectAccessVariableByName(@Local int i) {
 		System.out.println("Access Variable by Name");
 	}
 	

@@ -3,6 +3,8 @@ package net.luis.agent.asm;
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.implementation.*;
 import net.luis.agent.annotation.range.*;
+import net.luis.agent.annotation.util.Local;
+import net.luis.agent.annotation.util.This;
 import net.luis.agent.util.Utils;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +48,9 @@ public interface Types {
 	Type INVOKER = Type.getType(Invoker.class);
 	Type INJECTOR = Type.getType(Injector.class);
 	Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER, INJECTOR);
+	
+	Type THIS = Type.getType(This.class);
+	Type LOCAL = Type.getType(Local.class);
 	
 	Type DEFAULT = Type.getType(Default.class);
 	Type NOT_NULL = Type.getType(NotNull.class);
