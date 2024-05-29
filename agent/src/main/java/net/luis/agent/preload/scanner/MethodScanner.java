@@ -1,6 +1,5 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
@@ -8,8 +7,6 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  *
@@ -17,7 +14,7 @@ import java.util.function.Consumer;
  *
  */
 
-public class MethodScanner extends BaseMethodVisitor {
+public class MethodScanner extends MethodVisitor {
 	
 	private final MethodData method;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
@@ -25,7 +22,7 @@ public class MethodScanner extends BaseMethodVisitor {
 	private int parameterIndex = 0;
 	
 	public MethodScanner(@NotNull MethodData method) {
-		super(() -> {});
+		super(Opcodes.ASM9);
 		this.method = method;
 	}
 	

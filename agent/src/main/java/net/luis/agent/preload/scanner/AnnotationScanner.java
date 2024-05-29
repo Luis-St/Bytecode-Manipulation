@@ -1,12 +1,10 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.asm.base.visitor.BaseAnnotationVisitor;
 import net.luis.agent.preload.data.AnnotationData;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -17,11 +15,12 @@ import java.util.function.BiConsumer;
  *
  */
 
-public class AnnotationScanner extends BaseAnnotationVisitor {
+public class AnnotationScanner extends AnnotationVisitor {
 	
 	private final BiConsumer<String, Object> consumer;
 	
 	public AnnotationScanner(@NotNull BiConsumer<String, Object> consumer) {
+		super(Opcodes.ASM9);
 		this.consumer = consumer;
 	}
 	
@@ -49,7 +48,7 @@ public class AnnotationScanner extends BaseAnnotationVisitor {
 	public @NotNull AnnotationVisitor visitArray(@NotNull String parameter) {
 		List<Object> values = new ArrayList<>();
 		this.consumer.accept(parameter, values);
-		return new BaseAnnotationVisitor() {
+		return new AnnotationVisitor(Opcodes.ASM9) {
 			
 			@Override
 			public void visit(@Nullable String name, @NotNull Object value) {

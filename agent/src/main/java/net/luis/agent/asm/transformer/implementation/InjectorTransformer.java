@@ -1,8 +1,8 @@
 package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.asm.ASMUtils;
+import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
@@ -200,7 +200,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class InjectorMethodVisitor extends BaseMethodVisitor {
+	private static class InjectorMethodVisitor extends MethodVisitor implements Instrumentations {
 		
 		private static final int FLAG_LINE_NUMBER = 128;
 		private static final Field LABEL_LINE;
@@ -208,12 +208,14 @@ public class InjectorTransformer extends BaseClassTransformer {
 		
 		private final PreloadContext context;
 		private final Map</*Line Number*/Integer, List<InjectorData>> injectors;
+		private final Runnable markModified;
 		private int lastLine = -1;
 		
 		private InjectorMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull PreloadContext context, @NotNull List<InjectorData> injectors, @NotNull Runnable markModified) {
-			super(visitor, markModified);
+			super(Opcodes.ASM9, visitor);
 			this.context = context;
 			this.injectors = new HashMap<>();
+			this.markModified = markModified;
 			for (InjectorData data : injectors) {
 				this.injectors.computeIfAbsent(data.line(), l -> new ArrayList<>()).add(data);
 			}
@@ -294,14 +296,14 @@ public class InjectorTransformer extends BaseClassTransformer {
 		
 		private void instrumentInjectorAsListener(@NotNull MethodData ifaceMethod, @NotNull MethodData method) {
 			this.instrumentMethodCall(ifaceMethod, method);
-			this.markModified();
+			this.markModified.run();
 		}
 		
 		private void instrumentInjectorAsCallback(@NotNull MethodData ifaceMethod, @NotNull MethodData method) {
 			Label start = new Label();
 			Label end = new Label();
 			this.instrumentMethodCall(ifaceMethod, method);
-			int local = this.newLocal(method.getReturnType());
+			int local = this.newLocal(this.mv, method.getReturnType());
 			this.mv.visitLabel(start);
 			this.mv.visitVarInsn(Opcodes.ASTORE, local);
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
@@ -315,14 +317,14 @@ public class InjectorTransformer extends BaseClassTransformer {
 			this.mv.visitJumpInsn(Opcodes.GOTO, end);
 			this.mv.visitLabel(end);
 			this.mv.visitLocalVariable("generated$InjectorTransformer$Temp" + local, method.getReturnType().getDescriptor(), null, start, end, local);
-			this.markModified();
+			this.markModified.run();
 		}
 		
 		private void instrumentInjectorAsCancellation(@NotNull MethodData ifaceMethod, @NotNull MethodData method) {
 			Label start = new Label();
 			Label end = new Label();
 			this.instrumentMethodCall(ifaceMethod, method);
-			int local = this.newLocal(BOOLEAN);
+			int local = this.newLocal(this.mv, BOOLEAN);
 			this.mv.visitLabel(start);
 			this.mv.visitVarInsn(Opcodes.ISTORE, local);
 			this.mv.visitVarInsn(Opcodes.ILOAD, local);
@@ -331,9 +333,8 @@ public class InjectorTransformer extends BaseClassTransformer {
 			this.mv.visitJumpInsn(Opcodes.GOTO, start);
 			this.mv.visitLabel(end);
 			this.mv.visitLocalVariable("generated$InjectorTransformer$Temp" + local, "Z", null, start, end, local);
-			this.markModified();
+			this.markModified.run();
 		}
-		
 		
 		private void instrumentMethodCall(@NotNull MethodData ifaceMethod, @NotNull MethodData method) {
 			boolean isInstance = !method.is(TypeModifier.STATIC);

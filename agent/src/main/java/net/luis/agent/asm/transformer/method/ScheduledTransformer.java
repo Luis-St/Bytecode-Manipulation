@@ -2,7 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.*;
+import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -130,7 +130,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class ScheduledMethodVisitor extends BaseMethodVisitor implements Instrumentations {
+	private static class ScheduledMethodVisitor extends MethodVisitor implements Instrumentations {
 		
 		private final PreloadContext context;
 		private final Type type;
@@ -139,7 +139,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		private final boolean generated;
 		
 		private ScheduledMethodVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull List<MethodData> lookup, @NotNull FieldData executor, boolean generated) {
-			super(visitor, () -> {});
+			super(Opcodes.ASM9, visitor);
 			this.context = context;
 			this.type = type;
 			this.lookup = lookup;

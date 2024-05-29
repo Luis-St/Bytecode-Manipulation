@@ -1,6 +1,5 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.asm.base.visitor.*;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.*;
 import net.luis.agent.util.Mutable;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
  *
  */
 
-public class ClassContentScanner extends BaseClassVisitor {
+public class ClassContentScanner extends ClassVisitor {
 	
 	private final Map<String, RecordComponentData> recordComponents = new HashMap<>();
 	private final Map<String, FieldData> fields = new HashMap<>();
@@ -26,7 +25,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 	private Type owner;
 	
 	public ClassContentScanner() {
-		super(() -> {});
+		super(Opcodes.ASM9);
 	}
 	
 	@Override
@@ -45,7 +44,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 	public @NotNull RecordComponentVisitor visitRecordComponent(@NotNull String name, @NotNull String recordDescriptor, @Nullable String signature) {
 		Map<Type, AnnotationData> annotations = new HashMap<>();
 		this.recordComponents.put(name, new RecordComponentData(this.owner, name, Type.getType(recordDescriptor), signature, annotations));
-		return new BaseRecordComponentVisitor() {
+		return new RecordComponentVisitor(Opcodes.ASM9) {
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
 				return ClassContentScanner.this.createAnnotationScanner(annotationDescriptor, visible, annotations::put);
@@ -57,7 +56,7 @@ public class ClassContentScanner extends BaseClassVisitor {
 	public @NotNull FieldVisitor visitField(int access, @NotNull String name, @NotNull String fieldDescriptor, @Nullable String signature, @Nullable Object initialValue) {
 		Map<Type, AnnotationData> annotations = new HashMap<>();
 		this.fields.put(name, new FieldData(this.owner, name, Type.getType(fieldDescriptor), signature, TypeAccess.fromAccess(access), TypeModifier.fromFieldAccess(access), annotations, initialValue));
-		return new BaseFieldVisitor() {
+		return new FieldVisitor(Opcodes.ASM9) {
 			
 			@Override
 			public AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {

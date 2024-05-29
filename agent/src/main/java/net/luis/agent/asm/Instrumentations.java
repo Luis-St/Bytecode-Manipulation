@@ -5,6 +5,7 @@ import net.luis.agent.preload.data.MethodData;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import java.util.List;
 import java.util.Map;
@@ -289,6 +290,13 @@ public interface Instrumentations {
 		});
 	}
 	//endregion
+	
+	default int newLocal(@NotNull MethodVisitor visitor, @NotNull Type type) {
+		if (visitor instanceof LocalVariablesSorter sorter) {
+			return sorter.newLocal(type);
+		}
+		throw new IllegalStateException("LocalVariablesSorter is required as base visitor");
+	}
 	
 	default void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull MethodData method, boolean iface) {
 		this.instrumentMethodCall(visitor, method, iface, 0);

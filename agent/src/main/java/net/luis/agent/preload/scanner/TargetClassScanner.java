@@ -1,8 +1,7 @@
 package net.luis.agent.preload.scanner;
 
 import net.luis.agent.asm.ASMUtils;
-import net.luis.agent.asm.base.visitor.BaseClassVisitor;
-import net.luis.agent.asm.base.visitor.BaseMethodVisitor;
+import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
@@ -19,7 +18,7 @@ import org.objectweb.asm.*;
  *
  */
 
-public class TargetClassScanner extends BaseClassVisitor {
+public class TargetClassScanner extends ClassVisitor {
 	
 	private final PreloadContext context;
 	private final MethodData method;
@@ -29,7 +28,7 @@ public class TargetClassScanner extends BaseClassVisitor {
 	private final int offset;
 	
 	public TargetClassScanner(@NotNull PreloadContext context, @NotNull MethodData method, @NotNull AnnotationData target) {
-		super(() -> {});
+		super(Opcodes.ASM9);
 		this.context = context;
 		this.method = method;
 		this.target = target;
@@ -72,7 +71,7 @@ public class TargetClassScanner extends BaseClassVisitor {
 		return super.visitMethod(access, name, descriptor, signature, exceptions);
 	}
 	
-	private static class TargetMethodScanner extends BaseMethodVisitor {
+	private static class TargetMethodScanner extends MethodVisitor implements Instrumentations {
 		
 		private static final String MISSING_INFORMATION = "Missing Debug Information";
 		private static final String NOT_FOUND = "Not Found";
@@ -88,7 +87,7 @@ public class TargetClassScanner extends BaseClassVisitor {
 		private int visited;
 		
 		private TargetMethodScanner(@NotNull PreloadContext context, @NotNull MethodData method, @NotNull AnnotationData target) {
-			super(() -> {});
+			super(Opcodes.ASM9);
 			this.method = method;
 			this.value = target.getOrDefault(context, "value");
 			this.type = TargetType.valueOf(target.get("type"));
