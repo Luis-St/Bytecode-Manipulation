@@ -4,7 +4,7 @@ import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
+import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.util.CaughtAction;
 import net.luis.agent.util.DefaultStringFactory;
@@ -24,21 +24,21 @@ import static net.luis.agent.asm.Types.*;
 
 public class CaughtTransformer extends BaseClassTransformer {
 	
-	public CaughtTransformer(@NotNull PreloadContext context) {
-		super(context, true);
+	public CaughtTransformer() {
+		super(true);
 	}
 	
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = this.context.getClassData(type);
+		ClassData data = AgentContext.get().getClassData(type);
 		return data.methods().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
+		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
 			
 			@Override
 			protected boolean isMethodValid(@NotNull MethodData method) {
@@ -47,7 +47,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new CaughtVisitor(visitor, this.context, method, this::markModified);
+				return new CaughtVisitor(visitor, method, this::markModified);
 			}
 		};
 	}
@@ -63,11 +63,11 @@ public class CaughtTransformer extends BaseClassTransformer {
 		private final CaughtAction action;
 		private final Type exceptionType;
 		
-		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, method, markModified);
+		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, method, markModified);
 			AnnotationData annotation = method.getAnnotation(CAUGHT);
-			this.action = CaughtAction.valueOf(annotation.getOrDefault(context, "value"));
-			this.exceptionType = annotation.getOrDefault(context, "exceptionType");
+			this.action = CaughtAction.valueOf(annotation.getOrDefault("value"));
+			this.exceptionType = annotation.getOrDefault("exceptionType");
 			if (this.action == CaughtAction.NOTHING && !method.returns(VOID)) {
 				throw CrashReport.create("Method annotated with @Caught(NOTHING) must return void", REPORT_CATEGORY).addDetail("Method", method.getMethodSignature()).exception();
 			}

@@ -1,10 +1,10 @@
 package net.luis.agent.asm.transformer.method;
 
+import net.luis.agent.AgentContext;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
 import net.luis.agent.preload.type.TypeModifier;
@@ -29,25 +29,25 @@ public class RangeTransformer extends BaseClassTransformer {
 	
 	private static final Type[] ANNOS = { ABOVE, ABOVE_EQUAL, BELOW, BELOW_EQUAL };
 	
-	public RangeTransformer(@NotNull PreloadContext context) {
-		super(context, true);
+	public RangeTransformer() {
+		super(true);
 	}
 	
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = this.context.getClassData(type);
+		ClassData data = AgentContext.get().getClassData(type);
 		return data.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS)) && data.methods().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
+		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new RangeVisitor(visitor, this.context, method, this::markModified);
+				return new RangeVisitor(visitor, method, this::markModified);
 			}
 		};
 	}
@@ -60,8 +60,8 @@ public class RangeTransformer extends BaseClassTransformer {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
-		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markedModified) {
-			super(visitor, context, method, markedModified);
+		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull MethodData method, @NotNull Runnable markedModified) {
+			super(visitor, method, markedModified);
 			//region Parameter validation
 			for (ParameterData parameter : method.parameters()) {
 				if (parameter.isAnnotatedWithAny(ANNOS)) {

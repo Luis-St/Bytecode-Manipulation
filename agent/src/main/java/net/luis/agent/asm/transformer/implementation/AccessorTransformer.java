@@ -1,11 +1,11 @@
 package net.luis.agent.asm.transformer.implementation;
 
+import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
@@ -20,11 +20,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class AccessorTransformer extends BaseClassTransformer {
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE);
-	
-	public AccessorTransformer(@NotNull PreloadContext context) {
-		super(context);
-	}
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(AgentContext.get(), INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override
@@ -35,7 +31,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new AccessorVisitor(writer, this.context, type, () -> this.modified = true, this.lookup);
+		return new AccessorVisitor(writer, type, () -> this.modified = true, this.lookup);
 	}
 	
 	private static class AccessorVisitor extends ContextBasedClassVisitor {
@@ -44,8 +40,8 @@ public class AccessorTransformer extends BaseClassTransformer {
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private AccessorVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
-			super(writer, context, type, markModified);
+		private AccessorVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
 		
@@ -58,10 +54,11 @@ public class AccessorTransformer extends BaseClassTransformer {
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
+				AgentContext context = AgentContext.get();
 				Type target = Type.getObjectType(name);
-				ClassData targetData = this.context.getClassData(target);
+				ClassData targetData = context.getClassData(target);
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassData ifaceData = this.context.getClassData(iface);
+					ClassData ifaceData = context.getClassData(iface);
 					for (MethodData method : ifaceData.methods()) {
 						if (method.isAnnotatedWith(ACCESSOR)) {
 							this.validateMethod(iface, method, target, targetData);
@@ -166,7 +163,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 		}
 		
 		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target) {
-			ClassData data = this.context.getClassData(target);
+			ClassData data = AgentContext.get().getClassData(target);
 			data.methods().add(ifaceMethod.copy(EnumSet.noneOf(TypeModifier.class)));
 		}
 	}

@@ -1,11 +1,11 @@
 package net.luis.agent.asm.transformer.implementation;
 
+import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.scanner.ClassFileScanner;
 import net.luis.agent.preload.scanner.TargetClassScanner;
@@ -33,10 +33,10 @@ public class InjectorTransformer extends BaseClassTransformer {
 	private static final String IMPLEMENTATION_ERROR = "Inject Implementation Error";
 	private static final String MISSING_INFORMATION = "Missing Debug Information";
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(this.context, INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(AgentContext.get(), INJECT_INTERFACE);
 	
-	public InjectorTransformer(@NotNull PreloadContext context) {
-		super(context, true);
+	public InjectorTransformer() {
+		super(true);
 	}
 	
 	//region Type filtering
@@ -48,7 +48,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new InjectorClassVisitor(writer, this.context, type, () -> this.modified = true, this.lookup);
+		return new InjectorClassVisitor(writer, type, () -> this.modified = true, this.lookup);
 	}
 	
 	private static class InjectorClassVisitor extends ContextBasedClassVisitor {
@@ -56,8 +56,8 @@ public class InjectorTransformer extends BaseClassTransformer {
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		private final Map</*Method Signature*/String, List<InjectorData>> injectors = new HashMap<>();
 		
-		private InjectorClassVisitor(@NotNull ClassWriter writer, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
-			super(writer, context, type, markModified);
+		private InjectorClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
 		
@@ -70,10 +70,11 @@ public class InjectorTransformer extends BaseClassTransformer {
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
+				AgentContext context = AgentContext.get();
 				Type target = Type.getObjectType(name);
-				ClassData targetData = this.context.getClassData(target);
+				ClassData targetData = context.getClassData(target);
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassData ifaceData= this.context.getClassData(iface);
+					ClassData ifaceData = context.getClassData(iface);
 					for (MethodData method : ifaceData.methods()) {
 						if (method.isAnnotatedWith(INJECTOR)) {
 							this.validateMethod(iface, method, target, targetData);
@@ -174,7 +175,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			}
 			
 			AnnotationData annotation = Objects.requireNonNull(ifaceMethod.getAnnotation(INJECTOR).get("target"));
-			TargetClassScanner scanner = new TargetClassScanner(this.context, method, annotation);
+			TargetClassScanner scanner = new TargetClassScanner(method, annotation);
 			ClassFileScanner.scanClass(this.type, scanner);
 			if (!scanner.visitedTarget()) {
 				throw CrashReport.create("Could not find method specified in injector during scan of its own class", IMPLEMENTATION_ERROR).addDetail("Scanner", scanner).addDetail("Interface", iface)
@@ -183,8 +184,8 @@ public class InjectorTransformer extends BaseClassTransformer {
 			int line = scanner.getLine();
 			if (line == -1) {
 				throw CrashReport.create("Could not find target in method body of method specified in injector", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
-					.addDetail("Method", method.getMethodSignature()).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type")).addDetail("Target Mode", annotation.getOrDefault(this.context, "mode"))
-					.addDetail("Target Ordinal", annotation.getOrDefault(this.context, "ordinal")).addDetail("Target Offset", annotation.getOrDefault(this.context, "offset")).exception();
+					.addDetail("Method", method.getMethodSignature()).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type")).addDetail("Target Mode", annotation.getOrDefault("mode"))
+					.addDetail("Target Ordinal", annotation.getOrDefault("ordinal")).addDetail("Target Offset", annotation.getOrDefault("offset")).exception();
 			}
 			
 			this.injectors.computeIfAbsent(method.getMethodSignature(), m -> new ArrayList<>()).add(new InjectorData(line, ifaceMethod, method));
@@ -194,7 +195,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 		public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			if (this.injectors.containsKey(name + descriptor)) {
-				return new InjectorMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.context, this.injectors.get(name + descriptor), this::markModified);
+				return new InjectorMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.injectors.get(name + descriptor), this::markModified);
 			}
 			return visitor;
 		}
@@ -206,14 +207,12 @@ public class InjectorTransformer extends BaseClassTransformer {
 		private static final Field LABEL_LINE;
 		private static final Field LABEL_FLAGS;
 		
-		private final PreloadContext context;
 		private final Map</*Line Number*/Integer, List<InjectorData>> injectors;
 		private final Runnable markModified;
 		private int lastLine = -1;
 		
-		private InjectorMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull PreloadContext context, @NotNull List<InjectorData> injectors, @NotNull Runnable markModified) {
+		private InjectorMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull List<InjectorData> injectors, @NotNull Runnable markModified) {
 			super(Opcodes.ASM9, visitor);
-			this.context = context;
 			this.injectors = new HashMap<>();
 			this.markModified = markModified;
 			for (InjectorData data : injectors) {
@@ -355,7 +354,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 				return 0;
 			}
 			AnnotationData annotation = parameter.getAnnotation(LOCAL);
-			String value = annotation.getOrDefault(this.context, "value");
+			String value = annotation.getOrDefault("value");
 			if (value.isEmpty()) {
 				if (!parameter.isNamed()) {
 					throw CrashReport.create("Unable to map injector parameter to target by name, because the parameter name was not included into the class file during compilation", MISSING_INFORMATION)

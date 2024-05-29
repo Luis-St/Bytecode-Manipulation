@@ -1,6 +1,6 @@
 package net.luis.agent.asm;
 
-import net.luis.agent.preload.PreloadContext;
+import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +27,7 @@ public class ASMUtils {
 		}
 	}
 	
-	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull PreloadContext context, @NotNull Type annotationType) {
+	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull AgentContext context, @NotNull Type annotationType) {
 		Map<String, List<String>> lookup = new HashMap<>();
 		context.stream().filter(data -> data.isAnnotatedWith(annotationType)).forEach(data -> {
 			List<Type> types = data.getAnnotation(annotationType).get("targets");

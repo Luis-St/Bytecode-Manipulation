@@ -1,4 +1,4 @@
-package net.luis.agent.preload;
+package net.luis.agent;
 
 import net.luis.agent.preload.data.ClassData;
 import net.luis.agent.preload.scanner.ClassFileScanner;
@@ -16,10 +16,16 @@ import java.util.stream.Stream;
  *
  */
 
-public class PreloadContext {
+public class AgentContext {
+	
+	private static final AgentContext INSTANCE = new AgentContext();
 	
 	private final List<Type> classes = ClassPathScanner.getClasses().stream().filter(type -> !type.getDescriptor().contains("module-info")).collect(Collectors.toList());
 	private final Map<Type, ClassData> cache = new HashMap<>();
+	
+	public static @NotNull AgentContext get() {
+		return INSTANCE;
+	}
 	
 	public @NotNull List<Type> getClasses() {
 		return this.classes;

@@ -3,7 +3,6 @@ package net.luis.agent.asm.base;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.report.ReportedException;
-import net.luis.agent.preload.PreloadContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -28,15 +27,13 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		"net/luis/agent/" // Agent
 	);
 	private final boolean computeFrames;
-	protected final PreloadContext context;
 	protected boolean modified;
 	
-	protected BaseClassTransformer(@NotNull PreloadContext context) {
-		this(context, false);
+	protected BaseClassTransformer() {
+		this(false);
 	}
 	
-	protected BaseClassTransformer(@NotNull PreloadContext context, boolean computeFrames) {
-		this.context = context;
+	protected BaseClassTransformer(boolean computeFrames) {
 		this.computeFrames = computeFrames;
 	}
 	

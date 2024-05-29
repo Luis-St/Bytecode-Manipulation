@@ -1,11 +1,11 @@
 package net.luis.agent.asm.transformer.method;
 
+import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
 import net.luis.agent.preload.type.TypeModifier;
@@ -27,25 +27,25 @@ import static net.luis.agent.asm.Types.*;
 
 public class PatternTransformer extends BaseClassTransformer {
 	
-	public PatternTransformer(@NotNull PreloadContext context) {
-		super(context, true);
+	public PatternTransformer() {
+		super(true);
 	}
 	
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = this.context.getClassData(type);
+		ClassData data = AgentContext.get().getClassData(type);
 		return data.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) && data.methods().stream().noneMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
+		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new PatternVisitor(visitor, this.context, method, this::markModified);
+				return new PatternVisitor(visitor, method, this::markModified);
 			}
 		};
 	}
@@ -57,8 +57,8 @@ public class PatternTransformer extends BaseClassTransformer {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
-		private PatternVisitor(@NotNull LocalVariablesSorter visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, method, markModified);
+		private PatternVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, method, markModified);
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(PATTERN)).forEach(this.lookup::add);
 		}
 		

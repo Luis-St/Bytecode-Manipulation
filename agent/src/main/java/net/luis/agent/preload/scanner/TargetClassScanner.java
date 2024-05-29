@@ -2,7 +2,6 @@ package net.luis.agent.preload.scanner;
 
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeModifier;
 import net.luis.agent.util.TargetMode;
@@ -21,20 +20,18 @@ import static net.luis.agent.asm.Instrumentations.*;
 
 public class TargetClassScanner extends ClassVisitor {
 	
-	private final PreloadContext context;
 	private final MethodData method;
 	private final AnnotationData target;
 	private final TargetMode mode;
 	private final int offset;
 	private TargetMethodScanner visitor;
 	
-	public TargetClassScanner(@NotNull PreloadContext context, @NotNull MethodData method, @NotNull AnnotationData target) {
+	public TargetClassScanner(@NotNull MethodData method, @NotNull AnnotationData target) {
 		super(Opcodes.ASM9);
-		this.context = context;
 		this.method = method;
 		this.target = target;
-		this.mode = TargetMode.valueOf(target.getOrDefault(context, "mode"));
-		this.offset = target.getOrDefault(context, "offset");
+		this.mode = TargetMode.valueOf(target.getOrDefault("mode"));
+		this.offset = target.getOrDefault("offset");
 	}
 	
 	public boolean visitedTarget() {
@@ -66,7 +63,7 @@ public class TargetClassScanner extends ClassVisitor {
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 		if (this.method.getMethodSignature().equals(name + descriptor)) {
-			this.visitor = new TargetMethodScanner(this.context, this.method, this.target);
+			this.visitor = new TargetMethodScanner(this.method, this.target);
 			return this.visitor;
 		}
 		return super.visitMethod(access, name, descriptor, signature, exceptions);
@@ -87,12 +84,12 @@ public class TargetClassScanner extends ClassVisitor {
 		private int currentLine;
 		private int visited;
 		
-		private TargetMethodScanner(@NotNull PreloadContext context, @NotNull MethodData method, @NotNull AnnotationData target) {
+		private TargetMethodScanner(@NotNull MethodData method, @NotNull AnnotationData target) {
 			super(Opcodes.ASM9);
 			this.method = method;
-			this.value = target.getOrDefault(context, "value");
+			this.value = target.getOrDefault("value");
 			this.type = TargetType.valueOf(target.get("type"));
-			this.ordinal = target.getOrDefault(context, "ordinal");
+			this.ordinal = target.getOrDefault("ordinal");
 		}
 		
 		private void target() {

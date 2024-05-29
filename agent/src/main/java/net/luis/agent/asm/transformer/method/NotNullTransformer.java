@@ -1,11 +1,11 @@
 package net.luis.agent.asm.transformer.method;
 
+import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
 import net.luis.agent.util.Utils;
@@ -28,25 +28,21 @@ import static net.luis.agent.asm.Types.*;
 
 public class NotNullTransformer extends BaseClassTransformer {
 	
-	public NotNullTransformer(@NotNull PreloadContext context) {
-		super(context);
-	}
-	
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = this.context.getClassData(type);
+		ClassData data = AgentContext.get().getClassData(type);
 		return data.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) && data.methods().stream().noneMatch(method -> method.isAnnotatedWith(NOT_NULL));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
+		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new NotNullVisitor(visitor, this.context, method, this::markModified);
+				return new NotNullVisitor(visitor, method, this::markModified);
 			}
 		};
 	}
@@ -57,14 +53,14 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
-		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, method, markModified);
+		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, method, markModified);
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(NOT_NULL)).forEach(this.lookup::add);
 		}
 		
 		private @NotNull String getMessage(@NotNull ParameterData parameter) {
 			AnnotationData annotation = parameter.getAnnotation(NOT_NULL);
-			String value = annotation.getOrDefault(this.context, "value");
+			String value = annotation.getOrDefault("value");
 			if (!value.isBlank()) {
 				if (Utils.isSingleWord(value.strip())) {
 					return Utils.capitalize(value.strip()) + " must not be null";

@@ -3,7 +3,7 @@ package net.luis.agent.asm.transformer.method;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
+import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.*;
 import net.luis.agent.util.Mutable;
@@ -29,21 +29,17 @@ public class ScheduledTransformer extends BaseClassTransformer {
 	private static final Type SCHEDULED_EXECUTOR_POOL = Type.getType(ScheduledThreadPoolExecutor.class);
 	private static final Type TIME_UNIT = Type.getType(TimeUnit.class);
 	
-	public ScheduledTransformer(@NotNull PreloadContext context) {
-		super(context);
-	}
-	
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = this.context.getClassData(type);
+		ClassData data = AgentContext.get().getClassData(type);
 		return data.methods().stream().noneMatch(method -> method.isAnnotatedWith(SCHEDULED));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new ScheduledClassVisitor(writer, this.context, type, () -> this.modified = true);
+		return new ScheduledClassVisitor(writer, type, () -> this.modified = true);
 	}
 	
 	private static class ScheduledClassVisitor extends ContextBasedClassVisitor {
@@ -55,9 +51,9 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		private boolean generated;
 		private boolean initialized;
 		
-		private ScheduledClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified) {
-			super(visitor, context, type, markModified);
-			ClassData data = this.context.getClassData(type);
+		private ScheduledClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
+			super(visitor, type, markModified);
+			ClassData data = AgentContext.get().getClassData(type);
 			for (MethodData method : data.methods()) {
 				if (method.isAnnotatedWith(SCHEDULED)) {
 					//region Validation
@@ -99,7 +95,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				this.cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR.getDescriptor(), null, null).visitEnd();
 				EnumSet<TypeModifier> modifiers = EnumSet.of(TypeModifier.STATIC, TypeModifier.FINAL);
 				this.executor = new FieldData(this.type, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR, null, TypeAccess.PUBLIC, modifiers, new HashMap<>(), null);
-				this.context.getClassData(this.type).fields().put(this.executor.name(), this.executor);
+				AgentContext.get().getClassData(this.type).fields().put(this.executor.name(), this.executor);
 				this.generated = true;
 			}
 		}
@@ -109,7 +105,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			if ("<clinit>".equals(name)) {
 				this.initialized = true;
-				return new ScheduledMethodVisitor(visitor, this.context, this.type, this.lookup, this.executor, this.generated);
+				return new ScheduledMethodVisitor(visitor, this.type, this.lookup, this.executor, this.generated);
 			}
 			return visitor;
 		}
@@ -118,7 +114,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		public void visitEnd() {
 			if (!this.initialized) {
 				MethodData method = new MethodData(this.type, "<clinit>", VOID_METHOD, null, TypeAccess.PACKAGE, MethodType.STATIC_INITIALIZER, EnumSet.of(TypeModifier.STATIC), new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new HashMap<>(), new Mutable<>());
-				this.context.getClassData(this.type).methods().add(method);
+				AgentContext.get().getClassData(this.type).methods().add(method);
 				MethodVisitor visitor = this.visitMethod(Opcodes.ACC_STATIC, "<clinit>", VOID_METHOD.getDescriptor(), null, null);
 				visitor.visitCode();
 				visitor.visitInsn(Opcodes.RETURN);
@@ -132,15 +128,13 @@ public class ScheduledTransformer extends BaseClassTransformer {
 	
 	private static class ScheduledMethodVisitor extends MethodVisitor {
 		
-		private final PreloadContext context;
 		private final Type type;
 		private final List<MethodData> lookup;
 		private final FieldData executor;
 		private final boolean generated;
 		
-		private ScheduledMethodVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull List<MethodData> lookup, @NotNull FieldData executor, boolean generated) {
+		private ScheduledMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull List<MethodData> lookup, @NotNull FieldData executor, boolean generated) {
 			super(Opcodes.ASM9, visitor);
-			this.context = context;
 			this.type = type;
 			this.lookup = lookup;
 			this.executor = executor;
@@ -166,10 +160,10 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			}
 			for (MethodData method : this.lookup) {
 				AnnotationData annotation = method.getAnnotation(SCHEDULED);
-				long initialDelay = annotation.getOrDefault(this.context, "initialDelay");
+				long initialDelay = annotation.getOrDefault("initialDelay");
 				long delay = Objects.requireNonNull(annotation.get("value"));
-				String unit = annotation.getOrDefault(this.context, "unit");
-				boolean fixedRate = annotation.getOrDefault(this.context, "fixedRate");
+				String unit = annotation.getOrDefault("unit");
+				boolean fixedRate = annotation.getOrDefault("fixedRate");
 				
 				this.mv.visitFieldInsn(Opcodes.GETSTATIC, this.type.getInternalName(), this.executor.name(), this.executor.type().getDescriptor());
 				this.mv.visitInvokeDynamicInsn("run", "()Ljava/lang/Runnable;", METAFACTORY_HANDLE, VOID_METHOD, this.createHandle(method), VOID_METHOD);

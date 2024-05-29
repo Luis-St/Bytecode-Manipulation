@@ -4,7 +4,7 @@ import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
+import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.MethodType;
 import net.luis.agent.preload.type.TypeModifier;
@@ -26,33 +26,33 @@ import static net.luis.agent.asm.Types.*;
 
 public class AsyncTransformer extends BaseClassTransformer {
 	
-	public AsyncTransformer(@NotNull PreloadContext context) {
-		super(context, true);
+	public AsyncTransformer() {
+		super(true);
 	}
 	
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = this.context.getClassData(type);
+		ClassData data = AgentContext.get().getClassData(type);
 		return data.methods().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new AsyncClassVisitor(writer, this.context, type, this.context.getClassData(type), () -> this.modified = true);
+		return new AsyncClassVisitor(writer, type, () -> this.modified = true);
 	}
 	
 	private static class AsyncClassVisitor extends ContextBasedClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
-		private final ClassData data;
 		private final Map<MethodData, String> methods = new HashMap<>();
+		private final ClassData data;
 		
-		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull ClassData data, @NotNull Runnable markModified) {
-			super(visitor, context, type, markModified);
-			this.data = data;
+		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
+			super(visitor, type, markModified);
+			this.data = AgentContext.get().getClassData(type);
 		}
 		
 		@Override
@@ -79,7 +79,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 			String newName = "generated$" + name + "$async";
 			this.methods.put(method, newName);
 			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC, newName, descriptor, signature, exceptions);
-			return new ContextBasedMethodVisitor(visitor, this.context, method, this::markModified).skipAnnotation();
+			return new ContextBasedMethodVisitor(visitor, method, this::markModified).skipAnnotation();
 		}
 		
 		@Override

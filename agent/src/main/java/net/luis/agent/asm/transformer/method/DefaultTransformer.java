@@ -4,7 +4,7 @@ import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.PreloadContext;
+import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
@@ -27,25 +27,25 @@ import static net.luis.agent.asm.Types.*;
 
 public class DefaultTransformer extends BaseClassTransformer {
 	
-	public DefaultTransformer(@NotNull PreloadContext context) {
-		super(context, true);
+	public DefaultTransformer() {
+		super(true);
 	}
 	
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = this.context.getClassData(type);
+		ClassData data = AgentContext.get().getClassData(type);
 		return data.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new MethodOnlyClassVisitor(writer, this.context, type, () -> this.modified = true) {
+		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
-				return new DefaultVisitor(visitor, this.context, method, this::markModified);
+				return new DefaultVisitor(visitor, method, this::markModified);
 			}
 		};
 	}
@@ -56,8 +56,8 @@ public class DefaultTransformer extends BaseClassTransformer {
 		
 		private final List<ParameterData> lookup = new ArrayList<>();
 		
-		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
-			super(visitor, context, method, markModified);
+		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull MethodData method, @NotNull Runnable markModified) {
+			super(visitor, method, markModified);
 			method.parameters().stream().filter(parameter -> parameter.isAnnotatedWith(DEFAULT)).forEach(this.lookup::add);
 		}
 		
@@ -69,7 +69,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 				this.visitVarInsn(Opcodes.ALOAD, parameter);
 				this.mv.visitJumpInsn(Opcodes.IFNONNULL, label);
 				
-				String value = parameter.getAnnotation(DEFAULT).getOrDefault(this.context, "value");
+				String value = parameter.getAnnotation(DEFAULT).getOrDefault("value");
 				if (parameter.is(STRING)) {
 					this.mv.visitLdcInsn(value);
 				} else {
@@ -86,8 +86,8 @@ public class DefaultTransformer extends BaseClassTransformer {
 		//region Helper methods
 		private @NotNull Type getFactory(@NotNull ParameterData parameter) {
 			AnnotationData annotation = parameter.getAnnotation(DEFAULT);
-			Type factory = annotation.getOrDefault(this.context, "factory");
-			FieldData field = this.context.getClassData(factory).getField("INSTANCE");
+			Type factory = annotation.getOrDefault("factory");
+			FieldData field = AgentContext.get().getClassData(factory).getField("INSTANCE");
 			if (field == null) {
 				throw CrashReport.create("Missing INSTANCE field in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}

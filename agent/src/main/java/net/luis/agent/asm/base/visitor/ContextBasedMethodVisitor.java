@@ -1,6 +1,5 @@
 package net.luis.agent.asm.base.visitor;
 
-import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.MethodData;
 import net.luis.agent.preload.data.ParameterData;
 import net.luis.agent.preload.type.TypeModifier;
@@ -18,20 +17,17 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 public class ContextBasedMethodVisitor extends MethodVisitor {
 	
 	private final Runnable markModified;
-	protected final PreloadContext context;
 	protected final MethodData method;
 	private boolean skipAnnotation;
 	
-	public ContextBasedMethodVisitor(@NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
+	public ContextBasedMethodVisitor(@NotNull MethodData method, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9);
-		this.context = context;
 		this.method = method;
 		this.markModified = markModified;
 	}
 	
-	public ContextBasedMethodVisitor(@NotNull MethodVisitor visitor, @NotNull PreloadContext context, @NotNull MethodData method, @NotNull Runnable markModified) {
+	public ContextBasedMethodVisitor(@NotNull MethodVisitor visitor, @NotNull MethodData method, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9, visitor);
-		this.context = context;
 		this.method = method;
 		this.markModified = markModified;
 	}

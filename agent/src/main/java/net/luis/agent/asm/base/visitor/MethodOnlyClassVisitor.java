@@ -1,6 +1,6 @@
 package net.luis.agent.asm.base.visitor;
 
-import net.luis.agent.preload.PreloadContext;
+import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
@@ -16,12 +16,12 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 
 public class MethodOnlyClassVisitor extends ContextBasedClassVisitor {
 	
-	public MethodOnlyClassVisitor(@NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified) {
-		super(context, type, markModified);
+	public MethodOnlyClassVisitor(@NotNull Type type, @NotNull Runnable markModified) {
+		super(type, markModified);
 	}
 	
-	public MethodOnlyClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified) {
-		super(visitor, context, type, markModified);
+	public MethodOnlyClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
+		super(visitor, type, markModified);
 	}
 	
 	protected boolean isMethodValid(@NotNull MethodData method) {
@@ -34,7 +34,7 @@ public class MethodOnlyClassVisitor extends ContextBasedClassVisitor {
 	
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-		ClassData data = this.context.getClassData(this.type);
+		ClassData data = AgentContext.get().getClassData(this.type);
 		MethodData method = data.getMethod(name, Type.getType(descriptor));
 		MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 		if (method == null) {

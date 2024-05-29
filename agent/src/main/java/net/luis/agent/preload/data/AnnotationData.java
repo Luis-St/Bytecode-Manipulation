@@ -1,6 +1,6 @@
 package net.luis.agent.preload.data;
 
-import net.luis.agent.preload.PreloadContext;
+import net.luis.agent.AgentContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -31,8 +31,8 @@ public record AnnotationData(@NotNull Type type, boolean visible, @NotNull Map<S
 		return null;
 	}
 	
-	public <X> @Nullable X getDefault(@NotNull PreloadContext context, @NotNull String key) {
-		ClassData data = context.getClassData(this.type);
+	public <X> @Nullable X getDefault(@NotNull String key) {
+		ClassData data = AgentContext.get().getClassData(this.type);
 		List<MethodData> methods = data.getMethods(key);
 		if (methods.size() != 1) {
 			return null;
@@ -41,7 +41,7 @@ public record AnnotationData(@NotNull Type type, boolean visible, @NotNull Map<S
 	}
 	
 	@SuppressWarnings("DataFlowIssue")
-	public <X> @NotNull X getOrDefault(@NotNull PreloadContext context, @NotNull String key) {
-		return this.values.containsKey(key) ? this.get(key) : this.getDefault(context, key);
+	public <X> @NotNull X getOrDefault(@NotNull String key) {
+		return this.values.containsKey(key) ? this.get(key) : this.getDefault(key);
 	}
 }
