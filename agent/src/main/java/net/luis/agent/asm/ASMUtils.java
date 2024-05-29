@@ -1,6 +1,5 @@
 package net.luis.agent.asm;
 
-import net.luis.agent.preload.ClassDataPredicate;
 import net.luis.agent.preload.PreloadContext;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.util.Utils;
@@ -30,13 +29,13 @@ public class ASMUtils {
 	
 	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull PreloadContext context, @NotNull Type annotationType) {
 		Map<String, List<String>> lookup = new HashMap<>();
-		context.stream().filter(ClassDataPredicate.annotatedWith(annotationType)).forEach((info, content) -> {
-			List<Type> types = info.getAnnotation(annotationType).get("targets");
+		context.stream().filter(data -> data.isAnnotatedWith(annotationType)).forEach(data -> {
+			List<Type> types = data.getAnnotation(annotationType).get("targets");
 			if (types == null || types.isEmpty()) {
 				return;
 			}
 			for (Type target : types) {
-				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(info.type().getInternalName());
+				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(data.type().getInternalName());
 			}
 		});
 		return lookup;
@@ -101,14 +100,14 @@ public class ASMUtils {
 		}
 	}
 	
-	public static @NotNull List<MethodData> getBySignature(@NotNull String signature, @NotNull ClassContent content) {
+	public static @NotNull List<MethodData> getBySignature(@NotNull String signature, @NotNull ClassData data) {
 		List<MethodData> methods = new ArrayList<>();
 		boolean specific = signature.contains("(") && signature.contains(")");
 		boolean notFull = !specific || signature.endsWith(")");
 		
 		String name = specific ? signature.substring(0, signature.indexOf('(')).strip() : signature;
 		List<String> parameters = specific ? Stream.of(signature.substring(signature.indexOf('(') + 1, signature.indexOf(')')).split(",")).map(String::strip).toList() : new ArrayList<>();
-		List<MethodData> possibleMethods = name.isEmpty() ? content.methods() : content.getMethods(name);
+		List<MethodData> possibleMethods = name.isEmpty() ? data.methods() : data.getMethods(name);
 		if (parameters.isEmpty() && notFull) {
 			return possibleMethods;
 		}

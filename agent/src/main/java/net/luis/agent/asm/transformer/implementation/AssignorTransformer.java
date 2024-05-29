@@ -60,12 +60,12 @@ public class AssignorTransformer extends BaseClassTransformer {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
 				Type target = Type.getObjectType(name);
-				ClassContent targetContent = this.context.getClassContent(target);
+				ClassData targetData = this.context.getClassData(target);
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassContent ifaceContent = this.context.getClassContent(iface);
-					for (MethodData method : ifaceContent.methods()) {
+					ClassData ifaceData = this.context.getClassData(iface);
+					for (MethodData method : ifaceData.methods()) {
 						if (method.isAnnotatedWith(ASSIGNOR)) {
-							this.validateMethod(iface, method, target, targetContent);
+							this.validateMethod(iface, method, target, targetData);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
@@ -93,7 +93,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 			return methodName;
 		}
 		
-		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
+		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassData targetData) {
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
@@ -116,13 +116,13 @@ public class AssignorTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Assignor must not throw exceptions", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Exceptions", ifaceMethod.exceptions()).exception();
 			}
-			MethodData existingMethod = targetContent.getMethod(ifaceMethod.name(), ifaceMethod.type());
+			MethodData existingMethod = targetData.getMethod(ifaceMethod.name(), ifaceMethod.type());
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of assignor already has method with same signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Existing Method", existingMethod.getMethodSignature()).exception();
 			}
 			String accessorTarget = this.getAssignorName(ifaceMethod);
-			FieldData targetField = targetContent.getField(accessorTarget);
+			FieldData targetField = targetData.getField(accessorTarget);
 			if (targetField == null) {
 				throw CrashReport.create("Target field for assignor was not found in target class", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Expected Accessor Target", accessorTarget).exception();
@@ -172,8 +172,8 @@ public class AssignorTransformer extends BaseClassTransformer {
 		}
 		
 		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
-			ClassContent content = this.context.getClassContent(target);
-			content.methods().add(ifaceMethod.copy(EnumSet.noneOf(TypeModifier.class)));
+			ClassData data = this.context.getClassData(target);
+			data.methods().add(ifaceMethod.copy(EnumSet.noneOf(TypeModifier.class)));
 			targetField.modifiers().remove(TypeModifier.FINAL);
 		}
 		

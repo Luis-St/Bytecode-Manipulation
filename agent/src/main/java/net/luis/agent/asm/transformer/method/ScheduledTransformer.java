@@ -36,8 +36,8 @@ public class ScheduledTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassContent content = this.context.getClassContent(type);
-		return content.methods().stream().noneMatch(method -> method.isAnnotatedWith(SCHEDULED));
+		ClassData data = this.context.getClassData(type);
+		return data.methods().stream().noneMatch(method -> method.isAnnotatedWith(SCHEDULED));
 	}
 	//endregion
 	
@@ -57,8 +57,8 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		
 		private ScheduledClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, context, type, markModified);
-			ClassContent content = this.context.getClassContent(type);
-			for (MethodData method : content.methods()) {
+			ClassData data = this.context.getClassData(type);
+			for (MethodData method : data.methods()) {
 				if (method.isAnnotatedWith(SCHEDULED)) {
 					//region Validation
 					if (!method.is(MethodType.METHOD)) {
@@ -83,7 +83,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 					this.lookup.add(method);
 				}
 			}
-			for (FieldData field : content.getFields()) {
+			for (FieldData field : data.getFields()) {
 				if (field.is(TypeModifier.STATIC) && field.is(TypeModifier.FINAL)) {
 					if (field.is(SCHEDULED_EXECUTOR) || field.is(SCHEDULED_EXECUTOR_POOL)) {
 						this.executor = field;
@@ -99,7 +99,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				this.cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR.getDescriptor(), null, null).visitEnd();
 				EnumSet<TypeModifier> modifiers = EnumSet.of(TypeModifier.STATIC, TypeModifier.FINAL);
 				this.executor = new FieldData(this.type, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR, null, TypeAccess.PUBLIC, modifiers, new HashMap<>(), null);
-				this.context.getClassContent(this.type).fields().put(this.executor.name(), this.executor);
+				this.context.getClassData(this.type).fields().put(this.executor.name(), this.executor);
 				this.generated = true;
 			}
 		}
@@ -118,7 +118,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		public void visitEnd() {
 			if (!this.initialized) {
 				MethodData method = new MethodData(this.type, "<clinit>", VOID_METHOD, null, TypeAccess.PACKAGE, MethodType.STATIC_INITIALIZER, EnumSet.of(TypeModifier.STATIC), new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new HashMap<>(), new Mutable<>());
-				this.context.getClassContent(this.type).methods().add(method);
+				this.context.getClassData(this.type).methods().add(method);
 				MethodVisitor visitor = this.visitMethod(Opcodes.ACC_STATIC, "<clinit>", VOID_METHOD.getDescriptor(), null, null);
 				visitor.visitCode();
 				visitor.visitInsn(Opcodes.RETURN);

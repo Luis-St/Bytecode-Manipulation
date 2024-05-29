@@ -33,31 +33,31 @@ public class AsyncTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassContent content = this.context.getClassContent(type);
-		return content.methods().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
+		ClassData data = this.context.getClassData(type);
+		return data.methods().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
-		return new AsyncClassVisitor(writer, this.context, type, this.context.getClassContent(type), () -> this.modified = true);
+		return new AsyncClassVisitor(writer, this.context, type, this.context.getClassData(type), () -> this.modified = true);
 	}
 	
 	private static class AsyncClassVisitor extends ContextBasedClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
-		private final ClassContent content;
+		private final ClassData data;
 		private final Map<MethodData, String> methods = new HashMap<>();
 		
-		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull ClassContent content, @NotNull Runnable markModified) {
+		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull PreloadContext context, @NotNull Type type, @NotNull ClassData data, @NotNull Runnable markModified) {
 			super(visitor, context, type, markModified);
-			this.content = content;
+			this.data = data;
 		}
 		
 		@Override
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-			MethodData method = this.content.getMethod(name, Type.getMethodType(descriptor));
+			MethodData method = this.data.getMethod(name, Type.getMethodType(descriptor));
 			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(ASYNC)) {
 				return super.visitMethod(access, name, descriptor, signature, exceptions);
 			}

@@ -32,8 +32,8 @@ public record AnnotationData(@NotNull Type type, boolean visible, @NotNull Map<S
 	}
 	
 	public <X> @Nullable X getDefault(@NotNull PreloadContext context, @NotNull String key) {
-		ClassContent content = context.getClassContent(this.type);
-		List<MethodData> methods = content.getMethods(key);
+		ClassData data = context.getClassData(this.type);
+		List<MethodData> methods = data.getMethods(key);
 		if (methods.size() != 1) {
 			return null;
 		}

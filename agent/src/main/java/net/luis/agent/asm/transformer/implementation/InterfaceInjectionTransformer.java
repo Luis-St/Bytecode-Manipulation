@@ -62,7 +62,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			}
 			
 			private void updateClass(@NotNull List<Type> injects) {
-				this.context.getClassInfo(this.type).interfaces().addAll(injects);
+				this.context.getClassData(this.type).interfaces().addAll(injects);
 			}
 		};
 	}

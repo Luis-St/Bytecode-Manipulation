@@ -36,8 +36,8 @@ public class RangeTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassContent content = this.context.getClassContent(type);
-		return content.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS)) && content.methods().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS));
+		ClassData data = this.context.getClassData(type);
+		return data.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS)) && data.methods().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS));
 	}
 	//endregion
 	

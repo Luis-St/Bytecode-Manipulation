@@ -1,13 +1,11 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.preload.data.ClassContent;
-import net.luis.agent.preload.data.ClassInfo;
+import net.luis.agent.preload.data.ClassData;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -18,22 +16,11 @@ import java.util.function.Function;
 
 public class ClassFileScanner {
 	
-	public static @NotNull Map.Entry<ClassInfo, ClassContent> scanClass(@NotNull Type type) {
-		byte[] data = readClass(type);
-		ClassInfo info = scanClass(data, type, new ClassInfoScanner(), ClassInfoScanner::getClassInfo);
-		ClassContent content = scanClass(data, type, new ClassContentScanner(), ClassContentScanner::getClassContent);
-		return Map.entry(info, content);
+	public static @NotNull ClassData scanClass(@NotNull Type type) {
+		return scanClass(type, new ClassScanner(), ClassScanner::getClassData);
 	}
 	
-	public static @NotNull ClassInfo scanClassInfo(@NotNull Type type) {
-		return scanClass(type, new ClassInfoScanner(), ClassInfoScanner::getClassInfo);
-	}
-	
-	public static @NotNull ClassContent scanClassContent(@NotNull Type type) {
-		return scanClass(type, new ClassContentScanner(), ClassContentScanner::getClassContent);
-	}
-	
-	public static <T extends ClassVisitor, X> void scanClassCustom(@NotNull Type type, @NotNull T visitor) {
+	public static <T extends ClassVisitor, X> void scanClass(@NotNull Type type, @NotNull T visitor) {
 		scanClass(readClass(type), type, visitor, Function.identity());
 	}
 	

@@ -1,10 +1,10 @@
 package net.luis.agent.preload.data;
 
+import net.luis.agent.preload.type.*;
 import org.jetbrains.annotations.*;
 import org.objectweb.asm.Type;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -12,7 +12,9 @@ import java.util.Map;
  *
  */
 
-public record ClassContent(@NotNull Map<String, RecordComponentData> recordComponents, @NotNull Map<String, FieldData> fields, @NotNull List<MethodData> methods) {
+public record ClassData(@NotNull String name, @NotNull Type type, String signature, @NotNull TypeAccess access, @NotNull ClassType classType, @NotNull Set<TypeModifier> modifiers,
+						@Nullable Type superType, @NotNull List<Type> permittedSubclasses, @NotNull List<Type> interfaces, @NotNull Map<Type, AnnotationData> annotations,
+						@NotNull Map<String, RecordComponentData> recordComponents, @NotNull Map<String, FieldData> fields, @NotNull List<MethodData> methods, @NotNull List<InnerClassData> innerClasses) implements ASMData {
 	
 	//region Record components
 	public @Unmodifiable @NotNull List<RecordComponentData> getRecordComponents() {

@@ -8,9 +8,7 @@ package net.luis.agent.preload.type;
 
 public enum MethodType {
 	
-	CONSTRUCTOR,
-	STATIC_INITIALIZER,
-	METHOD;
+	CONSTRUCTOR, STATIC_INITIALIZER, METHOD;
 	
 	public static MethodType fromName(String name) {
 		if ("<init>".equalsIgnoreCase(name)) {

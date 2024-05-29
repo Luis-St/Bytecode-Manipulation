@@ -71,12 +71,12 @@ public class InjectorTransformer extends BaseClassTransformer {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
 				Type target = Type.getObjectType(name);
-				ClassContent targetContent = this.context.getClassContent(target);
+				ClassData targetData = this.context.getClassData(target);
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassContent ifaceContent = this.context.getClassContent(iface);
-					for (MethodData method : ifaceContent.methods()) {
+					ClassData ifaceData= this.context.getClassData(iface);
+					for (MethodData method : ifaceData.methods()) {
 						if (method.isAnnotatedWith(INJECTOR)) {
-							this.validateMethod(iface, method, target, targetContent);
+							this.validateMethod(iface, method, target, targetData);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
@@ -109,7 +109,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			return invokerTarget;
 		}
 		
-		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
+		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassData targetData) {
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
@@ -131,16 +131,16 @@ public class InjectorTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Injector must not throw exceptions", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
 					.addDetail("Exceptions", ifaceMethod.exceptions()).exception();
 			}
-			MethodData existingMethod = targetContent.getMethod(ifaceMethod.name(), ifaceMethod.type());
+			MethodData existingMethod = targetData.getMethod(ifaceMethod.name(), ifaceMethod.type());
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of injector already has method with same signature", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
 					.addDetail("Existing Method", existingMethod.getMethodSignature()).exception();
 			}
 			String injectorName = this.getInjectorName(ifaceMethod);
-			List<MethodData> possibleMethod = ASMUtils.getBySignature(injectorName, targetContent);
+			List<MethodData> possibleMethod = ASMUtils.getBySignature(injectorName, targetData);
 			if (possibleMethod.isEmpty()) {
 				throw CrashReport.create("Could not find method specified in injector", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature).addDetail("Method", injectorName)
-					.addDetail("Possible Methods", targetContent.getMethods(this.getRawInjectorName(injectorName)).stream().map(MethodData::getMethodSignature).toList()).exception();
+					.addDetail("Possible Methods", targetData.getMethods(this.getRawInjectorName(injectorName)).stream().map(MethodData::getMethodSignature).toList()).exception();
 			}
 			if (possibleMethod.size() > 1) {
 				throw CrashReport.create("Found multiple possible methods for injector", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Invoker", signature).addDetail("Method", injectorName)
@@ -175,7 +175,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			
 			AnnotationData annotation = Objects.requireNonNull(ifaceMethod.getAnnotation(INJECTOR).get("target"));
 			TargetClassScanner scanner = new TargetClassScanner(this.context, method, annotation);
-			ClassFileScanner.scanClassCustom(this.type, scanner);
+			ClassFileScanner.scanClass(this.type, scanner);
 			if (!scanner.visitedTarget()) {
 				throw CrashReport.create("Could not find method specified in injector during scan of its own class", IMPLEMENTATION_ERROR).addDetail("Scanner", scanner).addDetail("Interface", iface)
 					.addDetail("Injector", signature).addDetail("Scanned Class", target).addDetail("Method", method.getMethodSignature()).exception();

@@ -58,12 +58,12 @@ public class ImplementedTransformer extends BaseClassTransformer {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
 				Type target = Type.getObjectType(name);
-				ClassContent targetContent = this.context.getClassContent(target);
+				ClassData targetData = this.context.getClassData(target);
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassContent ifaceContent = this.context.getClassContent(iface);
-					for (MethodData method : ifaceContent.methods()) {
+					ClassData ifaceData = this.context.getClassData(iface);
+					for (MethodData method : ifaceData.methods()) {
 						if (method.isAnnotatedWith(IMPLEMENTED)) {
-							this.validateMethod(iface, method, target, targetContent);
+							this.validateMethod(iface, method, target, targetData);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
@@ -76,7 +76,7 @@ public class ImplementedTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		protected void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassContent targetContent) {
+		protected void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassData targetData) {
 			String signature = ifaceMethod.getMethodSignature();
 			//region Base validation
 			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
@@ -89,7 +89,7 @@ public class ImplementedTransformer extends BaseClassTransformer {
 				throw createReport("Method annotated with @Implemented must not be default implemented", iface, signature).exception();
 			}
 			//endregion
-			MethodData targetMethod = targetContent.getMethod(ifaceMethod.name(), ifaceMethod.type());
+			MethodData targetMethod = targetData.getMethod(ifaceMethod.name(), ifaceMethod.type());
 			if (targetMethod == null) {
 				throw createReport("Method annotated with @Implemented must be implemented in target class", iface, signature)
 					.addDetailBefore("Interface", "Target Class", target).exception();

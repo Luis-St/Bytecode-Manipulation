@@ -19,7 +19,7 @@ public class MethodScanner extends MethodVisitor {
 	private final MethodData method;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
 	private final Map<Integer, Map<Type, AnnotationData>> parameterAnnotations = new HashMap<>();
-	private int parameterIndex = 0;
+	private int parameterIndex;
 	
 	public MethodScanner(@NotNull MethodData method) {
 		super(Opcodes.ASM9);
