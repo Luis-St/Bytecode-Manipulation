@@ -24,6 +24,14 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public final class Main {
 	
+	/*
+	 * ToDo:
+	 *  - Update Data classes
+	 *  - Add support for @Pattern annotation on other annotations
+	 *  - Add transformers for unused annotations
+	 *  - Allow parameters in method with @Scheduled annotation (int -> for current cycle, ScheduleFuture -> for canceling)
+	 */
+	
 	public static void main(@Default @NotNull String[] args) {
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
