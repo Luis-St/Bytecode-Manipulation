@@ -19,7 +19,7 @@ public interface IInjectorTest {
 	
 	//region HEAD
 	@Injector(method = "test(int)", target = @Target(type = TargetType.HEAD))
-	default void injectHead(@Local int index) {
+	static void injectHead(@Local int index) {
 		System.out.println("Head");
 	}
 	//endregion

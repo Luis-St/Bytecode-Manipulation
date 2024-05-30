@@ -120,14 +120,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Injector must be default implemented", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature).exception();
 			}
 			//endregion
-			if (ifaceMethod.getParameterCount() > 0) {
-				for (ParameterData parameter : ifaceMethod.parameters()) {
-					if (!parameter.isAnnotatedWith(THIS) && !parameter.isAnnotatedWith(LOCAL)) {
-						throw CrashReport.create("Parameter of injector must be annotated with @This or @Local", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
-							.addDetail("Parameter Index", parameter.index()).addDetail("Parameter Type", parameter.type()).exception();
-					}
-				}
-			}
 			if (ifaceMethod.getExceptionCount() > 0) {
 				throw CrashReport.create("Method annotated with @Injector must not throw exceptions", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
 					.addDetail("Exceptions", ifaceMethod.exceptions()).exception();
@@ -148,14 +140,21 @@ public class InjectorTransformer extends BaseClassTransformer {
 					.addDetail("Possible Methods", possibleMethod.stream().map(MethodData::getMethodSignature).toList()).exception();
 			}
 			MethodData method = possibleMethod.getFirst();
-			if (ifaceMethod.is(TypeModifier.STATIC)) {
-				if (!method.is(TypeModifier.STATIC)) {
-					throw CrashReport.create("Method annotated with @Injector is declared static, but specified a none-static method", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
-						.addDetail("Method", method.getMethodSignature()).exception();
-				}
-			} else if (method.is(TypeModifier.STATIC)) {
+			if (!ifaceMethod.is(TypeModifier.STATIC) && method.is(TypeModifier.STATIC)) {
 				throw CrashReport.create("Method annotated with @Injector is declared none-static, but specified a static method", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
 					.addDetail("Method", method.getMethodSignature()).exception();
+			}
+			if (ifaceMethod.getParameterCount() > 0) {
+				for (ParameterData parameter : ifaceMethod.parameters()) {
+					if (!parameter.isAnnotatedWith(THIS) && !parameter.isAnnotatedWith(LOCAL)) {
+						throw CrashReport.create("Parameter of injector must be annotated with @This or @Local", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
+							.addDetail("Parameter Index", parameter.index()).addDetail("Parameter Type", parameter.type()).exception();
+					}
+					if (method.is(TypeModifier.STATIC) && parameter.isAnnotatedWith(THIS)) {
+						throw CrashReport.create("Parameter of injector cannot be annotated with @This, because the specified method is static", IMPLEMENTATION_ERROR).addDetail("Interface", iface).addDetail("Injector", signature)
+							.addDetail("Parameter Index", parameter.index()).addDetail("Parameter Type", parameter.type()).addDetail("Method", method.getMethodSignature()).exception();
+					}
+				}
 			}
 			if (method.returns(VOID)) {
 				if (!ifaceMethod.returns(VOID) && !ifaceMethod.returns(BOOLEAN)) {
@@ -336,14 +335,14 @@ public class InjectorTransformer extends BaseClassTransformer {
 		}
 		
 		private void instrumentMethodCall(@NotNull MethodData ifaceMethod, @NotNull MethodData method) {
-			boolean isInstance = !method.is(TypeModifier.STATIC);
+			boolean isInstance = !ifaceMethod.is(TypeModifier.STATIC);
 			if (isInstance) {
 				this.mv.visitVarInsn(Opcodes.ALOAD, 0);
 			}
 			for (ParameterData parameter : ifaceMethod.parameters()) {
 				this.mv.visitVarInsn(parameter.type().getOpcode(Opcodes.ILOAD), this.getLoadIndex(parameter, ifaceMethod, method));
 			}
-			this.mv.visitMethodInsn(isInstance ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKESTATIC, ifaceMethod.owner().getInternalName(), ifaceMethod.name(), ifaceMethod.type().getDescriptor(), isInstance);
+			this.mv.visitMethodInsn(isInstance ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKESTATIC, ifaceMethod.owner().getInternalName(), ifaceMethod.name(), ifaceMethod.type().getDescriptor(), true);
 		}
 		//endregion
 		

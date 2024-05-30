@@ -13,12 +13,12 @@ import java.util.Random;
 public interface IStringUtils {
 	
 	@Injector(target = @Target(value = "String#contains(CharSequence)", type = TargetType.INVOKE, ordinal = 1))
-	public static void injectRemoveQuoted() {
+	static void injectRemoveQuoted() {
 		System.out.println("Injecting StringUtils#removeQuoted method");
 	}
 	
 	@Injector(target = @Target(value = "List#isEmpty", type = TargetType.INVOKE))
-	public static @Nullable Boolean injectIsAfterAllOccurrence() {
+	static @Nullable Boolean injectIsAfterAllOccurrence() {
 		System.out.println("Injecting StringUtils#isAfterAllOccurrence method");
 		return new Random().nextBoolean() ? true : null;
 	}

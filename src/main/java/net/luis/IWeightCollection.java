@@ -9,9 +9,7 @@ import net.luis.utils.collection.WeightCollection;
 @InjectInterface(targets = WeightCollection.class)
 public interface IWeightCollection {
 	
-	@Injector(method = "<init>(Random)",
-		target = @Target(value = "Maps#newTreeMap()", type = TargetType.INVOKE)
-	)
+	@Injector(method = "<init>(Random)", target = @Target(value = "Maps#newTreeMap()", type = TargetType.INVOKE))
 	default void injectConstructor() {
 		System.out.println("Injecting constructor cancellation in WeightCollection#<init>");
 	}

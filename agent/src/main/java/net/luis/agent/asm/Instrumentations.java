@@ -1,7 +1,8 @@
 package net.luis.agent.asm;
 
-import net.luis.agent.preload.data.AnnotationData;
-import net.luis.agent.preload.data.MethodData;
+import net.luis.agent.AgentContext;
+import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.type.ClassType;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
@@ -254,7 +255,8 @@ public class Instrumentations {
 			visitor.visitVarInsn(Opcodes.ALOAD, index);
 			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), true);
 		} else if (method.is(TypeModifier.STATIC)) {
-			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), false);
+			ClassData data = AgentContext.get().getClassData(method.owner());
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), data.classType() == ClassType.INTERFACE);
 		} else {
 			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), false);
 		}
