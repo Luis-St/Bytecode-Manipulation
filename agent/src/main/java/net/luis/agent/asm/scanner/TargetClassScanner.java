@@ -1,9 +1,9 @@
-package net.luis.agent.preload.scanner;
+package net.luis.agent.asm.scanner;
 
 import net.luis.agent.asm.ASMUtils;
+import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.preload.data.*;
-import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.TargetMode;
 import net.luis.agent.util.TargetType;
 import org.jetbrains.annotations.NotNull;

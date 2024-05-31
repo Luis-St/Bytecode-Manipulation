@@ -1,4 +1,4 @@
-package net.luis.agent.preload.type;
+package net.luis.agent.asm.type;
 
 /**
  *

@@ -1,8 +1,8 @@
-package net.luis.agent.preload.data;
+package net.luis.agent.asm.data;
 
 import net.luis.agent.asm.ASMUtils;
-import net.luis.agent.preload.type.TypeAccess;
-import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.asm.type.TypeAccess;
+import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

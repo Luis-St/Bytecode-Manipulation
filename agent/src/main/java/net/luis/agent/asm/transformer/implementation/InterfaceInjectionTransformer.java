@@ -1,11 +1,11 @@
 package net.luis.agent.asm.transformer.implementation;
 
+import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.AgentContext;
-import net.luis.agent.preload.type.ClassType;
+import net.luis.agent.asm.type.ClassType;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -1,10 +1,10 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.AgentContext;
-import net.luis.agent.preload.data.Class;
-import net.luis.agent.preload.data.*;
-import net.luis.agent.preload.type.ClassType;
-import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.type.ClassType;
+import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;

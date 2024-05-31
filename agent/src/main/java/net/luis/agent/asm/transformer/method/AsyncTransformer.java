@@ -1,14 +1,14 @@
 package net.luis.agent.asm.transformer.method;
 
+import net.luis.agent.AgentContext;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
+import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.AgentContext;
-import net.luis.agent.preload.data.*;
-import net.luis.agent.preload.data.Class;
-import net.luis.agent.preload.type.MethodType;
-import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.asm.type.MethodType;
+import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;

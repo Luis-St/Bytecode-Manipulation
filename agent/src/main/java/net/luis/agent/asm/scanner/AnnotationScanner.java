@@ -1,12 +1,13 @@
-package net.luis.agent.preload.scanner;
+package net.luis.agent.asm.scanner;
 
-import net.luis.agent.preload.data.Annotation;
+import net.luis.agent.asm.data.Annotation;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 /**

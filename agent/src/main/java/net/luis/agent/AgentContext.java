@@ -1,8 +1,8 @@
 package net.luis.agent;
 
-import net.luis.agent.preload.data.Class;
-import net.luis.agent.preload.scanner.ClassFileScanner;
-import net.luis.agent.preload.scanner.ClassPathScanner;
+import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.scanner.ClassFileScanner;
+import net.luis.agent.asm.scanner.ClassPathScanner;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 

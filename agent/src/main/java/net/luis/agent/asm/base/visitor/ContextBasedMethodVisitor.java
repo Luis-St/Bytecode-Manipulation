@@ -1,6 +1,6 @@
 package net.luis.agent.asm.base.visitor;
 
-import net.luis.agent.preload.data.Method;
+import net.luis.agent.asm.data.Method;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;

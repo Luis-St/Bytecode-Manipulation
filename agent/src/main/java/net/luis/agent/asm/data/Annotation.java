@@ -1,4 +1,4 @@
-package net.luis.agent.preload.data;
+package net.luis.agent.asm.data;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;

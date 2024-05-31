@@ -1,6 +1,6 @@
-package net.luis.agent.preload.scanner;
+package net.luis.agent.asm.scanner;
 
-import net.luis.agent.preload.data.Class;
+import net.luis.agent.asm.data.Class;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 

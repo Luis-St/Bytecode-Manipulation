@@ -1,6 +1,5 @@
 package net.luis.agent.asm.base.visitor;
 
-import net.luis.agent.AgentContext;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 

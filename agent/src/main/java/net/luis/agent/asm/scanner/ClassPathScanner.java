@@ -1,4 +1,4 @@
-package net.luis.agent.preload.scanner;
+package net.luis.agent.asm.scanner;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -1,9 +1,8 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.AgentContext;
-import net.luis.agent.preload.data.Class;
-import net.luis.agent.preload.data.Method;
-import net.luis.agent.preload.data.Parameter;
+import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.data.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

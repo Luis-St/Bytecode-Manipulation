@@ -1,6 +1,6 @@
-package net.luis.agent.preload.data;
+package net.luis.agent.asm.data;
 
-import net.luis.agent.preload.type.*;
+import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Mutable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
