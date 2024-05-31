@@ -75,21 +75,6 @@ public class AssignorTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private @NotNull String getAssignorName(@NotNull Method ifaceMethod) {
-			Annotation annotation = ifaceMethod.getAnnotation(ASSIGNOR);
-			String target = annotation.get("target");
-			if (target != null) {
-				return target;
-			}
-			String methodName = ifaceMethod.getName();
-			if (methodName.startsWith("set")) {
-				return Utils.uncapitalize(methodName.substring(3));
-			} else if (methodName.startsWith("assign")) {
-				return Utils.uncapitalize(methodName.substring(6));
-			}
-			return methodName;
-		}
-		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSourceSignature();
 			//region Base validation
@@ -134,7 +119,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 			}
 			String fieldSignature = targetField.getGenericSignature();
 			if (fieldSignature != null && !fieldSignature.isBlank()) {
-				String assignorSignature = ASMUtils.getParameterTypesSignature(ifaceMethod);
+				String assignorSignature = this.getParameterTypesSignature(ifaceMethod);
 				if (!Objects.equals(fieldSignature, assignorSignature)) {
 					throw CrashReport.create("Assignor signature does not match target field signature", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Assignor", signature)
 						.addDetail("Accessor Target", accessorTarget).addDetail("Expected Signature", fieldSignature).addDetail("Actual Signature", assignorSignature).exception();
@@ -168,12 +153,6 @@ public class AssignorTransformer extends BaseClassTransformer {
 			this.markModified();
 		}
 		
-		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Field targetField) {
-			Class data = AgentContext.get().getClass(target);
-			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
-			targetField.getModifiers().remove(TypeModifier.FINAL);
-		}
-		
 		@Override
 		public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
 			if (this.unfinal.contains(name)) {
@@ -182,5 +161,38 @@ public class AssignorTransformer extends BaseClassTransformer {
 			}
 			return super.visitField(access, name, descriptor, signature, value);
 		}
+		
+		//region Helper methods
+		private @NotNull String getAssignorName(@NotNull Method ifaceMethod) {
+			Annotation annotation = ifaceMethod.getAnnotation(ASSIGNOR);
+			String target = annotation.get("target");
+			if (target != null) {
+				return target;
+			}
+			String methodName = ifaceMethod.getName();
+			if (methodName.startsWith("set")) {
+				return Utils.uncapitalize(methodName.substring(3));
+			} else if (methodName.startsWith("assign")) {
+				return Utils.uncapitalize(methodName.substring(6));
+			}
+			return methodName;
+		}
+		
+		private @NotNull String getParameterTypesSignature(@NotNull Method method) {
+			String signature = method.getGenericSignature();
+			if (signature == null || signature.isEmpty()) {
+				return "";
+			}
+			int start = signature.indexOf('(');
+			int end = signature.indexOf(')');
+			return signature.substring(start + 1, end);
+		}
+		
+		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Field targetField) {
+			Class data = AgentContext.get().getClass(target);
+			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
+			targetField.getModifiers().remove(TypeModifier.FINAL);
+		}
+		//endregion
 	}
 }

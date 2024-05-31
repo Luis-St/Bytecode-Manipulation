@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
 import static net.luis.agent.asm.Instrumentations.*;
+import static net.luis.agent.asm.Types.*;
 
 /**
  *
@@ -278,9 +279,9 @@ public class TargetClassScanner extends ClassVisitor {
 			this.lastOpcode = opcode;
 			if (this.type == TargetType.NEW) {
 				Type objectType = Type.getObjectType(type);
-				if (opcode == Opcodes.NEW && ASMUtils.isSameType(objectType, this.value)) {
+				if (opcode == Opcodes.NEW && isSameType(objectType, this.value)) {
 					this.target();
-				} else if (opcode == Opcodes.ANEWARRAY && ASMUtils.isSameType(Type.getType("[" + objectType.getDescriptor()), this.value)) {
+				} else if (opcode == Opcodes.ANEWARRAY && isSameType(Type.getType("[" + objectType.getDescriptor()), this.value)) {
 					this.target();
 				}
 			} else if (this.type == TargetType.COMPARE && opcode == Opcodes.INSTANCEOF) {
@@ -295,7 +296,7 @@ public class TargetClassScanner extends ClassVisitor {
 				return;
 			}
 			this.lastOpcode = Opcodes.MULTIANEWARRAY;
-			if (this.type == TargetType.NEW && ASMUtils.isSameType(Type.getType(descriptor), this.value)) {
+			if (this.type == TargetType.NEW && isSameType(Type.getType(descriptor), this.value)) {
 				this.target();
 			}
 		}

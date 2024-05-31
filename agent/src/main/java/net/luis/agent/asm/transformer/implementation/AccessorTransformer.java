@@ -74,21 +74,6 @@ public class AccessorTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private @NotNull String getAccessorName(@NotNull Method ifaceMethod) {
-			Annotation annotation = ifaceMethod.getAnnotation(ACCESSOR);
-			String target = annotation.get("target");
-			if (target != null) {
-				return target;
-			}
-			String methodName = ifaceMethod.getName();
-			if (methodName.startsWith("get")) {
-				return Utils.uncapitalize(methodName.substring(3));
-			} else if (methodName.startsWith("access")) {
-				return Utils.uncapitalize(methodName.substring(6));
-			}
-			return methodName;
-		}
-		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSourceSignature();
 			//region Base validation
@@ -133,7 +118,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 			}
 			String fieldSignature = targetField.getGenericSignature();
 			if (fieldSignature != null && !fieldSignature.isBlank()) {
-				String accessorSignature = ASMUtils.getReturnTypeSignature(ifaceMethod);
+				String accessorSignature = this.getReturnTypeSignature(ifaceMethod);
 				if (!Objects.equals(fieldSignature, accessorSignature)) {
 					throw CrashReport.create("Accessor signature does not match target field signature", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Accessor", signature)
 						.addDetail("Accessor Target", accessorTarget).addDetail("Expected Signature", fieldSignature).addDetail("Actual Signature", accessorSignature).exception();
@@ -162,9 +147,35 @@ public class AccessorTransformer extends BaseClassTransformer {
 			this.markModified();
 		}
 		
+		//region Helper methods
+		private @NotNull String getAccessorName(@NotNull Method ifaceMethod) {
+			Annotation annotation = ifaceMethod.getAnnotation(ACCESSOR);
+			String target = annotation.get("target");
+			if (target != null) {
+				return target;
+			}
+			String methodName = ifaceMethod.getName();
+			if (methodName.startsWith("get")) {
+				return Utils.uncapitalize(methodName.substring(3));
+			} else if (methodName.startsWith("access")) {
+				return Utils.uncapitalize(methodName.substring(6));
+			}
+			return methodName;
+		}
+		
+		private @NotNull String getReturnTypeSignature(@NotNull Method method) {
+			String signature = method.getGenericSignature();
+			if (signature == null || signature.isEmpty()) {
+				return "";
+			}
+			int index = signature.indexOf(')');
+			return signature.substring(index + 1);
+		}
+		
 		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target) {
 			Class data = AgentContext.get().getClass(target);
 			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.of(TypeModifier.ABSTRACT)).build());
 		}
+		//endregion
 	}
 }

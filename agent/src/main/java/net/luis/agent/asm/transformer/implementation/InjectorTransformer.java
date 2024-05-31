@@ -90,27 +90,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		@SuppressWarnings("DuplicatedCode")
-		private @NotNull String getInjectorName(@NotNull Method ifaceMethod) {
-			Annotation annotation = ifaceMethod.getAnnotation(INJECTOR);
-			String target = annotation.get("method");
-			if (target != null) {
-				return target;
-			}
-			String methodName = ifaceMethod.getName();
-			if (methodName.startsWith("inject")) {
-				return Utils.uncapitalize(methodName.substring(6));
-			}
-			return methodName;
-		}
-		
-		private @NotNull String getRawInjectorName(@NotNull String invokerTarget) {
-			if (invokerTarget.contains("(")) {
-				return invokerTarget.substring(0, invokerTarget.indexOf('('));
-			}
-			return invokerTarget;
-		}
-		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSourceSignature();
 			//region Base validation
@@ -199,6 +178,29 @@ public class InjectorTransformer extends BaseClassTransformer {
 			}
 			return visitor;
 		}
+		
+		//region Helper methods
+		@SuppressWarnings("DuplicatedCode")
+		private @NotNull String getInjectorName(@NotNull Method ifaceMethod) {
+			Annotation annotation = ifaceMethod.getAnnotation(INJECTOR);
+			String target = annotation.get("method");
+			if (target != null) {
+				return target;
+			}
+			String methodName = ifaceMethod.getName();
+			if (methodName.startsWith("inject")) {
+				return Utils.uncapitalize(methodName.substring(6));
+			}
+			return methodName;
+		}
+		
+		private @NotNull String getRawInjectorName(@NotNull String invokerTarget) {
+			if (invokerTarget.contains("(")) {
+				return invokerTarget.substring(0, invokerTarget.indexOf('('));
+			}
+			return invokerTarget;
+		}
+		//endregion
 	}
 	
 	private static class InjectorMethodVisitor extends MethodVisitor {

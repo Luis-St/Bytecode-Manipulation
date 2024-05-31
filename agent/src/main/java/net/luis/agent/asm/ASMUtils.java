@@ -42,57 +42,6 @@ public class ASMUtils {
 		return lookup;
 	}
 	
-	public static @NotNull String getReturnTypeSignature(@NotNull Method method) {
-		String signature = method.getGenericSignature();
-		if (signature == null || signature.isEmpty()) {
-			return "";
-		}
-		int index = signature.indexOf(')');
-		return signature.substring(index + 1);
-	}
-	
-	public static @NotNull String getParameterTypesSignature(@NotNull Method method) {
-		String signature = method.getGenericSignature();
-		if (signature == null || signature.isEmpty()) {
-			return "";
-		}
-		int start = signature.indexOf('(');
-		int end = signature.indexOf(')');
-		return signature.substring(start + 1, end);
-	}
-	
-	public static @NotNull String getSimpleName(@NotNull Type type) {
-		String name = type.getClassName();
-		int index = name.lastIndexOf('.');
-		return index == -1 ? name : name.substring(index + 1);
-	}
-	
-	public static boolean isPrimitive(@NotNull Type type) {
-		return type.getSort() >= Type.BOOLEAN && type.getSort() <= Type.DOUBLE;
-	}
-	
-	public static boolean isSameType(@NotNull Type type, @NotNull String str) {
-		boolean array = type.getSort() == Type.ARRAY;
-		if (array) {
-			String strElement = str;
-			if (str.contains("[")) {
-				strElement = str.substring(0, str.indexOf('['));
-			}
-			if (!isSameType(type.getElementType(), strElement)) {
-				return false;
-			}
-			return type.getDimensions() == (str.length() - strElement.length()) / 2;
-		} else if (str.contains("/")) {
-			return type.getDescriptor().equalsIgnoreCase(str) || type.getInternalName().equalsIgnoreCase(str);
-		} else if (str.contains(".")) {
-			return type.getClassName().equals(str);
-		} else if (isPrimitive(type) && str.length() == 1) {
-			return type.getDescriptor().equalsIgnoreCase(str);
-		} else {
-			return getSimpleName(type).equals(str);
-		}
-	}
-	
 	public static @NotNull List<Method> getBySignature(@NotNull String signature, @NotNull Class data) {
 		List<Method> methods = new ArrayList<>();
 		boolean specific = signature.contains("(") && signature.contains(")");
@@ -118,7 +67,7 @@ public class ASMUtils {
 					break;
 				}
 				String str = parameters.get(index);
-				possible = isSameType(type, str);
+				possible = Types.isSameType(type, str);
 			}
 			if (possible && method.getParameterCount() == parameters.size()) {
 				methods.add(method);
@@ -132,7 +81,7 @@ public class ASMUtils {
 		boolean specifiesParameters = target.contains("(") && target.contains(")");
 		
 		String targetOwner = specifiesOwner ? target.substring(0, target.indexOf('#')).strip() : "";
-		if (!targetOwner.isEmpty() && !isSameType(owner, targetOwner)) {
+		if (!targetOwner.isEmpty() && !Types.isSameType(owner, targetOwner)) {
 			return false;
 		}
 		
@@ -156,7 +105,7 @@ public class ASMUtils {
 					return false;
 				}
 				for (int i = 0; i < methodParameters.length; i++) {
-					if (!isSameType(methodParameters[i], targetParameters.get(i))) {
+					if (!Types.isSameType(methodParameters[i], targetParameters.get(i))) {
 						return false;
 					}
 				}
@@ -165,9 +114,10 @@ public class ASMUtils {
 		
 		boolean specifiesReturnType = specifiesParameters && !target.endsWith(")");
 		String targetReturnType = specifiesReturnType ? target.substring(target.indexOf(')') + 1).strip() : "";
-		return targetReturnType.isEmpty() || isSameType(descriptor.getReturnType(), targetReturnType);
+		return targetReturnType.isEmpty() || Types.isSameType(descriptor.getReturnType(), targetReturnType);
 	}
 	
+	//region Helper methods
 	private static @Nullable Type tryParseMethodType(@NotNull String type) {
 		try {
 			Type methodType = Type.getMethodType(type);
@@ -188,4 +138,5 @@ public class ASMUtils {
 		}
 		return target;
 	}
+	//endregion
 }

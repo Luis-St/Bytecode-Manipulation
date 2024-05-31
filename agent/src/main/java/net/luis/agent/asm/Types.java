@@ -77,4 +77,32 @@ public class Types {
 		int index = Utils.indexOf(PRIMITIVES, primitive);
 		return index != -1 ? WRAPPERS[index] : primitive;
 	}
+	
+	public static @NotNull String getSimpleName(@NotNull Type type) {
+		String name = type.getClassName();
+		int index = name.lastIndexOf('.');
+		return index == -1 ? name : name.substring(index + 1);
+	}
+	
+	public static boolean isSameType(@NotNull Type type, @NotNull String str) {
+		boolean array = type.getSort() == Type.ARRAY;
+		if (array) {
+			String strElement = str;
+			if (str.contains("[")) {
+				strElement = str.substring(0, str.indexOf('['));
+			}
+			if (!isSameType(type.getElementType(), strElement)) {
+				return false;
+			}
+			return type.getDimensions() == (str.length() - strElement.length()) / 2;
+		} else if (str.contains("/")) {
+			return type.getDescriptor().equalsIgnoreCase(str) || type.getInternalName().equalsIgnoreCase(str);
+		} else if (str.contains(".")) {
+			return type.getClassName().equals(str);
+		} else if (Utils.indexOf(PRIMITIVES, type) != -1 && str.length() == 1) {
+			return type.getDescriptor().equalsIgnoreCase(str);
+		} else {
+			return getSimpleName(type).equals(str);
+		}
+	}
 }

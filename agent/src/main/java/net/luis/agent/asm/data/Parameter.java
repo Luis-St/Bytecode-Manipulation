@@ -1,6 +1,7 @@
 package net.luis.agent.asm.data;
 
 import net.luis.agent.asm.ASMUtils;
+import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.TypeAccess;
 import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.Utils;
@@ -108,7 +109,7 @@ public class Parameter implements ASMData {
 		if (this.isNamed()) {
 			return Utils.capitalize(Utils.getSeparated(this.name));
 		}
-		return Utils.capitalize(Utils.getSeparated(ASMUtils.getSimpleName(this.type))) + " (parameter #" + this.index + ")";
+		return Utils.capitalize(Utils.getSeparated(Types.getSimpleName(this.type))) + " (parameter #" + this.index + ")";
 	}
 	//endregion
 	

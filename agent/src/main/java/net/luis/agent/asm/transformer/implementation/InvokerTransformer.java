@@ -74,26 +74,6 @@ public class InvokerTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private @NotNull String getInvokerName(@NotNull Method ifaceMethod) {
-			Annotation annotation = ifaceMethod.getAnnotation(INVOKER);
-			String target = annotation.get("target");
-			if (target != null) {
-				return target;
-			}
-			String methodName = ifaceMethod.getName();
-			if (methodName.startsWith("invoke")) {
-				return Utils.uncapitalize(methodName.substring(6));
-			}
-			return methodName;
-		}
-		
-		private @NotNull String getRawInvokerName(@NotNull String invokerTarget) {
-			if (invokerTarget.contains("(")) {
-				return invokerTarget.substring(0, invokerTarget.indexOf('('));
-			}
-			return invokerTarget;
-		}
-		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSourceSignature();
 			//region Base validation
@@ -165,9 +145,31 @@ public class InvokerTransformer extends BaseClassTransformer {
 			this.markModified();
 		}
 		
+		//region Helper methods
+		private @NotNull String getInvokerName(@NotNull Method ifaceMethod) {
+			Annotation annotation = ifaceMethod.getAnnotation(INVOKER);
+			String target = annotation.get("target");
+			if (target != null) {
+				return target;
+			}
+			String methodName = ifaceMethod.getName();
+			if (methodName.startsWith("invoke")) {
+				return Utils.uncapitalize(methodName.substring(6));
+			}
+			return methodName;
+		}
+		
+		private @NotNull String getRawInvokerName(@NotNull String invokerTarget) {
+			if (invokerTarget.contains("(")) {
+				return invokerTarget.substring(0, invokerTarget.indexOf('('));
+			}
+			return invokerTarget;
+		}
+		
 		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target) {
 			Class data = AgentContext.get().getClass(target);
 			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
 		}
+		//endregion
 	}
 }

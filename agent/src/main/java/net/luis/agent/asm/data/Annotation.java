@@ -2,6 +2,7 @@ package net.luis.agent.asm.data;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;
+import net.luis.agent.asm.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -105,7 +106,7 @@ public class Annotation {
 	
 	@Override
 	public String toString() {
-		return "@" + ASMUtils.getSimpleName(this.type);
+		return "@" + this.type.getClassName();
 	}
 	//endregion
 	

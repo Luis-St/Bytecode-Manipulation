@@ -128,7 +128,7 @@ public class Method implements ASMData {
 		return this.parameters.get(index);
 	}
 	
-	public @NotNull LocalVariable getLocal(int index) {
+	public @Nullable LocalVariable getLocal(int index) {
 		return this.locals.get(index);
 	}
 	
