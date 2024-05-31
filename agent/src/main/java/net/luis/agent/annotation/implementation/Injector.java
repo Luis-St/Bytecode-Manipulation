@@ -17,4 +17,6 @@ public @interface Injector {
 	@NotNull String method() default "";
 	
 	@NotNull net.luis.agent.annotation.util.Target target();
+	
+	boolean restricted() default true;
 }

@@ -18,7 +18,7 @@ import java.util.List;
 public interface IInjectorTest {
 	
 	//region HEAD
-	@Injector(method = "test(int)", target = @Target(type = TargetType.HEAD))
+	@Injector(method = "test(int)", target = @Target(type = TargetType.HEAD), restricted = false)
 	static void injectHead(@Local int index) {
 		System.out.println("Head");
 	}

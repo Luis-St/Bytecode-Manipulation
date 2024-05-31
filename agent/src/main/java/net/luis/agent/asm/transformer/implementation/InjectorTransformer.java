@@ -90,6 +90,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 			}
 		}
 		
+		@SuppressWarnings("DuplicatedCode")
 		private @NotNull String getInjectorName(@NotNull Method ifaceMethod) {
 			Annotation annotation = ifaceMethod.getAnnotation(INJECTOR);
 			String target = annotation.get("method");
