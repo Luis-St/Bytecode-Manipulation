@@ -40,6 +40,9 @@ public class Types {
 	
 	public static final Type VOID_METHOD = Type.getType("()V");
 	
+	public static final Type RUNTIME_EXCEPTION = Type.getType(RuntimeException.class);
+	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType(IllegalArgumentException.class);
+	
 	public static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
 	public static final Type IMPLEMENTED = Type.getType(Implemented.class);
@@ -52,10 +55,6 @@ public class Types {
 	public static final Type THIS = Type.getType(This.class);
 	public static final Type LOCAL = Type.getType(Local.class);
 	
-	public static final Type DEFAULT = Type.getType(Default.class);
-	public static final Type NOT_NULL = Type.getType(NotNull.class);
-	public static final Type PATTERN = Type.getType(Pattern.class);
-	
 	public static final Type ABOVE = Type.getType(Above.class);
 	public static final Type ABOVE_EQUAL = Type.getType(AboveEqual.class);
 	public static final Type BELOW = Type.getType(Below.class);
@@ -64,6 +63,10 @@ public class Types {
 	public static final Type ASYNC = Type.getType(Async.class);
 	public static final Type SCHEDULED = Type.getType(Scheduled.class);
 	public static final Type CAUGHT = Type.getType(Caught.class);
+	public static final Type DEFAULT = Type.getType(Default.class);
+	public static final Type NOT_NULL = Type.getType(NotNull.class);
+	public static final Type PATTERN = Type.getType(Pattern.class);
+	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
 	
 	public static @NotNull Type convertToPrimitive(@NotNull Type wrapper) {
 		int index = Utils.indexOf(WRAPPERS, wrapper);

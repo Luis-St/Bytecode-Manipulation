@@ -74,8 +74,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		public void visitCode() {
 			this.mv.visitCode();
 			for (Parameter parameter : this.lookup) {
-				this.visitVarInsn(Opcodes.ALOAD, parameter.getLoadIndex());
-				instrumentNonNullCheck(this.mv, this.getMessage(parameter));
+				instrumentNonNullCheck(this.mv, parameter.getLoadIndex(), this.getMessage(parameter));
 				this.mv.visitInsn(Opcodes.POP);
 			}
 		}
@@ -84,7 +83,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.method.isAnnotatedWith(NOT_NULL)) {
 				this.validateMethod();
-				instrumentNonNullCheck(this.mv, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " must not return null");
+				instrumentNonNullCheck(this.mv, -1, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " must not return null");
 				this.mv.visitTypeInsn(Opcodes.CHECKCAST, this.method.getReturnType().getInternalName());
 			}
 			this.mv.visitInsn(opcode);

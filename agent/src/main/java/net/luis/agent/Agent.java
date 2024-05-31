@@ -29,5 +29,6 @@ public class Agent {
 		inst.addTransformer(new NotNullTransformer());
 		inst.addTransformer(new DefaultTransformer());
 		inst.addTransformer(new RangeTransformer());
+		inst.addTransformer(new RestrictedAccessTransformer());
 	}
 }

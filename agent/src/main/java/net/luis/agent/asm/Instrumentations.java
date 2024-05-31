@@ -256,8 +256,8 @@ public class Instrumentations {
 			visitor.visitVarInsn(Opcodes.ALOAD, index);
 			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), true);
 		} else if (method.is(TypeModifier.STATIC)) {
-			Class data = AgentContext.get().getClassData(method.getOwner());
-			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), data.is(ClassType.INTERFACE));
+			Class clazz = AgentContext.get().getClassData(method.getOwner());
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), clazz.is(ClassType.INTERFACE));
 		} else {
 			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), false);
 		}
@@ -288,9 +288,18 @@ public class Instrumentations {
 		visitor.visitJumpInsn(Opcodes.IFNE, end);
 	}
 	
-	public static void instrumentNonNullCheck(@NotNull MethodVisitor visitor, @NotNull String message) {
+	public static void instrumentNonNullCheck(@NotNull MethodVisitor visitor, int index, @NotNull String message) {
+		if (index != -1) {
+			visitor.visitVarInsn(Opcodes.ALOAD, index);
+		}
 		visitor.visitLdcInsn(message);
 		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/Objects", "requireNonNull", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
+	}
+	
+	public static void instrumentEqualsIgnoreCase(@NotNull MethodVisitor visitor, int first, int second) {
+		visitor.visitVarInsn(Opcodes.ALOAD, first);
+		visitor.visitVarInsn(Opcodes.ALOAD, second);
+		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "equalsIgnoreCase", "(Ljava/lang/String;)Z", false);
 	}
 	
 	public static void instrumentFactoryCall(@NotNull MethodVisitor visitor, @NotNull Type factory, @NotNull Type target, @NotNull String value) {

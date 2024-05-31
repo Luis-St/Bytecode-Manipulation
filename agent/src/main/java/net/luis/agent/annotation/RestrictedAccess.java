@@ -1,4 +1,4 @@
-package net.luis.agent.annotation.unused;
+package net.luis.agent.annotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -14,5 +14,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.CLASS)
 public @interface RestrictedAccess {
 	
-	@NotNull Class<?>[] value();
+	@NotNull String[] value();
+	
+	boolean pattern() default false;
 }

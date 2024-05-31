@@ -26,8 +26,7 @@ public final class Main {
 	
 	/*
 	 * ToDo:
-	 *  - Update Data classes
-	 *  - Add support for @Pattern annotation on other annotations
+	 *  - Add support for @Pattern annotation on other annotations -> Use Pattern#matches instead of compile & matcher
 	 *  - Add transformers for unused annotations
 	 *  - Allow parameters in method with @Scheduled annotation (int -> for current cycle, ScheduleFuture -> for canceling)
 	 */
@@ -60,6 +59,7 @@ public final class Main {
 		}
 	}
 	
+	@RestrictedAccess("Main#main")
 	public static void execute(@Pattern("^[a-z]*$") String command, @Default("[]") @NotNull String[] args, @Default List<String> values) {
 		System.out.println("Command: " + command);
 		System.out.println("Args: " + Arrays.toString(args));
