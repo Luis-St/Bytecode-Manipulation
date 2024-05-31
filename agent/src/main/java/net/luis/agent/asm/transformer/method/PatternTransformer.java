@@ -31,8 +31,8 @@ public class PatternTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class data = AgentContext.get().getClassData(type);
-		return data.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) && data.getMethods().values().stream().noneMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
+		Class clazz = AgentContext.get().getClassData(type);
+		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) && clazz.getMethods().values().stream().noneMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
 	}
 	//endregion
 	
@@ -49,7 +49,6 @@ public class PatternTransformer extends BaseClassTransformer {
 	
 	private static class PatternVisitor extends MethodVisitor {
 		
-		private static final Type ILL_ARG = Type.getType(IllegalArgumentException.class);
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
@@ -69,7 +68,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				String value = Objects.requireNonNull(parameter.getAnnotation(PATTERN).get("value"));
 				
 				instrumentPatternCheck(this.mv, value, parameter.getLoadIndex(), label);
-				instrumentThrownException(this.mv, ILL_ARG, parameter.getMessageName() + " must match pattern '" + value + "'");
+				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, parameter.getMessageName() + " must match pattern '" + value + "'");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
@@ -88,7 +87,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
 				
 				instrumentPatternCheck(this.mv, value, local, end);
-				instrumentThrownException(this.mv, ILL_ARG, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must match pattern '" + value + "'");
+				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must match pattern '" + value + "'");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.mv.visitLabel(end);

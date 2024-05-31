@@ -30,8 +30,8 @@ public class CaughtTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class data = AgentContext.get().getClassData(type);
-		return data.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
+		Class clazz = AgentContext.get().getClassData(type);
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
 	}
 	//endregion
 	
@@ -54,7 +54,6 @@ public class CaughtTransformer extends BaseClassTransformer {
 	private static class CaughtVisitor extends MethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
-		private static final Type RUN_EX = Type.getType(RuntimeException.class);
 		
 		private final Label start = new Label();
 		private final Label end = new Label();
@@ -95,7 +94,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 			if (this.action == CaughtAction.NOTHING) {
 				this.mv.visitInsn(Opcodes.RETURN);
 			} else if (this.action == CaughtAction.THROW) {
-				instrumentThrownException(this.mv, RUN_EX, local);
+				instrumentThrownException(this.mv, RUNTIME_EXCEPTION, local);
 			} else if (this.action == CaughtAction.DEFAULT) {
 				instrumentFactoryCall(this.mv, Type.getType(DefaultStringFactory.class), this.returnType, "");
 				this.mv.visitInsn(this.returnType.getOpcode(Opcodes.IRETURN));

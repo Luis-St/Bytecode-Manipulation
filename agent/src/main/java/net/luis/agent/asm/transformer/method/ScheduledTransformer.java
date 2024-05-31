@@ -32,8 +32,8 @@ public class ScheduledTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class data = AgentContext.get().getClassData(type);
-		return data.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(SCHEDULED));
+		Class clazz = AgentContext.get().getClassData(type);
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(SCHEDULED));
 	}
 	//endregion
 	
@@ -100,7 +100,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
-		public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
+		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			if ("<clinit>".equals(name)) {
 				this.initialized = true;

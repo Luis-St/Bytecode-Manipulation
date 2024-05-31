@@ -33,8 +33,8 @@ public class DefaultTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class data = AgentContext.get().getClassData(type);
-		return data.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
+		Class clazz = AgentContext.get().getClassData(type);
+		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
 	}
 	//endregion
 	

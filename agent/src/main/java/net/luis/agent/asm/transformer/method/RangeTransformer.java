@@ -34,8 +34,8 @@ public class RangeTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class data = AgentContext.get().getClassData(type);
-		return data.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS)) && data.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS));
+		Class clazz = AgentContext.get().getClassData(type);
+		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS)) && clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS));
 	}
 	//endregion
 	
@@ -54,7 +54,6 @@ public class RangeTransformer extends BaseClassTransformer {
 		
 		private static final String INVALID_CATEGORY = "Invalid Annotated Element";
 		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";
-		private static final Type ILL_ARG = Type.getType(IllegalArgumentException.class);
 		
 		private final List<Parameter> lookup = new ArrayList<>();
 		private final Method method;
@@ -172,7 +171,7 @@ public class RangeTransformer extends BaseClassTransformer {
 			}
 			this.mv.visitInsn(Opcodes.DCMPL);
 			this.mv.visitJumpInsn(compare, label);
-			instrumentThrownException(this.mv, ILL_ARG, message + " " + value);
+			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, message + " " + value);
 			this.mv.visitJumpInsn(Opcodes.GOTO, label);
 			this.mv.visitLabel(label);
 		}

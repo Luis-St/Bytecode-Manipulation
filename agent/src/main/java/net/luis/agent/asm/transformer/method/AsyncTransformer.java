@@ -8,6 +8,7 @@ import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.MethodType;
 import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -33,8 +34,8 @@ public class AsyncTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class data = AgentContext.get().getClassData(type);
-		return data.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
+		Class clazz = AgentContext.get().getClassData(type);
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
 	}
 	//endregion
 	
@@ -76,7 +77,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 			}
 			//endregion
 			access = access & ~method.getAccess().getOpcode();
-			String newName = "generated$" + name + "$async";
+			String newName = "generated$" + Utils.capitalize(name) + "$Async";
 			this.methods.put(method, newName);
 			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC, newName, descriptor, signature, exceptions);
 			return new MethodVisitor(Opcodes.ASM9, visitor) {

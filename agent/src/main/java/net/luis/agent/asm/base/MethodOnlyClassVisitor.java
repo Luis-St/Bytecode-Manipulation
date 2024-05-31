@@ -35,8 +35,8 @@ public class MethodOnlyClassVisitor extends ContextBasedClassVisitor {
 	
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-		Class data = AgentContext.get().getClassData(this.type);
-		Method method = data.getMethod(name + descriptor);
+		Class clazz = AgentContext.get().getClassData(this.type);
+		Method method = clazz.getMethod(name + descriptor);
 		MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 		if (method == null) {
 			return visitor;
