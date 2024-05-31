@@ -27,12 +27,24 @@ public class AgentContext {
 		return INSTANCE;
 	}
 	
+	public void initialize() {
+		long start = System.currentTimeMillis();
+		this.classes.forEach(type -> this.cache.put(type, ClassFileScanner.scanClass(type)));
+		System.out.println("Initialized context with " + this.classes.size() + " classes in " + (System.currentTimeMillis() - start) + "ms");
+	}
+	
 	public @NotNull List<Type> getClasses() {
 		return this.classes;
 	}
 	
 	public @NotNull Class getClass(@NotNull Type type) {
-		return this.cache.computeIfAbsent(type, ClassFileScanner::scanClass);
+		Class clazz = ClassFileScanner.scanClass(type);
+		if (this.cache.containsKey(type)) {
+			return this.cache.get(type);
+		} else {
+			this.cache.put(type, clazz);
+			return clazz;
+		}
 	}
 	
 	public @NotNull Stream<Class> stream() {

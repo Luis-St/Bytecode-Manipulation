@@ -16,6 +16,8 @@ public class Agent {
 	
 	public static void premain(@NotNull String agentArgs, @NotNull Instrumentation inst) {
 		System.out.println("Agent loaded");
+		AgentContext.get().initialize();
+		inst.addTransformer(new ImplementationSelfTransformer());
 		inst.addTransformer(new InterfaceInjectionTransformer());
 		inst.addTransformer(new ImplementedTransformer());
 		inst.addTransformer(new AccessorTransformer());
