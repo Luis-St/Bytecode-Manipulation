@@ -2,8 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
-import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
+import net.luis.agent.asm.base.MethodOnlyClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -45,19 +44,19 @@ public class DefaultTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
-				return new DefaultVisitor(visitor, method, this::markModified);
+				return new DefaultVisitor(visitor, method);
 			}
 		};
 	}
 	
-	private static class DefaultVisitor extends ContextBasedMethodVisitor {
+	private static class DefaultVisitor extends MethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid String Factory";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
 		
-		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull Runnable markModified) {
-			super(visitor, method, markModified);
+		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
+			super(Opcodes.ASM9, visitor);
 			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(DEFAULT)).forEach(this.lookup::add);
 		}
 		
@@ -79,7 +78,6 @@ public class DefaultTransformer extends BaseClassTransformer {
 				this.visitVarInsn(Opcodes.ASTORE, parameter.getLoadIndex());
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.mv.visitLabel(label);
-				this.markModified();
 			}
 		}
 		

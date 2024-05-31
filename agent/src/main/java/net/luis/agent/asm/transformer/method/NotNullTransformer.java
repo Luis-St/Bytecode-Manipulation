@@ -2,8 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
-import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
+import net.luis.agent.asm.base.MethodOnlyClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -41,19 +40,21 @@ public class NotNullTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
-				return new NotNullVisitor(visitor, method, this::markModified);
+				return new NotNullVisitor(visitor, method);
 			}
 		};
 	}
 	
-	private static class NotNullVisitor extends ContextBasedMethodVisitor {
+	private static class NotNullVisitor extends MethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
+		private final Method method;
 		
-		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull Runnable markModified) {
-			super(visitor, method, markModified);
+		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
+			super(Opcodes.ASM9, visitor);
+			this.method = method;
 			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(NOT_NULL)).forEach(this.lookup::add);
 		}
 		
@@ -76,7 +77,6 @@ public class NotNullTransformer extends BaseClassTransformer {
 				this.visitVarInsn(Opcodes.ALOAD, parameter.getLoadIndex());
 				instrumentNonNullCheck(this.mv, this.getMessage(parameter));
 				this.mv.visitInsn(Opcodes.POP);
-				this.markModified();
 			}
 		}
 		
@@ -86,7 +86,6 @@ public class NotNullTransformer extends BaseClassTransformer {
 				this.validateMethod();
 				instrumentNonNullCheck(this.mv, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " must not return null");
 				this.mv.visitTypeInsn(Opcodes.CHECKCAST, this.method.getReturnType().getInternalName());
-				this.markModified();
 			}
 			this.mv.visitInsn(opcode);
 		}

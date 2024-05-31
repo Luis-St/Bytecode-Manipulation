@@ -3,7 +3,7 @@ package net.luis.agent.asm.transformer.implementation;
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
+import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -55,13 +55,12 @@ public class ImplementedTransformer extends BaseClassTransformer {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
 				AgentContext context = AgentContext.get();
-				Type target = Type.getObjectType(name);
-				Class targetClass = context.getClassData(target);
+				Class targetClass = context.getClassData(Type.getObjectType(name));
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
 					Class ifaceClass = context.getClassData(iface);
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(IMPLEMENTED)) {
-							this.validateMethod(iface, method, target, targetClass);
+							this.validateMethod(method, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
 								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
@@ -74,27 +73,27 @@ public class ImplementedTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		protected void validateMethod(@NotNull Type iface, @NotNull Method ifaceMethod, @NotNull Type target, @NotNull Class targetData) {
+		protected void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSourceSignature();
 			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
-				throw createReport("Method annotated with @Implemented must be public", iface, signature).exception();
+				throw createReport("Method annotated with @Implemented must be public", ifaceMethod.getOwner(), signature).exception();
 			}
 			if (ifaceMethod.is(TypeModifier.STATIC)) {
-				throw createReport("Method annotated with @Implemented must not be static", iface, signature).exception();
+				throw createReport("Method annotated with @Implemented must not be static", ifaceMethod.getOwner(), signature).exception();
 			}
 			if (!ifaceMethod.is(TypeModifier.ABSTRACT)) {
-				throw createReport("Method annotated with @Implemented must not be default implemented", iface, signature).exception();
+				throw createReport("Method annotated with @Implemented must not be default implemented", ifaceMethod.getOwner(), signature).exception();
 			}
 			//endregion
-			Method targetMethod = targetData.getMethod(ifaceMethod.getFullSignature());
+			Method targetMethod = targetClass.getMethod(ifaceMethod.getFullSignature());
 			if (targetMethod == null) {
-				throw createReport("Method annotated with @Implemented must be implemented in target class", iface, signature)
-					.addDetailBefore("Interface", "Target Class", target).exception();
+				throw createReport("Method annotated with @Implemented must be implemented in target class", ifaceMethod.getOwner(), signature)
+					.addDetailBefore("Interface", "Target Class", targetClass.getType()).exception();
 			}
 			if (!targetMethod.is(TypeAccess.PUBLIC)) {
-				throw createReport("Method annotated with @Implemented must be public in target class", iface, signature)
-					.addDetailBefore("Interface", "Target Class", target)
+				throw createReport("Method annotated with @Implemented must be public in target class", ifaceMethod.getOwner(), signature)
+					.addDetailBefore("Interface", "Target Class", targetClass.getType())
 					.addDetailBefore("Interface", "Target Method", targetMethod.getSourceSignature()).exception();
 			}
 		}

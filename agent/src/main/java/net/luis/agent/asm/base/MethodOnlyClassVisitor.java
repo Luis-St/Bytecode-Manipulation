@@ -1,4 +1,4 @@
-package net.luis.agent.asm.base.visitor;
+package net.luis.agent.asm.base;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.data.Class;
@@ -43,6 +43,7 @@ public class MethodOnlyClassVisitor extends ContextBasedClassVisitor {
 		}
 		if (this.isMethodValid(method)) {
 			LocalVariablesSorter sorter = new LocalVariablesSorter(access, descriptor, visitor);
+			this.markModified();
 			return this.createMethodVisitor(sorter, method);
 		}
 		return visitor;

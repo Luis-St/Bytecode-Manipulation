@@ -3,7 +3,7 @@ package net.luis.agent.asm.transformer.implementation;
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
+import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.ClassType;
 import net.luis.agent.util.Utils;
@@ -24,6 +24,8 @@ import static net.luis.agent.asm.Types.*;
 
 public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
+	private static final String REPORT_CATEGORY = "Interface Injection Error";
+	
 	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
@@ -37,7 +39,6 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	@SuppressWarnings("UnqualifiedFieldAccess")
 	public @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new ContextBasedClassVisitor(writer, type, () -> this.modified = true) {
-			private static final String REPORT_CATEGORY = "Interface Injection Error";
 			
 			@Override
 			public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {

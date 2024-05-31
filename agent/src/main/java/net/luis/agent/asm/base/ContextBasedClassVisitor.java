@@ -1,4 +1,4 @@
-package net.luis.agent.asm.base.visitor;
+package net.luis.agent.asm.base;
 
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;

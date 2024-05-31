@@ -2,8 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
-import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
+import net.luis.agent.asm.base.MethodOnlyClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -47,12 +46,12 @@ public class CaughtTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
-				return new CaughtVisitor(visitor, method, this::markModified);
+				return new CaughtVisitor(visitor, method);
 			}
 		};
 	}
 	
-	private static class CaughtVisitor extends ContextBasedMethodVisitor {
+	private static class CaughtVisitor extends MethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		private static final Type RUN_EX = Type.getType(RuntimeException.class);
@@ -62,12 +61,14 @@ public class CaughtTransformer extends BaseClassTransformer {
 		private final Label handler = new Label();
 		private final CaughtAction action;
 		private final Type exceptionType;
+		private final Type returnType;
 		
-		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull Runnable markModified) {
-			super(visitor, method, markModified);
+		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
+			super(Opcodes.ASM9, visitor);
 			Annotation annotation = method.getAnnotation(CAUGHT);
 			this.action = CaughtAction.valueOf(annotation.getOrDefault("value"));
 			this.exceptionType = annotation.getOrDefault("exceptionType");
+			this.returnType = method.getReturnType();
 			if (this.action == CaughtAction.NOTHING && !method.returns(VOID)) {
 				throw CrashReport.create("Method annotated with @Caught(NOTHING) must return void", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).exception();
 			}
@@ -88,7 +89,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 			this.mv.visitLabel(this.end);
 			this.mv.visitJumpInsn(Opcodes.GOTO, this.handler);
 			this.mv.visitLabel(this.handler);
-			int local = this.newLocal(this.exceptionType);
+			int local = newLocal(this.mv, this.exceptionType);
 			this.mv.visitVarInsn(Opcodes.ASTORE, local);
 			
 			if (this.action == CaughtAction.NOTHING) {
@@ -96,17 +97,14 @@ public class CaughtTransformer extends BaseClassTransformer {
 			} else if (this.action == CaughtAction.THROW) {
 				instrumentThrownException(this.mv, RUN_EX, local);
 			} else if (this.action == CaughtAction.DEFAULT) {
-				Type type = this.method.getReturnType();
-				instrumentFactoryCall(this.mv, Type.getType(DefaultStringFactory.class), type, "");
-				this.mv.visitInsn(type.getOpcode(Opcodes.IRETURN));
+				instrumentFactoryCall(this.mv, Type.getType(DefaultStringFactory.class), this.returnType, "");
+				this.mv.visitInsn(this.returnType.getOpcode(Opcodes.IRETURN));
 			} else {
-				Type type = this.method.getReturnType();
-				loadDefaultConst(this.mv, type);
-				this.mv.visitInsn(type.getOpcode(Opcodes.IRETURN));
+				loadDefaultConst(this.mv, this.returnType);
+				this.mv.visitInsn(this.returnType.getOpcode(Opcodes.IRETURN));
 			}
 			this.mv.visitMaxs(0, 0);
 			this.mv.visitEnd();
-			this.markModified();
 		}
 	}
 }

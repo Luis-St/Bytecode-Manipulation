@@ -2,8 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
-import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
+import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -80,7 +79,24 @@ public class AsyncTransformer extends BaseClassTransformer {
 			String newName = "generated$" + name + "$async";
 			this.methods.put(method, newName);
 			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC, newName, descriptor, signature, exceptions);
-			return new ContextBasedMethodVisitor(visitor, method, this::markModified).skipAnnotation();
+			return new MethodVisitor(Opcodes.ASM9, visitor) {
+				//region Implementation
+				@Override
+				public @Nullable AnnotationVisitor visitAnnotation(@NotNull String annotationDescriptor, boolean visible) {
+					return null;
+				}
+				
+				@Override
+				public @Nullable AnnotationVisitor visitParameterAnnotation(int parameter, @NotNull String annotationDescriptor, boolean visible) {
+					return null;
+				}
+				
+				@Override
+				public @Nullable AnnotationVisitor visitTypeAnnotation(int typeRef, @Nullable TypePath typePath, @NotNull String annotationDescriptor, boolean visible) {
+					return null;
+				}
+				//endregion
+			};
 		}
 		
 		@Override

@@ -2,8 +2,7 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
-import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
+import net.luis.agent.asm.base.MethodOnlyClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -46,21 +45,23 @@ public class RangeTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
-				return new RangeVisitor(visitor, method, this::markModified);
+				return new RangeVisitor(visitor, method);
 			}
 		};
 	}
 	
-	private static class RangeVisitor extends ContextBasedMethodVisitor {
+	private static class RangeVisitor extends MethodVisitor {
 		
 		private static final String INVALID_CATEGORY = "Invalid Annotated Element";
 		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";
 		private static final Type ILL_ARG = Type.getType(IllegalArgumentException.class);
 		
 		private final List<Parameter> lookup = new ArrayList<>();
+		private final Method method;
 		
-		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull Runnable markedModified) {
-			super(visitor, method, markedModified);
+		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
+			super(Opcodes.ASM9, visitor);
+			this.method = method;
 			//region Parameter validation
 			for (Parameter parameter : method.getParameters().values()) {
 				if (parameter.isAnnotatedWithAny(ANNOS)) {
@@ -120,7 +121,6 @@ public class RangeTransformer extends BaseClassTransformer {
 				if (parameter.isAnnotatedWith(BELOW_EQUAL)) {
 					this.instrument(parameter.getAnnotation(BELOW_EQUAL), parameter.getType(), index, false, Opcodes.IFGE, message + "below or equal to");
 				}
-				this.markModified();
 			}
 		}
 		
@@ -130,7 +130,7 @@ public class RangeTransformer extends BaseClassTransformer {
 				Label start = new Label();
 				Label end = new Label();
 				Type type = this.method.getReturnType();
-				int local = this.newLocal(type);
+				int local = newLocal(this.mv, type);
 				String message = "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must be ";
 				this.mv.visitLabel(start);
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
@@ -152,7 +152,6 @@ public class RangeTransformer extends BaseClassTransformer {
 				this.mv.visitLabel(end);
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), local);
 				this.mv.visitLocalVariable("generated$RangeTransformer$Temp" + local, type.getDescriptor(), null, start, end, local);
-				this.markModified();
 			}
 			this.mv.visitInsn(opcode);
 		}
