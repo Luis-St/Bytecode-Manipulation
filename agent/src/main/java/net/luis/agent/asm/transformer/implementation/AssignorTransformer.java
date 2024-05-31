@@ -7,6 +7,7 @@ import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.data.Class;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
 import net.luis.agent.util.Utils;
@@ -20,7 +21,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class AssignorTransformer extends BaseClassTransformer {
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(AgentContext.get(), INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override
@@ -30,7 +31,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 	//endregion
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new AssignorVisitor(writer, type, () -> this.modified = true, this.lookup);
 	}
 	
@@ -57,17 +58,17 @@ public class AssignorTransformer extends BaseClassTransformer {
 			if (this.lookup.containsKey(name)) {
 				AgentContext context = AgentContext.get();
 				Type target = Type.getObjectType(name);
-				ClassData targetData = context.getClassData(target);
+				Class targetClass = context.getClassData(target);
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassData ifaceData = context.getClassData(iface);
-					for (MethodData method : ifaceData.methods()) {
+					Class ifaceClass = context.getClassData(iface);
+					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(ASSIGNOR)) {
-							this.validateMethod(iface, method, target, targetData);
+							this.validateMethod(iface, method, target, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
-							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
 							}
 						}
 					}
@@ -75,13 +76,13 @@ public class AssignorTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private @NotNull String getAssignorName(@NotNull MethodData ifaceMethod) {
-			AnnotationData annotation = ifaceMethod.getAnnotation(ASSIGNOR);
+		private @NotNull String getAssignorName(@NotNull Method ifaceMethod) {
+			Annotation annotation = ifaceMethod.getAnnotation(ASSIGNOR);
 			String target = annotation.get("target");
 			if (target != null) {
 				return target;
 			}
-			String methodName = ifaceMethod.name();
+			String methodName = ifaceMethod.getName();
 			if (methodName.startsWith("set")) {
 				return Utils.uncapitalize(methodName.substring(3));
 			} else if (methodName.startsWith("assign")) {
@@ -90,10 +91,10 @@ public class AssignorTransformer extends BaseClassTransformer {
 			return methodName;
 		}
 		
-		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassData targetData) {
-			String signature = ifaceMethod.getMethodSignature();
+		private void validateMethod(@NotNull Type iface, @NotNull Method ifaceMethod, @NotNull Type target, @NotNull Class targetClass) {
+			String signature = ifaceMethod.getSourceSignature();
 			//region Base validation
-			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
+			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Assignor must be public", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature).exception();
 			}
 			if (ifaceMethod.is(TypeModifier.STATIC)) {
@@ -111,28 +112,28 @@ public class AssignorTransformer extends BaseClassTransformer {
 			}
 			if (ifaceMethod.getExceptionCount() > 0) {
 				throw CrashReport.create("Method annotated with @Assignor must not throw exceptions", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
-					.addDetail("Exceptions", ifaceMethod.exceptions()).exception();
+					.addDetail("Exceptions", ifaceMethod.getExceptions()).exception();
 			}
-			MethodData existingMethod = targetData.getMethod(ifaceMethod.name(), ifaceMethod.type());
+			Method existingMethod = targetClass.getMethod(ifaceMethod.getFullSignature());
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of assignor already has method with same signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
-					.addDetail("Existing Method", existingMethod.getMethodSignature()).exception();
+					.addDetail("Existing Method", existingMethod.getSourceSignature()).exception();
 			}
 			String accessorTarget = this.getAssignorName(ifaceMethod);
-			FieldData targetField = targetData.getField(accessorTarget);
+			Field targetField = targetClass.getField(accessorTarget);
 			if (targetField == null) {
 				throw CrashReport.create("Target field for assignor was not found in target class", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Expected Accessor Target", accessorTarget).exception();
 			}
-			if (targetField.access() == TypeAccess.PUBLIC && !targetField.is(TypeModifier.FINAL)) {
+			if (targetField.is(TypeAccess.PUBLIC) && !targetField.is(TypeModifier.FINAL)) {
 				throw CrashReport.create("Target field for assignor is public and not final, no assignor required", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
 					.addDetail("Accessor Target", accessorTarget).exception();
 			}
-			if (!targetField.is(ifaceMethod.getParameterType(0))) {
+			if (!targetField.is(ifaceMethod.getParameter(0).getType())) {
 				throw CrashReport.create("Assignor parameter type does not match target field type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Assignor", signature)
-					.addDetail("Accessor Target", accessorTarget).addDetail("Expected Type", targetField.type()).addDetail("Actual Type", ifaceMethod.getReturnType()).exception();
+					.addDetail("Accessor Target", accessorTarget).addDetail("Expected Type", targetField.getType()).addDetail("Actual Type", ifaceMethod.getReturnType()).exception();
 			}
-			String fieldSignature = targetField.signature();
+			String fieldSignature = targetField.getGenericSignature();
 			if (fieldSignature != null && !fieldSignature.isBlank()) {
 				String assignorSignature = ASMUtils.getParameterTypesSignature(ifaceMethod);
 				if (!Objects.equals(fieldSignature, assignorSignature)) {
@@ -144,11 +145,11 @@ public class AssignorTransformer extends BaseClassTransformer {
 		}
 		
 		@SuppressWarnings("DuplicatedCode")
-		private void generateAssignor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
+		private void generateAssignor(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Field targetField) {
 			if (targetField.is(TypeModifier.FINAL)) {
-				this.unfinal.add(targetField.name());
+				this.unfinal.add(targetField.getName());
 			}
-			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), ifaceMethod.getGenericSignature(), null);
 			Label start = new Label();
 			Label end = new Label();
 			Instrumentations.instrumentMethodAnnotations(visitor, ifaceMethod);
@@ -156,22 +157,22 @@ public class AssignorTransformer extends BaseClassTransformer {
 			visitor.visitCode();
 			visitor.visitLabel(start);
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);
-			visitor.visitVarInsn(ifaceMethod.parameters().getFirst().type().getOpcode(Opcodes.ILOAD), 1);
-			visitor.visitFieldInsn(Opcodes.PUTFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
+			visitor.visitVarInsn(ifaceMethod.getParameter(0).getType().getOpcode(Opcodes.ILOAD), 1);
+			visitor.visitFieldInsn(Opcodes.PUTFIELD, target.getInternalName(), targetField.getName(), targetField.getType().getDescriptor());
 			visitor.visitInsn(Opcodes.RETURN);
 			visitor.visitLabel(end);
-			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), start, end, 0);
-			visitor.visitLocalVariable("generated$AssignorTransformer$Temp" + 1, targetField.type().getDescriptor(), null, start, end, 1);
+			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.getGenericSignature(), start, end, 0);
+			visitor.visitLocalVariable("generated$AssignorTransformer$Temp" + 1, targetField.getType().getDescriptor(), null, start, end, 1);
 			visitor.visitMaxs(0, 0);
 			visitor.visitEnd();
 			this.updateClass(ifaceMethod, target, targetField);
 			this.markModified();
 		}
 		
-		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
-			ClassData data = AgentContext.get().getClassData(target);
-			data.methods().add(ifaceMethod.copy(EnumSet.noneOf(TypeModifier.class)));
-			targetField.modifiers().remove(TypeModifier.FINAL);
+		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Field targetField) {
+			Class data = AgentContext.get().getClassData(target);
+			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
+			targetField.getModifiers().remove(TypeModifier.FINAL);
 		}
 		
 		@Override

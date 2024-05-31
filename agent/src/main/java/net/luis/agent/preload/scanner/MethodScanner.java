@@ -16,27 +16,26 @@ import java.util.*;
 
 public class MethodScanner extends MethodVisitor {
 	
-	private final MethodData method;
+	private final Method method;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
-	private final Map<Integer, Map<Type, AnnotationData>> parameterAnnotations = new HashMap<>();
+	private final Map<Integer, Map<Type, Annotation>> parameterAnnotations = new HashMap<>();
 	private int parameterIndex;
 	
-	public MethodScanner(@NotNull MethodData method) {
+	public MethodScanner(@NotNull Method method) {
 		super(Opcodes.ASM9);
 		this.method = method;
 	}
 	
 	@Override
 	public AnnotationVisitor visitAnnotationDefault() {
-		return new AnnotationScanner((name, value) -> this.method.annotationDefault().accept(value));
+		return new AnnotationScanner((name, value) -> this.method.getAnnotationDefault().set(value));
 	}
 	
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
-		Map<String, Object> values = new HashMap<>();
-		Type type = Type.getType(descriptor);
-		this.method.annotations().put(type, new AnnotationData(type, visible, values));
-		return new AnnotationScanner(values::put);
+		Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
+		this.method.getAnnotations().put(annotation.getType(), annotation);
+		return new AnnotationScanner(annotation.getValues()::put);
 	}
 	
 	@Override
@@ -49,28 +48,27 @@ public class MethodScanner extends MethodVisitor {
 	
 	@Override
 	public @NotNull AnnotationVisitor visitParameterAnnotation(int parameter, @NotNull String descriptor, boolean visible) {
-		Map<String, Object> values = new HashMap<>();
-		Type type = Type.getType(descriptor);
-		this.parameterAnnotations.computeIfAbsent(parameter, p -> new HashMap<>()).put(type, new AnnotationData(type, visible, values));
-		return new AnnotationScanner(values::put);
+		Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
+		this.parameterAnnotations.computeIfAbsent(parameter, p -> new HashMap<>()).put(annotation.getType(), annotation);
+		return new AnnotationScanner(annotation.getValues()::put);
 	}
 	
 	@Override
-	public void visitLocalVariable(@NotNull String name, @NotNull String descriptor, @Nullable String signature, @NotNull Label start, @NotNull Label end, int index) {
+	public void visitLocalVariable(@NotNull String name, @NotNull String descriptor, @Nullable String genericSignature, @NotNull Label start, @NotNull Label end, int index) {
 		int offset = this.parameters.size() + (this.method.is(TypeModifier.STATIC) ? 0 : 1);
 		if (index < offset) {
 			return;
 		}
-		this.method.localVariables().put(index, new LocalVariableData(this.method, index, name, Type.getType(descriptor), signature));
+		this.method.getLocals().put(index, LocalVariable.builder(this.method, index, name, Type.getType(descriptor)).genericSignature(genericSignature).build());
 	}
 	
 	@Override
 	public void visitEnd() {
-		Type[] types = this.method.type().getArgumentTypes();
+		Type[] types = this.method.getType().getArgumentTypes();
 		for (int i = 0; i < types.length; i++) {
+			Parameter.Builder builder = Parameter.builder(this.method).index(i).type(types[i]).annotations(this.parameterAnnotations.getOrDefault(i, new HashMap<>()));
 			Map.Entry<String, Set<TypeModifier>> entry = this.parameters.getOrDefault(i, Map.entry("arg" + i, EnumSet.noneOf(TypeModifier.class)));
-			Map<Type, AnnotationData> annotations = this.parameterAnnotations.getOrDefault(i, new HashMap<>());
-			this.method.parameters().add(new ParameterData(this.method, entry.getKey(), types[i], i, entry.getValue(), annotations));
+			this.method.getParameters().put(i, builder.name(entry.getKey()).modifiers(entry.getValue()).build());
 		}
 	}
 }

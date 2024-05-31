@@ -58,7 +58,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		}
 		ClassReader reader = new ClassReader(buffer);
 		ClassWriter writer = new ClassWriter(reader, this.computeFrames ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
-		ClassVisitor visitor = this.visit(type, clazz, writer);
+		ClassVisitor visitor = this.visit(type, writer);
 		try {
 			reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 			byte[] bytes = writer.toByteArray();
@@ -86,5 +86,5 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 		return null;
 	}
 	
-	protected abstract @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer);
+	protected abstract @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer);
 }

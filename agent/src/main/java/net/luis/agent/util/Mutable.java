@@ -28,12 +28,16 @@ public class Mutable<T> implements Supplier<T>, Consumer<T> {
 	}
 	
 	@Override
-	public void accept(@Nullable T t) {
-		this.value = t;
+	public T get() {
+		return this.value;
+	}
+	
+	public void set(@Nullable T value) {
+		this.value = value;
 	}
 	
 	@Override
-	public T get() {
-		return this.value;
+	public void accept(@Nullable T t) {
+		this.value = t;
 	}
 }

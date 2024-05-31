@@ -7,6 +7,7 @@ import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.data.Class;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
 import net.luis.agent.util.Utils;
@@ -20,7 +21,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class AccessorTransformer extends BaseClassTransformer {
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(AgentContext.get(), INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override
@@ -30,7 +31,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 	//endregion
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new AccessorVisitor(writer, type, () -> this.modified = true, this.lookup);
 	}
 	
@@ -56,17 +57,17 @@ public class AccessorTransformer extends BaseClassTransformer {
 			if (this.lookup.containsKey(name)) {
 				AgentContext context = AgentContext.get();
 				Type target = Type.getObjectType(name);
-				ClassData targetData = context.getClassData(target);
+				Class targetClass = context.getClassData(target);
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassData ifaceData = context.getClassData(iface);
-					for (MethodData method : ifaceData.methods()) {
+					Class ifaceClass = context.getClassData(iface);
+					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(ACCESSOR)) {
-							this.validateMethod(iface, method, target, targetData);
+							this.validateMethod(iface, method, target, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
-							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
 							}
 						}
 					}
@@ -74,13 +75,13 @@ public class AccessorTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private @NotNull String getAccessorName(@NotNull MethodData ifaceMethod) {
-			AnnotationData annotation = ifaceMethod.getAnnotation(ACCESSOR);
+		private @NotNull String getAccessorName(@NotNull Method ifaceMethod) {
+			Annotation annotation = ifaceMethod.getAnnotation(ACCESSOR);
 			String target = annotation.get("target");
 			if (target != null) {
 				return target;
 			}
-			String methodName = ifaceMethod.name();
+			String methodName = ifaceMethod.getName();
 			if (methodName.startsWith("get")) {
 				return Utils.uncapitalize(methodName.substring(3));
 			} else if (methodName.startsWith("access")) {
@@ -89,10 +90,10 @@ public class AccessorTransformer extends BaseClassTransformer {
 			return methodName;
 		}
 		
-		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassData targetData) {
-			String signature = ifaceMethod.getMethodSignature();
+		private void validateMethod(@NotNull Type iface, @NotNull Method ifaceMethod, @NotNull Type target, @NotNull Class targetClass) {
+			String signature = ifaceMethod.getSourceSignature();
 			//region Base validation
-			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
+			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Accessor must be public", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature).exception();
 			}
 			if (ifaceMethod.is(TypeModifier.STATIC)) {
@@ -110,28 +111,28 @@ public class AccessorTransformer extends BaseClassTransformer {
 			}
 			if (ifaceMethod.getExceptionCount() > 0) {
 				throw CrashReport.create("Method annotated with @Accessor must not throw exceptions", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
-					.addDetail("Exceptions", ifaceMethod.exceptions()).exception();
+					.addDetail("Exceptions", ifaceMethod.getExceptions()).exception();
 			}
-			MethodData existingMethod = targetData.getMethod(ifaceMethod.name(), ifaceMethod.type());
+			Method existingMethod = targetClass.getMethod(ifaceMethod.getFullSignature());
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of accessor already has method with same signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
-					.addDetail("Existing Method", existingMethod.getMethodSignature()).exception();
+					.addDetail("Existing Method", existingMethod.getSourceSignature()).exception();
 			}
 			String accessorTarget = this.getAccessorName(ifaceMethod);
-			FieldData targetField = targetData.getField(accessorTarget);
+			Field targetField = targetClass.getField(accessorTarget);
 			if (targetField == null) {
 				throw CrashReport.create("Target field for accessor was not found in target class", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 					.addDetail("Expected Accessor Target", accessorTarget).exception();
 			}
-			if (targetField.access() == TypeAccess.PUBLIC) {
+			if (targetField.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Target field for accessor is public, no accessor required", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
 					.addDetail("Accessor Target", accessorTarget).exception();
 			}
-			if (!ifaceMethod.returns(targetField.type())) {
+			if (!ifaceMethod.returns(targetField.getType())) {
 				throw CrashReport.create("Accessor return type does not match target field type", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Accessor", signature)
-					.addDetail("Accessor Target", accessorTarget).addDetail("Expected Type", targetField.type()).addDetail("Actual Type", ifaceMethod.getReturnType()).exception();
+					.addDetail("Accessor Target", accessorTarget).addDetail("Expected Type", targetField.getType()).addDetail("Actual Type", ifaceMethod.getReturnType()).exception();
 			}
-			String fieldSignature = targetField.signature();
+			String fieldSignature = targetField.getGenericSignature();
 			if (fieldSignature != null && !fieldSignature.isBlank()) {
 				String accessorSignature = ASMUtils.getReturnTypeSignature(ifaceMethod);
 				if (!Objects.equals(fieldSignature, accessorSignature)) {
@@ -143,8 +144,8 @@ public class AccessorTransformer extends BaseClassTransformer {
 		}
 		
 		@SuppressWarnings("DuplicatedCode")
-		private void generateAccessor(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull FieldData targetField) {
-			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+		private void generateAccessor(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Field targetField) {
+			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), ifaceMethod.getGenericSignature(), null);
 			Label start = new Label();
 			Label end = new Label();
 			Instrumentations.instrumentMethodAnnotations(visitor, ifaceMethod);
@@ -152,19 +153,19 @@ public class AccessorTransformer extends BaseClassTransformer {
 			visitor.visitCode();
 			visitor.visitLabel(start);
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);
-			visitor.visitFieldInsn(Opcodes.GETFIELD, target.getInternalName(), targetField.name(), targetField.type().getDescriptor());
+			visitor.visitFieldInsn(Opcodes.GETFIELD, target.getInternalName(), targetField.getName(), targetField.getType().getDescriptor());
 			visitor.visitInsn(ifaceMethod.getReturnType().getOpcode(Opcodes.IRETURN));
 			visitor.visitLabel(end);
-			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.signature(), start, end, 0);
+			visitor.visitLocalVariable("this", target.getDescriptor(), targetField.getGenericSignature(), start, end, 0);
 			visitor.visitMaxs(0, 0);
 			visitor.visitEnd();
 			this.updateClass(ifaceMethod, target);
 			this.markModified();
 		}
 		
-		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target) {
-			ClassData data = AgentContext.get().getClassData(target);
-			data.methods().add(ifaceMethod.copy(EnumSet.noneOf(TypeModifier.class)));
+		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target) {
+			Class data = AgentContext.get().getClassData(target);
+			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.of(TypeModifier.ABSTRACT)).build());
 		}
 	}
 }

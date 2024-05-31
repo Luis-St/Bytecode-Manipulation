@@ -2,7 +2,8 @@ package net.luis.agent.preload.data;
 
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.util.*;
@@ -15,62 +16,68 @@ import java.util.*;
 
 public interface ASMData {
 	
-	@NotNull String name();
+	//region Getters
+	@NotNull
+	String getName();
 	
-	//region Type
-	@NotNull Type type();
+	@NotNull
+	Type getType();
+	
+	@Nullable
+	String getGenericSignature();
+	
+	@NotNull
+	TypeAccess getAccess();
+	
+	@NotNull
+	Set<TypeModifier> getModifiers();
+	
+	@NotNull
+	Map<Type, Annotation> getAnnotations();
+	//endregion
+	
+	//region Functional getters
+	default @NotNull Annotation getAnnotation(@NotNull Type type) {
+		return this.getAnnotations().get(type);
+	}
+	
+	default @NotNull String getFullSignature() {
+		return this.getName() + this.getType();
+	}
+	
+	@NotNull
+	String getSourceSignature();
+	
+	default int getOpcodes() {
+		return this.getAccess().getOpcode() | TypeModifier.toOpcodes(this.getModifiers());
+	}
 	
 	default boolean is(@NotNull Type type) {
-		return this.type().equals(type);
+		return this.getType().equals(type);
 	}
 	
 	default boolean isAny(@NotNull Type... type) {
 		return Arrays.stream(type).anyMatch(this::is);
 	}
-	//endregion
-	
-	@Nullable String signature();
-	
-	//region Access & Modifiers
-	default int getOpcodes() {
-		return this.access().getOpcode() | TypeModifier.toOpcodes(this.modifiers());
-	}
-	
-	@NotNull TypeAccess access();
 	
 	default boolean is(@NotNull TypeAccess access) {
-		return this.access() == access;
+		return this.getAccess() == access;
 	}
 	
-	@NotNull Set<TypeModifier> modifiers();
-	
 	default boolean is(@NotNull TypeModifier modifier) {
-		return this.modifiers().contains(modifier);
+		return this.getModifiers().contains(modifier);
 	}
 	
 	default boolean is(@NotNull TypeAccess access, @NotNull TypeModifier... modifiers) {
-		return this.access() == access && Arrays.stream(modifiers).allMatch(this.modifiers()::contains);
-	}
-	//endregion
-	
-	//region Annotations
-	@ApiStatus.Internal
-	@NotNull Map<Type, AnnotationData> annotations();
-	
-	default @Unmodifiable @NotNull List<AnnotationData> getAnnotations() {
-		return List.copyOf(this.annotations().values());
+		return this.getAccess() == access && Arrays.stream(modifiers).allMatch(this.getModifiers()::contains);
 	}
 	
 	default boolean isAnnotatedWith(@NotNull Type type) {
-		return this.annotations().containsKey(type);
+		return this.getAnnotations().containsKey(type);
 	}
 	
 	default boolean isAnnotatedWithAny(@NotNull Type... type) {
 		return Arrays.stream(type).anyMatch(this::isAnnotatedWith);
-	}
-	
-	default @NotNull AnnotationData getAnnotation(@NotNull Type type) {
-		return this.annotations().get(type);
 	}
 	//endregion
 }

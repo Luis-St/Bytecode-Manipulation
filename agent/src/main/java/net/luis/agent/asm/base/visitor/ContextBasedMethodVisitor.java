@@ -1,8 +1,6 @@
 package net.luis.agent.asm.base.visitor;
 
-import net.luis.agent.preload.data.MethodData;
-import net.luis.agent.preload.data.ParameterData;
-import net.luis.agent.preload.type.TypeModifier;
+import net.luis.agent.preload.data.Method;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -17,16 +15,16 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 public class ContextBasedMethodVisitor extends MethodVisitor {
 	
 	private final Runnable markModified;
-	protected final MethodData method;
+	protected final Method method;
 	private boolean skipAnnotation;
 	
-	public ContextBasedMethodVisitor(@NotNull MethodData method, @NotNull Runnable markModified) {
+	public ContextBasedMethodVisitor(@NotNull Method method, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9);
 		this.method = method;
 		this.markModified = markModified;
 	}
 	
-	public ContextBasedMethodVisitor(@NotNull MethodVisitor visitor, @NotNull MethodData method, @NotNull Runnable markModified) {
+	public ContextBasedMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull Runnable markModified) {
 		super(Opcodes.ASM9, visitor);
 		this.method = method;
 		this.markModified = markModified;
@@ -53,10 +51,6 @@ public class ContextBasedMethodVisitor extends MethodVisitor {
 		return this.skipAnnotation ? null : super.visitTypeAnnotation(typeRef, typePath, descriptor, visible);
 	}
 	//endregion
-	
-	protected void visitVarInsn(int opcode, @NotNull ParameterData parameter) {
-		this.mv.visitVarInsn(opcode, this.method.is(TypeModifier.STATIC) ? parameter.index() : parameter.index() + 1);
-	}
 	
 	protected int newLocal(@NotNull Type type) {
 		if (this.mv instanceof LocalVariablesSorter sorter) {

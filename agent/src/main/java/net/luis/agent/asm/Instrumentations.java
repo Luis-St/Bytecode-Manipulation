@@ -1,6 +1,7 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.AgentContext;
+import net.luis.agent.preload.data.Class;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.preload.type.ClassType;
 import net.luis.agent.preload.type.TypeModifier;
@@ -202,11 +203,11 @@ public class Instrumentations {
 	//endregion
 	
 	//region Annotations
-	public static void instrumentAnnotation(@NotNull AnnotationVisitor visitor, @NotNull AnnotationData annotation) {
-		for (Map.Entry<String, Object> entry : annotation.values().entrySet()) {
+	public static void instrumentAnnotation(@NotNull AnnotationVisitor visitor, @NotNull Annotation annotation) {
+		for (Map.Entry<String, Object> entry : annotation.getValues().entrySet()) {
 			switch (entry.getValue()) {
-				case AnnotationData data -> {
-					AnnotationVisitor child = visitor.visitAnnotation(entry.getKey(), data.type().getDescriptor());
+				case Annotation data -> {
+					AnnotationVisitor child = visitor.visitAnnotation(entry.getKey(), data.getType().getDescriptor());
 					instrumentAnnotation(child, data);
 					child.visitEnd();
 				}
@@ -231,34 +232,34 @@ public class Instrumentations {
 		visitor.visitEnd();
 	}
 	
-	public static void instrumentMethodAnnotations(@NotNull MethodVisitor visitor, @NotNull MethodData method) {
-		method.getAnnotations().forEach(annotation -> {
-			instrumentAnnotation(visitor.visitAnnotation(annotation.type().getDescriptor(), true), annotation);
+	public static void instrumentMethodAnnotations(@NotNull MethodVisitor visitor, @NotNull Method method) {
+		method.getAnnotations().values().forEach(annotation -> {
+			instrumentAnnotation(visitor.visitAnnotation(annotation.getType().getDescriptor(), true), annotation);
 		});
 	}
 	
-	public static void instrumentParameterAnnotations(@NotNull MethodVisitor visitor, @NotNull MethodData method) {
-		method.parameters().forEach(parameter -> {
-			parameter.getAnnotations().forEach(annotation -> {
-				instrumentAnnotation(visitor.visitParameterAnnotation(parameter.index(), annotation.type().getDescriptor(), true), annotation);
+	public static void instrumentParameterAnnotations(@NotNull MethodVisitor visitor, @NotNull Method method) {
+		method.getParameters().values().forEach(parameter -> {
+			parameter.getAnnotations().values().forEach(annotation -> {
+				instrumentAnnotation(visitor.visitParameterAnnotation(parameter.getIndex(), annotation.getType().getDescriptor(), true), annotation);
 			});
 		});
 	}
 	//endregion
 	
-	public static void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull MethodData method, boolean iface) {
+	public static void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Method method, boolean iface) {
 		instrumentMethodCall(visitor, method, iface, 0);
 	}
 	
-	public static void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull MethodData method, boolean iface, int index) {
+	public static void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Method method, boolean iface, int index) {
 		if (iface && !method.is(TypeModifier.STATIC)) {
 			visitor.visitVarInsn(Opcodes.ALOAD, index);
-			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), true);
+			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), true);
 		} else if (method.is(TypeModifier.STATIC)) {
-			ClassData data = AgentContext.get().getClassData(method.owner());
-			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), data.classType() == ClassType.INTERFACE);
+			Class data = AgentContext.get().getClassData(method.getOwner());
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), data.is(ClassType.INTERFACE));
 		} else {
-			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, method.owner().getInternalName(), method.name(), method.type().getDescriptor(), false);
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), false);
 		}
 	}
 	

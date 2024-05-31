@@ -1,15 +1,15 @@
 package net.luis.agent.asm.transformer.method;
 
+import net.luis.agent.AgentContext;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.base.visitor.MethodOnlyClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.AgentContext;
+import net.luis.agent.preload.data.Class;
 import net.luis.agent.preload.data.*;
 import net.luis.agent.util.CaughtAction;
 import net.luis.agent.util.DefaultStringFactory;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
@@ -31,22 +31,22 @@ public class CaughtTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = AgentContext.get().getClassData(type);
-		return data.methods().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
+		Class data = AgentContext.get().getClassData(type);
+		return data.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
 	}
 	//endregion
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
 			
 			@Override
-			protected boolean isMethodValid(@NotNull MethodData method) {
+			protected boolean isMethodValid(@NotNull Method method) {
 				return super.isMethodValid(method) && method.isAnnotatedWith(CAUGHT);
 			}
 			
 			@Override
-			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
+			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
 				return new CaughtVisitor(visitor, method, this::markModified);
 			}
 		};
@@ -63,13 +63,13 @@ public class CaughtTransformer extends BaseClassTransformer {
 		private final CaughtAction action;
 		private final Type exceptionType;
 		
-		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull MethodData method, @NotNull Runnable markModified) {
+		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull Runnable markModified) {
 			super(visitor, method, markModified);
-			AnnotationData annotation = method.getAnnotation(CAUGHT);
+			Annotation annotation = method.getAnnotation(CAUGHT);
 			this.action = CaughtAction.valueOf(annotation.getOrDefault("value"));
 			this.exceptionType = annotation.getOrDefault("exceptionType");
 			if (this.action == CaughtAction.NOTHING && !method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @Caught(NOTHING) must return void", REPORT_CATEGORY).addDetail("Method", method.getMethodSignature()).exception();
+				throw CrashReport.create("Method annotated with @Caught(NOTHING) must return void", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).exception();
 			}
 		}
 		

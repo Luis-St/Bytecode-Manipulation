@@ -1,6 +1,6 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.preload.data.AnnotationData;
+import net.luis.agent.preload.data.Annotation;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -64,8 +64,8 @@ public class AnnotationScanner extends AnnotationVisitor {
 	
 	@Override
 	public @NotNull AnnotationVisitor visitAnnotation(@NotNull String name, @NotNull String descriptor) {
-		Map<String, Object> values = new HashMap<>();
-		this.consumer.accept(name, new AnnotationData(Type.getType(descriptor), true, values));
-		return new AnnotationScanner(values::put);
+		Annotation annotation = Annotation.of(Type.getType(descriptor));
+		this.consumer.accept(name, annotation);
+		return new AnnotationScanner(annotation.getValues()::put);
 	}
 }

@@ -1,6 +1,6 @@
 package net.luis.agent.preload.scanner;
 
-import net.luis.agent.preload.data.ClassData;
+import net.luis.agent.preload.data.Class;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 
@@ -16,20 +16,20 @@ import java.util.function.Function;
 
 public class ClassFileScanner {
 	
-	public static @NotNull ClassData scanClass(@NotNull Type type) {
-		return scanClass(type, new ClassScanner(), ClassScanner::getClassData);
+	public static @NotNull Class scanClass(@NotNull Type type) {
+		return scanClass(type, new ClassScanner(), ClassScanner::get);
 	}
 	
-	public static <T extends ClassVisitor, X> void scanClass(@NotNull Type type, @NotNull T visitor) {
-		scanClass(readClass(type), type, visitor, Function.identity());
+	public static <T extends ClassVisitor> void scanClass(@NotNull Type type, @NotNull T visitor) {
+		scanClass(readClass(type), visitor, Function.identity());
 	}
 	
 	//region Helper methods
 	private static <T extends ClassVisitor, X> @NotNull X scanClass(@NotNull Type type, @NotNull T visitor, @NotNull Function<T, X> result) {
-		return scanClass(readClass(type), type, visitor, result);
+		return scanClass(readClass(type), visitor, result);
 	}
 	
-	private static <T extends ClassVisitor, X> @NotNull X scanClass(byte @NotNull [] data, Type type, @NotNull T visitor, @NotNull Function<T, X> result) {
+	private static <T extends ClassVisitor, X> @NotNull X scanClass(byte @NotNull [] data, @NotNull T visitor, @NotNull Function<T, X> result) {
 		ClassReader reader = new ClassReader(data);
 		reader.accept(visitor, 0);
 		return result.apply(visitor);

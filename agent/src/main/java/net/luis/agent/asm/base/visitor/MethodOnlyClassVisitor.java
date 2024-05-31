@@ -2,6 +2,7 @@ package net.luis.agent.asm.base.visitor;
 
 import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.data.Class;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,18 +25,18 @@ public class MethodOnlyClassVisitor extends ContextBasedClassVisitor {
 		super(visitor, type, markModified);
 	}
 	
-	protected boolean isMethodValid(@NotNull MethodData method) {
+	protected boolean isMethodValid(@NotNull Method method) {
 		return !method.is(TypeModifier.ABSTRACT);
 	}
 	
-	protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodData method) {
+	protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
 		return visitor;
 	}
 	
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-		ClassData data = AgentContext.get().getClassData(this.type);
-		MethodData method = data.getMethod(name, Type.getType(descriptor));
+		Class data = AgentContext.get().getClassData(this.type);
+		Method method = data.getMethod(name + descriptor);
 		MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 		if (method == null) {
 			return visitor;

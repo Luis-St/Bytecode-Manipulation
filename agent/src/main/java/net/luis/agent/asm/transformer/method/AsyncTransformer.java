@@ -6,6 +6,7 @@ import net.luis.agent.asm.base.visitor.ContextBasedMethodVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.data.Class;
 import net.luis.agent.preload.type.MethodType;
 import net.luis.agent.preload.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
@@ -33,13 +34,13 @@ public class AsyncTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		ClassData data = AgentContext.get().getClassData(type);
-		return data.methods().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
+		Class data = AgentContext.get().getClassData(type);
+		return data.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
 	}
 	//endregion
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new AsyncClassVisitor(writer, type, () -> this.modified = true);
 	}
 	
@@ -47,8 +48,8 @@ public class AsyncTransformer extends BaseClassTransformer {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
-		private final Map<MethodData, String> methods = new HashMap<>();
-		private final ClassData data;
+		private final Map<Method, String> methods = new HashMap<>();
+		private final Class data;
 		
 		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
@@ -57,25 +58,25 @@ public class AsyncTransformer extends BaseClassTransformer {
 		
 		@Override
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-			MethodData method = this.data.getMethod(name, Type.getMethodType(descriptor));
+			Method method = this.data.getMethod(name + descriptor);
 			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(ASYNC)) {
 				return super.visitMethod(access, name, descriptor, signature, exceptions);
 			}
 			//region Validation
 			if (!method.is(MethodType.METHOD)) {
-				throw CrashReport.create("Annotation @Async can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.name()).exception();
+				throw CrashReport.create("Annotation @Async can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getName()).exception();
 			}
 			if (!method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getMethodSignature()).addDetail("Return Type", method.type().getReturnType()).exception();
+				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).addDetail("Return Type", method.getType().getReturnType()).exception();
 			}
 			if (method.getExceptionCount() > 0) {
-				throw CrashReport.create("Method annotated with @Async must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getMethodSignature()).addDetail("Exceptions", method.exceptions()).exception();
+				throw CrashReport.create("Method annotated with @Async must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).addDetail("Exceptions", method.getExceptions()).exception();
 			}
 			if (method.isAnnotatedWith(SCHEDULED)) {
-				throw CrashReport.create("Method annotated with @Async must not be annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", method.name()).exception();
+				throw CrashReport.create("Method annotated with @Async must not be annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", method.getName()).exception();
 			}
 			//endregion
-			access = access & ~method.access().getOpcode();
+			access = access & ~method.getAccess().getOpcode();
 			String newName = "generated$" + name + "$async";
 			this.methods.put(method, newName);
 			MethodVisitor visitor = super.visitMethod(access | Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC, newName, descriptor, signature, exceptions);
@@ -84,9 +85,9 @@ public class AsyncTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitEnd() {
-			for (Map.Entry<MethodData, String> entry : this.methods.entrySet()) {
-				MethodData method = entry.getKey();
-				MethodVisitor visitor = super.visitMethod(method.getOpcodes(), method.name(), method.type().getDescriptor(), method.signature(), null);
+			for (Map.Entry<Method, String> entry : this.methods.entrySet()) {
+				Method method = entry.getKey();
+				MethodVisitor visitor = super.visitMethod(method.getOpcodes(), method.getName(), method.getType().getDescriptor(), method.getGenericSignature(), null);
 				visitor.visitCode();
 				instrumentMethodAnnotations(visitor, method);
 				instrumentParameterAnnotations(visitor, method);
@@ -95,8 +96,8 @@ public class AsyncTransformer extends BaseClassTransformer {
 				if (!method.is(TypeModifier.STATIC)) {
 					visitor.visitVarInsn(Opcodes.ALOAD, index++);
 				}
-				for (ParameterData parameter : method.parameters()) {
-					visitor.visitVarInsn(parameter.type().getOpcode(Opcodes.ILOAD), index++);
+				for (Parameter parameter : method.getParameters().values()) {
+					visitor.visitVarInsn(parameter.getType().getOpcode(Opcodes.ILOAD), index++);
 				}
 				//endregion
 				visitor.visitInvokeDynamicInsn("run", this.makeDescriptor(method), METAFACTORY_HANDLE, VOID_METHOD, this.createHandle(method, entry.getValue()), VOID_METHOD);
@@ -110,21 +111,21 @@ public class AsyncTransformer extends BaseClassTransformer {
 		}
 		
 		//region Helper methods
-		private @NotNull String makeDescriptor(@NotNull MethodData method) {
+		private @NotNull String makeDescriptor(@NotNull Method method) {
 			StringBuilder builder = new StringBuilder();
 			builder.append("(");
 			if (!method.is(TypeModifier.STATIC)) {
 				builder.append(this.type.getDescriptor());
 			}
-			for (ParameterData parameter : method.parameters()) {
-				builder.append(parameter.type().getDescriptor());
+			for (Parameter parameter : method.getParameters().values()) {
+				builder.append(parameter.getType().getDescriptor());
 			}
 			builder.append(")Ljava/lang/Runnable;");
 			return builder.toString();
 		}
 		
-		private @NotNull Handle createHandle(@NotNull MethodData method, String newName) {
-			return new Handle(method.is(TypeModifier.STATIC) ? Opcodes.H_INVOKESTATIC : Opcodes.H_INVOKEVIRTUAL, this.type.getInternalName(), newName, method.type().getDescriptor(), false);
+		private @NotNull Handle createHandle(@NotNull Method method, String newName) {
+			return new Handle(method.is(TypeModifier.STATIC) ? Opcodes.H_INVOKESTATIC : Opcodes.H_INVOKEVIRTUAL, this.type.getInternalName(), newName, method.getType().getDescriptor(), false);
 		}
 		//endregion
 	}

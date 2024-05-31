@@ -1,6 +1,5 @@
 package net.luis.agent.util;
 
-import net.luis.agent.asm.ASMUtils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -10,6 +9,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static net.luis.agent.asm.Types.*;
+
 /**
  *
  * @author Luis-St
@@ -18,17 +19,6 @@ import java.util.stream.IntStream;
 
 public class DefaultStringFactory implements StringFactory {
 	
-	//region Primitives
-	private static final Type BOOLEAN = Type.getType(Boolean.class);
-	private static final Type BYTE = Type.getType(Byte.class);
-	private static final Type CHAR = Type.getType(Character.class);
-	private static final Type SHORT = Type.getType(Short.class);
-	private static final Type INTEGER = Type.getType(Integer.class);
-	private static final Type LONG = Type.getType(Long.class);
-	private static final Type FLOAT = Type.getType(Float.class);
-	private static final Type DOUBLE = Type.getType(Double.class);
-	private static final Type STRING = Type.getType(String.class);
-	//endregion
 	private static final Type OPTIONAL = Type.getType(Optional.class);
 	
 	public static final DefaultStringFactory INSTANCE = new DefaultStringFactory();
@@ -39,13 +29,21 @@ public class DefaultStringFactory implements StringFactory {
 	private DefaultStringFactory() {
 		//region Factories
 		this.directFactories.put(BOOLEAN, Boolean::parseBoolean);
+		this.directFactories.put(convertToWrapper(BOOLEAN), Boolean::parseBoolean);
 		this.directFactories.put(BYTE, value -> value.isBlank() ? 0 : Byte.parseByte(value));
+		this.directFactories.put(convertToWrapper(BYTE), value -> value.isBlank() ? 0 : Byte.parseByte(value));
 		this.directFactories.put(CHAR, value -> value.isBlank() ? '\0' : value.charAt(0));
+		this.directFactories.put(convertToWrapper(CHAR), value -> value.isBlank() ? '\0' : value.charAt(0));
 		this.directFactories.put(SHORT, value -> value.isBlank() ? 0 : Short.parseShort(value));
-		this.directFactories.put(INTEGER, value -> value.isBlank() ? 0 : Integer.parseInt(value));
+		this.directFactories.put(convertToWrapper(SHORT), value -> value.isBlank() ? 0 : Short.parseShort(value));
+		this.directFactories.put(INT, value -> value.isBlank() ? 0 : Integer.parseInt(value));
+		this.directFactories.put(convertToWrapper(INT), value -> value.isBlank() ? 0 : Integer.parseInt(value));
 		this.directFactories.put(LONG, value -> value.isBlank() ? 0L : Long.parseLong(value));
+		this.directFactories.put(convertToWrapper(LONG), value -> value.isBlank() ? 0L : Long.parseLong(value));
 		this.directFactories.put(FLOAT, value -> value.isBlank() ? 0.0F : Float.parseFloat(value));
+		this.directFactories.put(convertToWrapper(FLOAT), value -> value.isBlank() ? 0.0F : Float.parseFloat(value));
 		this.directFactories.put(DOUBLE, value -> value.isBlank() ? 0.0D : Double.parseDouble(value));
+		this.directFactories.put(convertToWrapper(DOUBLE), value -> value.isBlank() ? 0.0D : Double.parseDouble(value));
 		this.directFactories.put(STRING, Function.identity());
 		this.directFactories.put(OPTIONAL, value -> Optional.empty());
 		this.inheritanceFactories.put(Type.getType(List.class), this::createList);
@@ -64,9 +62,9 @@ public class DefaultStringFactory implements StringFactory {
 		if (factory != null) {
 			return factory.apply(value);
 		}
-		Class<?> clazz = ASMUtils.getClass(type);
+		Class<?> clazz = this.getClass(type);
 		for (Map.Entry<Type, Function<String, ?>> entry : this.inheritanceFactories.entrySet()) {
-			Class<?> target = ASMUtils.getClass(entry.getKey());
+			Class<?> target = this.getClass(entry.getKey());
 			if (target.isAssignableFrom(clazz)) {
 				return entry.getValue().apply(value);
 			}
@@ -79,7 +77,7 @@ public class DefaultStringFactory implements StringFactory {
 		if (!(value.isEmpty() || "[]".equals(value))) {
 			throw new IllegalArgumentException("Invalid array value '" + value + "', default string factory only supports empty arrays (e.g. '' or '[]')");
 		}
-		Class<?> arrayType = ASMUtils.getClass(type.getElementType());
+		Class<?> arrayType = this.getClass(type.getElementType());
 		int[] dimensions = IntStream.range(0, type.getDimensions()).map(i -> 0).toArray();
 		return Array.newInstance(arrayType, dimensions);
 	}
@@ -158,4 +156,14 @@ public class DefaultStringFactory implements StringFactory {
 	public void registerArray(@NotNull BiFunction<Type, String, Object> factory) {
 		this.arrayFactory.accept(factory);
 	}
+	
+	//region Helper methods
+	private @NotNull Class<?> getClass(@NotNull Type type) {
+		try {
+			return Class.forName(type.getClassName());
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	//endregion
 }

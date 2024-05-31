@@ -24,7 +24,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(AgentContext.get(), INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override
@@ -35,7 +35,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	@Override
 	@SuppressWarnings("UnqualifiedFieldAccess")
-	public @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
+	public @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new ContextBasedClassVisitor(writer, type, () -> this.modified = true) {
 			private static final String REPORT_CATEGORY = "Interface Injection Error";
 			
@@ -57,7 +57,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			}
 			
 			private void updateClass(@NotNull List<Type> injects) {
-				AgentContext.get().getClassData(this.type).interfaces().addAll(injects);
+				AgentContext.get().getClassData(this.type).getInterfaces().addAll(injects);
 			}
 		};
 	}

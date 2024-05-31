@@ -7,6 +7,7 @@ import net.luis.agent.asm.base.visitor.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.AgentContext;
 import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.data.Class;
 import net.luis.agent.preload.type.TypeAccess;
 import net.luis.agent.preload.type.TypeModifier;
 import net.luis.agent.util.Utils;
@@ -20,7 +21,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class InvokerTransformer extends BaseClassTransformer {
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(AgentContext.get(), INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override
@@ -30,7 +31,7 @@ public class InvokerTransformer extends BaseClassTransformer {
 	//endregion
 	
 	@Override
-	protected @NotNull ClassVisitor visit(@NotNull Type type, @Nullable Class<?> clazz, @NotNull ClassWriter writer) {
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new InvokerVisitor(writer, type, () -> this.modified = true, this.lookup);
 	}
 	
@@ -56,17 +57,17 @@ public class InvokerTransformer extends BaseClassTransformer {
 			if (this.lookup.containsKey(name)) {
 				AgentContext context = AgentContext.get();
 				Type target = Type.getObjectType(name);
-				ClassData targetData = context.getClassData(target);
+				Class targetClass = context.getClassData(target);
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassData ifaceData = context.getClassData(iface);
-					for (MethodData method : ifaceData.methods()) {
+					Class ifaceClass = context.getClassData(iface);
+					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(INVOKER)) {
-							this.validateMethod(iface, method, target, targetData);
+							this.validateMethod(iface, method, target, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
-							} else if (method.getAnnotations().stream().map(AnnotationData::type).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getMethodSignature()).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
 							}
 						}
 					}
@@ -74,13 +75,13 @@ public class InvokerTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private @NotNull String getInvokerName(@NotNull MethodData ifaceMethod) {
-			AnnotationData annotation = ifaceMethod.getAnnotation(INVOKER);
+		private @NotNull String getInvokerName(@NotNull Method ifaceMethod) {
+			Annotation annotation = ifaceMethod.getAnnotation(INVOKER);
 			String target = annotation.get("target");
 			if (target != null) {
 				return target;
 			}
-			String methodName = ifaceMethod.name();
+			String methodName = ifaceMethod.getName();
 			if (methodName.startsWith("invoke")) {
 				return Utils.uncapitalize(methodName.substring(6));
 			}
@@ -94,10 +95,10 @@ public class InvokerTransformer extends BaseClassTransformer {
 			return invokerTarget;
 		}
 		
-		private void validateMethod(@NotNull Type iface, @NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull ClassData targetData) {
-			String signature = ifaceMethod.getMethodSignature();
+		private void validateMethod(@NotNull Type iface, @NotNull Method ifaceMethod, @NotNull Type target, @NotNull Class targetData) {
+			String signature = ifaceMethod.getSourceSignature();
 			//region Base validation
-			if (ifaceMethod.access() != TypeAccess.PUBLIC) {
+			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Invoker must be public", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature).exception();
 			}
 			if (ifaceMethod.is(TypeModifier.STATIC)) {
@@ -107,41 +108,41 @@ public class InvokerTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Invoker must not be default implemented", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature).exception();
 			}
 			//endregion
-			MethodData existingMethod = targetData.getMethod(ifaceMethod.name(), ifaceMethod.type());
+			Method existingMethod = targetData.getMethod(ifaceMethod.getFullSignature());
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of invoker already has method with same signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature)
-					.addDetail("Existing Method", existingMethod.getMethodSignature()).exception();
+					.addDetail("Existing Method", existingMethod.getSourceSignature()).exception();
 			}
 			String invokerTarget = this.getInvokerName(ifaceMethod);
-			List<MethodData> possibleTargets = ASMUtils.getBySignature(invokerTarget, targetData);
+			List<Method> possibleTargets = ASMUtils.getBySignature(invokerTarget, targetData);
 			if (possibleTargets.isEmpty()) {
 				throw CrashReport.create("Could not find target method for invoker", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature).addDetail("Target", invokerTarget)
-					.addDetail("Possible Targets", targetData.getMethods(this.getRawInvokerName(invokerTarget)).stream().map(MethodData::getMethodSignature).toList()).exception();
+					.addDetail("Possible Targets", targetData.getMethods(this.getRawInvokerName(invokerTarget)).stream().map(Method::getSourceSignature).toList()).exception();
 			}
 			if (possibleTargets.size() > 1) {
 				throw CrashReport.create("Found multiple possible targets for invoker", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature).addDetail("Target", invokerTarget)
-					.addDetail("Possible Targets", possibleTargets.stream().map(MethodData::getMethodSignature).toList()).exception();
+					.addDetail("Possible Targets", possibleTargets.stream().map(Method::getSourceSignature).toList()).exception();
 			}
-			MethodData targetMethod = possibleTargets.getFirst();
-			if (targetMethod.access() == TypeAccess.PUBLIC) {
+			Method targetMethod = possibleTargets.getFirst();
+			if (targetMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Target method of invoker is public, no invoker required", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature)
-					.addDetail("Target Method", targetMethod.getMethodSignature()).exception();
+					.addDetail("Target Method", targetMethod.getSourceSignature()).exception();
 			}
-			if (!targetMethod.is(ifaceMethod.type())) {
+			if (!targetMethod.is(ifaceMethod.getType())) {
 				throw CrashReport.create("Invoker method signature does not match target method signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature)
-					.addDetail("Target Method", targetMethod.getMethodSignature()).exception();
+					.addDetail("Target Method", targetMethod.getSourceSignature()).exception();
 			}
 			
-			if (!Objects.equals(targetMethod.signature(), ifaceMethod.signature())) {
+			if (!Objects.equals(targetMethod.getGenericSignature(), ifaceMethod.getGenericSignature())) {
 				throw CrashReport.create("Invoker method signature does not match target method signature", REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Invoker", signature)
-					.addDetail("Target Method", targetMethod.signature()).exception();
+					.addDetail("Target Method", targetMethod.getGenericSignature()).exception();
 			}
 			this.generateInvoker(ifaceMethod, target, targetMethod);
 		}
 		
 		@SuppressWarnings("DuplicatedCode")
-		private void generateInvoker(@NotNull MethodData ifaceMethod, @NotNull Type target, @NotNull MethodData targetMethod) {
-			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.name(), ifaceMethod.type().getDescriptor(), ifaceMethod.signature(), null);
+		private void generateInvoker(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Method targetMethod) {
+			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), ifaceMethod.getGenericSignature(), null);
 			Label start = new Label();
 			Label end = new Label();
 			Instrumentations.instrumentMethodAnnotations(visitor, ifaceMethod);
@@ -150,14 +151,14 @@ public class InvokerTransformer extends BaseClassTransformer {
 			visitor.visitLabel(start);
 			visitor.visitVarInsn(Opcodes.ALOAD, 0);
 			for (int i = 0; i < ifaceMethod.getParameterCount(); i++) {
-				visitor.visitVarInsn(ifaceMethod.getParameterType(i).getOpcode(Opcodes.ILOAD), i + 1);
+				visitor.visitVarInsn(ifaceMethod.getParameter(i).getType().getOpcode(Opcodes.ILOAD), i + 1);
 			}
-			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, target.getInternalName(), targetMethod.name(), targetMethod.type().getDescriptor(), false);
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, target.getInternalName(), targetMethod.getName(), targetMethod.getType().getDescriptor(), false);
 			visitor.visitInsn(ifaceMethod.getReturnType().getOpcode(Opcodes.IRETURN));
 			visitor.visitLabel(end);
-			visitor.visitLocalVariable("this", target.getDescriptor(), ifaceMethod.signature(), start, end, 0);
+			visitor.visitLocalVariable("this", target.getDescriptor(), ifaceMethod.getGenericSignature(), start, end, 0);
 			for (int i = 0; i < ifaceMethod.getParameterCount(); i++) {
-				visitor.visitLocalVariable("generated$InvokerTransformer$Temp" + (i + 1), ifaceMethod.getParameterType(i).getDescriptor(), null, start, end, i + 1);
+				visitor.visitLocalVariable("generated$InvokerTransformer$Temp" + (i + 1), ifaceMethod.getParameter(i).getType().getDescriptor(), null, start, end, i + 1);
 			}
 			visitor.visitMaxs(0, 0);
 			visitor.visitEnd();
@@ -165,9 +166,9 @@ public class InvokerTransformer extends BaseClassTransformer {
 			this.markModified();
 		}
 		
-		private void updateClass(@NotNull MethodData ifaceMethod, @NotNull Type target) {
-			ClassData data = AgentContext.get().getClassData(target);
-			data.methods().add(ifaceMethod.copy(EnumSet.noneOf(TypeModifier.class)));
+		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target) {
+			Class data = AgentContext.get().getClassData(target);
+			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
 		}
 	}
 }

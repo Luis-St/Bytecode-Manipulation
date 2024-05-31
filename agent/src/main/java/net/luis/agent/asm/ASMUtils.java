@@ -1,7 +1,9 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.AgentContext;
-import net.luis.agent.preload.data.*;
+import net.luis.agent.preload.data.Class;
+import net.luis.agent.preload.data.Method;
+import net.luis.agent.preload.data.Parameter;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,22 +29,22 @@ public class ASMUtils {
 		}
 	}
 	
-	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull AgentContext context, @NotNull Type annotationType) {
+	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull Type annotationType) {
 		Map<String, List<String>> lookup = new HashMap<>();
-		context.stream().filter(data -> data.isAnnotatedWith(annotationType)).forEach(data -> {
+		AgentContext.get().stream().filter(data -> data.isAnnotatedWith(annotationType)).forEach(data -> {
 			List<Type> types = data.getAnnotation(annotationType).get("targets");
 			if (types == null || types.isEmpty()) {
 				return;
 			}
 			for (Type target : types) {
-				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(data.type().getInternalName());
+				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(data.getType().getInternalName());
 			}
 		});
 		return lookup;
 	}
 	
-	public static @NotNull String getReturnTypeSignature(@NotNull MethodData method) {
-		String signature = method.signature();
+	public static @NotNull String getReturnTypeSignature(@NotNull Method method) {
+		String signature = method.getGenericSignature();
 		if (signature == null || signature.isEmpty()) {
 			return "";
 		}
@@ -50,8 +52,8 @@ public class ASMUtils {
 		return signature.substring(index + 1);
 	}
 	
-	public static @NotNull String getParameterTypesSignature(@NotNull MethodData method) {
-		String signature = method.signature();
+	public static @NotNull String getParameterTypesSignature(@NotNull Method method) {
+		String signature = method.getGenericSignature();
 		if (signature == null || signature.isEmpty()) {
 			return "";
 		}
@@ -64,14 +66,6 @@ public class ASMUtils {
 		String name = type.getClassName();
 		int index = name.lastIndexOf('.');
 		return index == -1 ? name : name.substring(index + 1);
-	}
-	
-	public static @NotNull Class<?> getClass(@NotNull Type type) {
-		try {
-			return Class.forName(type.getClassName());
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
 	}
 	
 	public static boolean isPrimitive(@NotNull Type type) {
@@ -100,26 +94,26 @@ public class ASMUtils {
 		}
 	}
 	
-	public static @NotNull List<MethodData> getBySignature(@NotNull String signature, @NotNull ClassData data) {
-		List<MethodData> methods = new ArrayList<>();
+	public static @NotNull List<Method> getBySignature(@NotNull String signature, @NotNull Class data) {
+		List<Method> methods = new ArrayList<>();
 		boolean specific = signature.contains("(") && signature.contains(")");
 		boolean notFull = !specific || signature.endsWith(")");
 		
 		String name = specific ? signature.substring(0, signature.indexOf('(')).strip() : signature;
 		List<String> parameters = specific ? Stream.of(signature.substring(signature.indexOf('(') + 1, signature.indexOf(')')).split(",")).map(String::strip).toList() : new ArrayList<>();
-		List<MethodData> possibleMethods = name.isEmpty() ? data.methods() : data.getMethods(name);
+		List<Method> possibleMethods = name.isEmpty() ? new ArrayList<>(data.getMethods().values()) : data.getMethods(name);
 		if (parameters.isEmpty() && notFull) {
 			return possibleMethods;
 		}
-		for (MethodData method : possibleMethods) {
-			if (method.getMethodSignature().equals(signature)) {
+		for (Method method : possibleMethods) {
+			if (method.getFullSignature().equals(signature)) {
 				methods.add(method);
 				break;
 			}
 			boolean possible = true;
-			for (ParameterData parameter : method.parameters()) {
-				Type type = parameter.type();
-				int index = parameter.index();
+			for (Parameter parameter : method.getParameters().values()) {
+				Type type = parameter.getType();
+				int index = parameter.getIndex();
 				if (index >= parameters.size()) {
 					possible = false;
 					break;
