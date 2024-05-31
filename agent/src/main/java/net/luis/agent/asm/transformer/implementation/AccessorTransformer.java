@@ -56,9 +56,9 @@ public class AccessorTransformer extends BaseClassTransformer {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
 				AgentContext context = AgentContext.get();
-				Class targetClass = context.getClassData(Type.getObjectType(name));
+				Class targetClass = context.getClass(Type.getObjectType(name));
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = context.getClassData(iface);
+					Class ifaceClass = context.getClass(iface);
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(ACCESSOR)) {
 							this.validateMethod(method, targetClass);
@@ -163,7 +163,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 		}
 		
 		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target) {
-			Class data = AgentContext.get().getClassData(target);
+			Class data = AgentContext.get().getClass(target);
 			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.of(TypeModifier.ABSTRACT)).build());
 		}
 	}

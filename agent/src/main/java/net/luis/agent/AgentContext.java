@@ -31,11 +31,11 @@ public class AgentContext {
 		return this.classes;
 	}
 	
-	public @NotNull Class getClassData(@NotNull Type type) {
+	public @NotNull Class getClass(@NotNull Type type) {
 		return this.cache.computeIfAbsent(type, ClassFileScanner::scanClass);
 	}
 	
 	public @NotNull Stream<Class> stream() {
-		return this.getClasses().stream().map(this::getClassData);
+		return this.getClasses().stream().map(this::getClass);
 	}
 }

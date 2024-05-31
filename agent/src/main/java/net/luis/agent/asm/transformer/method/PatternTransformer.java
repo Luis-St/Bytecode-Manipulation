@@ -31,7 +31,7 @@ public class PatternTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClassData(type);
+		Class clazz = AgentContext.get().getClass(type);
 		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) && clazz.getMethods().values().stream().noneMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
 	}
 	//endregion

@@ -58,7 +58,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			}
 			
 			private void updateClass(@NotNull List<Type> injects) {
-				AgentContext.get().getClassData(this.type).getInterfaces().addAll(injects);
+				AgentContext.get().getClass(this.type).getInterfaces().addAll(injects);
 			}
 		};
 	}

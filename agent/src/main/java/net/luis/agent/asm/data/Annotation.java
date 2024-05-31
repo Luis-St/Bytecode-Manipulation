@@ -66,7 +66,7 @@ public class Annotation {
 	}
 	
 	public <X> @Nullable X getDefault(@Nullable String key) {
-		Class data = AgentContext.get().getClassData(this.type);
+		Class data = AgentContext.get().getClass(this.type);
 		List<Method> methods = data.getMethods(key);
 		if (methods.size() != 1) {
 			return null;

@@ -34,7 +34,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClassData(type);
+		Class clazz = AgentContext.get().getClass(type);
 		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
 	}
 	//endregion
@@ -53,7 +53,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 		
 		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
-			this.data = AgentContext.get().getClassData(type);
+			this.data = AgentContext.get().getClass(type);
 		}
 		
 		@Override

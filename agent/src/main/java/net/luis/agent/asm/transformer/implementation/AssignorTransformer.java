@@ -57,9 +57,9 @@ public class AssignorTransformer extends BaseClassTransformer {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
 				AgentContext context = AgentContext.get();
-				Class targetClass = context.getClassData(Type.getObjectType(name));
+				Class targetClass = context.getClass(Type.getObjectType(name));
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = context.getClassData(iface);
+					Class ifaceClass = context.getClass(iface);
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(ASSIGNOR)) {
 							this.validateMethod(method, targetClass);
@@ -169,7 +169,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 		}
 		
 		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Field targetField) {
-			Class data = AgentContext.get().getClassData(target);
+			Class data = AgentContext.get().getClass(target);
 			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
 			targetField.getModifiers().remove(TypeModifier.FINAL);
 		}

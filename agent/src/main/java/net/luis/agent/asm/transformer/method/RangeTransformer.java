@@ -34,7 +34,7 @@ public class RangeTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClassData(type);
+		Class clazz = AgentContext.get().getClass(type);
 		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS)) && clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS));
 	}
 	//endregion

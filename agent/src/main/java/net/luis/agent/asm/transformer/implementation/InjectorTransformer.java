@@ -72,9 +72,9 @@ public class InjectorTransformer extends BaseClassTransformer {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
 				AgentContext context = AgentContext.get();
-				Class targetClass = context.getClassData(Type.getObjectType(name));
+				Class targetClass = context.getClass(Type.getObjectType(name));
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = context.getClassData(iface);
+					Class ifaceClass = context.getClass(iface);
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(INJECTOR)) {
 							this.validateMethod(method, targetClass);

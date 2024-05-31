@@ -32,7 +32,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClassData(type);
+		Class clazz = AgentContext.get().getClass(type);
 		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(RESTRICTED_ACCESS));
 	}
 	//endregion
@@ -50,7 +50,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		
 		@Override
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-			Class clazz = AgentContext.get().getClassData(this.type);
+			Class clazz = AgentContext.get().getClass(this.type);
 			Method method = clazz.getMethod(name + descriptor);
 			MethodVisitor visitor = this.cv.visitMethod(access, name, descriptor, signature, exceptions);
 			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(RESTRICTED_ACCESS)) {
@@ -222,7 +222,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			method.getParameters().put(3, Parameter.builder(method, "methodName", STRING).addAnnotation(NOT_NULL, Annotation.of(NOT_NULL)).build());
 			method.getLocals().put(4, LocalVariable.builder(method, 4, "concat", STRING).build());
 			method.getLocals().put(5, LocalVariable.builder(method, 5, "simple", STRING).build());
-			AgentContext.get().getClassData(this.type).getMethods().put(method.getFullSignature(), method);
+			AgentContext.get().getClass(this.type).getMethods().put(method.getFullSignature(), method);
 		}
 		//endregion
 	}
@@ -242,7 +242,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		private RestrictedAccessMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(Opcodes.ASM9, visitor);
 			this.type = method.getOwner();
-			this.isInterface = AgentContext.get().getClassData(method.getOwner()).is(ClassType.INTERFACE);
+			this.isInterface = AgentContext.get().getClass(method.getOwner()).is(ClassType.INTERFACE);
 			this.method = method;
 			Annotation annotation = method.getAnnotation(RESTRICTED_ACCESS);
 			this.values = Objects.requireNonNull(annotation.get("value"));

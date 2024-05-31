@@ -29,7 +29,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClassData(type);
+		Class clazz = AgentContext.get().getClass(type);
 		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) && clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(NOT_NULL));
 	}
 	//endregion

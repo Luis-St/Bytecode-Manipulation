@@ -33,7 +33,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClassData(type);
+		Class clazz = AgentContext.get().getClass(type);
 		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
 	}
 	//endregion
@@ -85,7 +85,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 		private @NotNull Type getFactory(@NotNull Parameter parameter) {
 			Annotation annotation = parameter.getAnnotation(DEFAULT);
 			Type factory = annotation.getOrDefault("factory");
-			Field field = AgentContext.get().getClassData(factory).getField("INSTANCE");
+			Field field = AgentContext.get().getClass(factory).getField("INSTANCE");
 			if (field == null) {
 				throw CrashReport.create("Missing INSTANCE field in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}

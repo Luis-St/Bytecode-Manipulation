@@ -256,7 +256,7 @@ public class Instrumentations {
 			visitor.visitVarInsn(Opcodes.ALOAD, index);
 			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), true);
 		} else if (method.is(TypeModifier.STATIC)) {
-			Class clazz = AgentContext.get().getClassData(method.getOwner());
+			Class clazz = AgentContext.get().getClass(method.getOwner());
 			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), clazz.is(ClassType.INTERFACE));
 		} else {
 			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), false);

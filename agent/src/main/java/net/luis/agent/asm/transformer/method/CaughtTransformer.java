@@ -30,7 +30,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClassData(type);
+		Class clazz = AgentContext.get().getClass(type);
 		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
 	}
 	//endregion
