@@ -24,6 +24,7 @@ public class Agent {
 		inst.addTransformer(new AssignorTransformer());
 		inst.addTransformer(new InvokerTransformer());
 		inst.addTransformer(new InjectorTransformer());
+		inst.addTransformer(new RedirectorTransformer());
 		inst.addTransformer(new ScheduledTransformer());
 		inst.addTransformer(new CaughtTransformer());
 		inst.addTransformer(new AsyncTransformer());

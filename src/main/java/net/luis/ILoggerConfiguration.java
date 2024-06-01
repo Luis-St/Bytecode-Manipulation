@@ -12,8 +12,7 @@ import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFact
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @InjectInterface(targets = LoggerConfiguration.class)
 public interface ILoggerConfiguration {
@@ -49,5 +48,25 @@ public interface ILoggerConfiguration {
 		ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
 		builder.setConfigurationName("RuntimeConfiguration");
 		return builder.build();
+	}
+	
+	@Redirector(method = "<init>(List)", target = @Target(value = "Lists#newArrayList(Object[])", type = TargetType.INVOKE))
+	default ArrayList<String> redirectInit() {
+		return new ArrayList<>();
+	}
+	
+	@Redirector(method = "overridePattern(LoggingType, Level, String)", target = @Target(value = "StringUtils#containsAny(CharSequence, CharSequence[])", type = TargetType.INVOKE))
+	default boolean redirectOverridePattern() {
+		return false;
+	}
+	
+	@Redirector(method = "addDefaultLogger(LoggingType, Level)", target = @Target(value = "Map#computeIfAbsent(Object, Function)", type = TargetType.INVOKE))
+	default Object redirectAddDefaultLogger() {
+		return new ArrayList<Level>();
+	}
+	
+	@Redirector(method = "addDefaultLogger(LoggingType, Level)", target = @Target(value = "List#add(Object)", type = TargetType.INVOKE))
+	default boolean test() {
+		return false;
 	}
 }

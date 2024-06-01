@@ -70,6 +70,15 @@ public class Utils {
 		return -1;
 	}
 	
+	public static <T> @NotNull T[] reverse(@NotNull T[] array) {
+		for (int i = 0; i < array.length / 2; i++) {
+			T temp = array[i];
+			array[i] = array[array.length - i - 1];
+			array[array.length - i - 1] = temp;
+		}
+		return array;
+	}
+	
 	//region Array to list
 	public static @NotNull List<Boolean> asList(boolean @NotNull [] array) {
 		return IntStream.range(0, array.length).mapToObj(i -> array[i]).collect(Collectors.toList());
