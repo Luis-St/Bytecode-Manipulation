@@ -103,7 +103,6 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			visitor.visitLabel(labels[0]);
 			//endregion
 			
-			
 			//region Create and store class and method concat
 			visitor.visitLdcInsn("#");
 			visitor.visitInsn(Opcodes.ICONST_2);
