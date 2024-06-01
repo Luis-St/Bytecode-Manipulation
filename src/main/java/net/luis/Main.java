@@ -27,7 +27,7 @@ public final class Main {
 	/*
 	 * ToDo:
 	 *  - Add transformers for unused annotations
-	 *  - Allow parameters in method with @Scheduled annotation (int -> for current cycle, ScheduleFuture -> for canceling)
+	 *  - Allow parameters in method with @Scheduled annotation (int -> for current cycle, ScheduleFuture -> for canceling) -> make threads daemon
 	 *  - Overhaul DefaultStringFactory
 	 */
 	

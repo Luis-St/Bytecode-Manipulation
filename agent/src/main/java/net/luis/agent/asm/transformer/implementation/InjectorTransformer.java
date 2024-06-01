@@ -21,6 +21,7 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -31,7 +32,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class InjectorTransformer extends BaseClassTransformer {
 	
-	private static final String IMPLEMENTATION_ERROR = "Inject Implementation Error";
+	private static final String IMPLEMENTATION_ERROR = "Injector Implementation Error";
 	private static final String MISSING_INFORMATION = "Missing Debug Information";
 	
 	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
@@ -116,7 +117,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 					.addDetail("Possible Methods", targetClass.getMethods(this.getRawInjectorName(injectorName)).stream().map(Method::getSourceSignature).toList()).exception();
 			}
 			if (possibleMethod.size() > 1) {
-				throw CrashReport.create("Found multiple possible methods for injector", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature).addDetail("Method", injectorName)
+				throw CrashReport.create("Found multiple possible methods for injector", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Injector", signature).addDetail("Method", injectorName)
 					.addDetail("Possible Methods", possibleMethod.stream().map(Method::getSourceSignature).toList()).exception();
 			}
 			Method method = possibleMethod.getFirst();
@@ -174,7 +175,8 @@ public class InjectorTransformer extends BaseClassTransformer {
 		public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			if (this.injectors.containsKey(name + descriptor)) {
-				return new InjectorMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.injectors.get(name + descriptor), this::markModified);
+				this.markModified();
+				return new InjectorMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.injectors.get(name + descriptor));
 			}
 			return visitor;
 		}
@@ -194,11 +196,11 @@ public class InjectorTransformer extends BaseClassTransformer {
 			return methodName;
 		}
 		
-		private @NotNull String getRawInjectorName(@NotNull String invokerTarget) {
-			if (invokerTarget.contains("(")) {
-				return invokerTarget.substring(0, invokerTarget.indexOf('('));
+		private @NotNull String getRawInjectorName(@NotNull String target) {
+			if (target.contains("(")) {
+				return target.substring(0, target.indexOf('('));
 			}
-			return invokerTarget;
+			return target;
 		}
 		//endregion
 	}
@@ -209,14 +211,11 @@ public class InjectorTransformer extends BaseClassTransformer {
 		private static final Field LABEL_LINE;
 		private static final Field LABEL_FLAGS;
 		
-		private final Map</*Line Number*/Integer, List<InjectorData>> injectors;
-		private final Runnable markModified;
+		private final Map</*Line Number*/Integer, List<InjectorData>> injectors = new HashMap<>();
 		private int lastLine = -1;
 		
-		private InjectorMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull List<InjectorData> injectors, @NotNull Runnable markModified) {
+		private InjectorMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull List<InjectorData> injectors) {
 			super(Opcodes.ASM9, visitor);
-			this.injectors = new HashMap<>();
-			this.markModified = markModified;
 			for (InjectorData data : injectors) {
 				this.injectors.computeIfAbsent(data.line(), l -> new ArrayList<>()).add(data);
 			}
@@ -297,7 +296,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 		
 		private void instrumentInjectorAsListener(@NotNull Method ifaceMethod, @NotNull Method method) {
 			this.instrumentMethodCall(ifaceMethod, method);
-			this.markModified.run();
 		}
 		
 		private void instrumentInjectorAsCallback(@NotNull Method ifaceMethod, @NotNull Method method) {
@@ -318,7 +316,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 			this.mv.visitJumpInsn(Opcodes.GOTO, end);
 			this.mv.visitLabel(end);
 			this.mv.visitLocalVariable("generated$InjectorTransformer$Temp" + local, method.getReturnType().getDescriptor(), null, start, end, local);
-			this.markModified.run();
 		}
 		
 		private void instrumentInjectorAsCancellation(@NotNull Method ifaceMethod, @NotNull Method method) {
@@ -334,7 +331,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 			this.mv.visitJumpInsn(Opcodes.GOTO, start);
 			this.mv.visitLabel(end);
 			this.mv.visitLocalVariable("generated$InjectorTransformer$Temp" + local, "Z", null, start, end, local);
-			this.markModified.run();
 		}
 		
 		private void instrumentMethodCall(@NotNull Method ifaceMethod, @NotNull Method method) {
@@ -343,87 +339,9 @@ public class InjectorTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(Opcodes.ALOAD, 0);
 			}
 			for (Parameter parameter : ifaceMethod.getParameters().values()) {
-				this.mv.visitVarInsn(parameter.getType().getOpcode(Opcodes.ILOAD), this.getLoadIndex(parameter, ifaceMethod, method));
+				this.mv.visitVarInsn(parameter.getType().getOpcode(Opcodes.ILOAD), getLoadIndex("injector", parameter, ifaceMethod, method));
 			}
 			this.mv.visitMethodInsn(isInstance ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKESTATIC, ifaceMethod.getOwner().getInternalName(), ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), true);
-		}
-		//endregion
-		
-		//region Helper methods
-		private int getLoadIndex(@NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
-			if (parameter.isAnnotatedWith(THIS)) {
-				this.checkStatic(parameter, ifaceMethod, method);
-				return 0;
-			}
-			Annotation annotation = parameter.getAnnotation(LOCAL);
-			String value = annotation.getOrDefault("value");
-			if (value.isEmpty()) {
-				if (!parameter.isNamed()) {
-					throw CrashReport.create("Unable to map injector parameter to target by name, because the parameter name was not included into the class file during compilation", MISSING_INFORMATION)
-						.addDetail("Injector", ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
-				}
-				String name = parameter.getName();
-				if ("_this".equals(name)) {
-					this.checkStatic(parameter, ifaceMethod, method);
-					System.out.println("Found parameter which specifies 'this' as target using the @Local annotation, use the @This annotation instead");
-					return 0;
-				}
-				int index = this.getLoadIndex(name, parameter, ifaceMethod, method);
-				if (index != -1) {
-					return index;
-				}
-			} else if (value.chars().allMatch(Character::isDigit)) {
-				int index = Integer.parseInt(value);
-				int max = method.getParameterCount() + method.getLocalCount();
-				if (!method.is(TypeModifier.STATIC)) {
-					max++;
-				}
-				if (index >= max) {
-					throw CrashReport.create("Unable to map injector parameter to target by index, because the index is out of bounds", MISSING_INFORMATION).addDetail("Injector", ifaceMethod.getSourceSignature())
-						.addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Index", index).addDetail("Max", max).exception();
-				}
-				return index;
-			} else if ("this".equals(value)) {
-				this.checkStatic(parameter, ifaceMethod, method);
-				System.out.println("Found parameter which specifies 'this' as target using the @Local annotation, use the @This annotation instead");
-				return 0;
-			} else {
-				int index = this.getLoadIndex(value, parameter, ifaceMethod, method);
-				if (index != -1) {
-					return index;
-				}
-			}
-			throw CrashReport.create("Unable to find target for injector parameter", IMPLEMENTATION_ERROR).addDetail("Injector", ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature())
-				.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Local Annotation Value", value).exception();
-		}
-		
-		private void checkStatic(@NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
-			if (method.is(TypeModifier.STATIC)) {
-				throw CrashReport.create("Unable to map injector parameter to 'this', because the method is static", MISSING_INFORMATION).addDetail("Injector", ifaceMethod.getSourceSignature())
-					.addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
-			}
-		}
-		
-		private int getLoadIndex(@NotNull String value, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
-			for (Parameter param : method.getParameters().values()) {
-				if (!param.isNamed()) {
-					throw CrashReport.create("Unable to find target by name for injector parameter, because the name was not included into the class file during compilation", MISSING_INFORMATION)
-						.addDetail("Injector", ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
-				}
-				if (param.getName().equals(value)) {
-					return param.getLoadIndex();
-				}
-			}
-			if (method.getLocals().isEmpty()) {
-				throw CrashReport.create("Unable to find target by name for injector parameter, because the local variables were not included into the class file during compilation", MISSING_INFORMATION)
-					.addDetail("Injector", ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
-			}
-			for (LocalVariable local : method.getLocals().values()) {
-				if (local.getName().equals(value)) {
-					return local.getIndex();
-				}
-			}
-			return -1;
 		}
 		//endregion
 		

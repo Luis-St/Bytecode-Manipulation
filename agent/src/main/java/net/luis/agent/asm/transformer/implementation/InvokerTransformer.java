@@ -159,11 +159,11 @@ public class InvokerTransformer extends BaseClassTransformer {
 			return methodName;
 		}
 		
-		private @NotNull String getRawInvokerName(@NotNull String invokerTarget) {
-			if (invokerTarget.contains("(")) {
-				return invokerTarget.substring(0, invokerTarget.indexOf('('));
+		private @NotNull String getRawInvokerName(@NotNull String target) {
+			if (target.contains("(")) {
+				return target.substring(0, target.indexOf('('));
 			}
-			return invokerTarget;
+			return target;
 		}
 		
 		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target) {

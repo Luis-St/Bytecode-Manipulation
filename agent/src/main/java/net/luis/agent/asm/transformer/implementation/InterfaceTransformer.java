@@ -75,7 +75,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		
 		//region Helper methods
 		private @NotNull List<String> getRestrictedValues(@NotNull Method method) {
-			String invokerTarget = this.getInjectorTarget(method);
+			String invokerTarget = this.getTarget(method);
 			if (invokerTarget.contains("(")) {
 				invokerTarget = invokerTarget.substring(0, invokerTarget.indexOf('('));
 			}
@@ -87,7 +87,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		}
 		
 		@SuppressWarnings("DuplicatedCode")
-		private @NotNull String getInjectorTarget(@NotNull Method method) {
+		private @NotNull String getTarget(@NotNull Method method) {
 			Annotation annotation = method.getAnnotation(INJECTOR);
 			String target = annotation.get("method");
 			if (target != null) {

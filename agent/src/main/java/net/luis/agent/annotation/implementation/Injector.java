@@ -10,8 +10,8 @@ import java.lang.annotation.*;
  *
  */
 
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
-@java.lang.annotation.Target(ElementType.METHOD)
 public @interface Injector {
 	
 	@NotNull String method() default "";

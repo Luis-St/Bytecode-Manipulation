@@ -3,8 +3,10 @@ package net.luis.agent.asm;
 import net.luis.agent.AgentContext;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.ClassType;
 import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
@@ -247,6 +249,73 @@ public class Instrumentations {
 	}
 	//endregion
 	
+	//region @This and @Local
+	public static int getLoadIndex(@NotNull String type, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
+		if (parameter.isAnnotatedWith(THIS)) {
+			checkStatic(type, parameter, ifaceMethod, method);
+			return 0;
+		}
+		Annotation annotation = parameter.getAnnotation(LOCAL);
+		String value = annotation.getOrDefault("value");
+		if (value.isEmpty()) {
+			if (!parameter.isNamed()) {
+				throw CrashReport.create("Unable to map " + type + " parameter to target by name, because the parameter name was not included into the class file during compilation", "Missing Debug Information")
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+			}
+			String name = parameter.getName();
+			if ("_this".equals(name)) {
+				checkStatic(type, parameter, ifaceMethod, method);
+				System.out.println("Found parameter which specifies 'this' as target using the @Local annotation, use the @This annotation instead");
+				return 0;
+			}
+			int index = getLoadIndex(type, name, parameter, ifaceMethod, method);
+			if (index != -1) {
+				return index;
+			}
+		} else if (value.chars().allMatch(Character::isDigit)) {
+			int index = Integer.parseInt(value);
+			int max = method.getParameterCount() + method.getLocalCount();
+			if (!method.is(TypeModifier.STATIC)) {
+				max++;
+			}
+			if (index >= max) {
+				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the index is out of bounds", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature())
+					.addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Index", index).addDetail("Max", max).exception();
+			}
+			return index;
+		} else if ("this".equals(value)) {
+			checkStatic(type, parameter, ifaceMethod, method);
+			System.out.println("Found parameter which specifies 'this' as target using the @Local annotation, use the @This annotation instead");
+			return 0;
+		} else {
+			int index = getLoadIndex(type, value, parameter, ifaceMethod, method);
+			if (index != -1) {
+				return index;
+			}
+		}
+		throw CrashReport.create("Unable to find target for " + type + " parameter", Utils.capitalize(type) + " Implementation Error").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature())
+			.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Local Annotation Value", value).exception();
+	}
+	//endregion
+	
+	//region Stack manipulation
+	public static void pop(@NotNull MethodVisitor visitor, @NotNull Type type) {
+		if (convertToPrimitive(type).getSize() == 2) {
+			visitor.visitInsn(Opcodes.POP2);
+		} else {
+			visitor.visitInsn(Opcodes.POP);
+		}
+	}
+	
+	public static void dup(@NotNull MethodVisitor visitor, @NotNull Type type) {
+		if (convertToPrimitive(type).getSize() == 2) {
+			visitor.visitInsn(Opcodes.DUP2);
+		} else {
+			visitor.visitInsn(Opcodes.DUP);
+		}
+	}
+	//endregion
+	
 	public static void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Method method, boolean iface) {
 		instrumentMethodCall(visitor, method, iface, 0);
 	}
@@ -359,6 +428,35 @@ public class Instrumentations {
 		} else {
 			visitor.visitLdcInsn(d);
 		}
+	}
+	
+	private static void checkStatic(@NotNull String type, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
+		if (method.is(TypeModifier.STATIC)) {
+			throw CrashReport.create("Unable to map " + type + " parameter to 'this', because the method is static", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature())
+				.addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+		}
+	}
+	
+	private static int getLoadIndex(@NotNull String type, @NotNull String value, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
+		for (Parameter param : method.getParameters().values()) {
+			if (!param.isNamed()) {
+				throw CrashReport.create("Unable to find target by name for " + type + " parameter, because the name was not included into the class file during compilation", "Missing Debug Information")
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+			}
+			if (param.getName().equals(value)) {
+				return param.getLoadIndex();
+			}
+		}
+		if (method.getLocals().isEmpty()) {
+			throw CrashReport.create("Unable to find target by name for " + type + " parameter, because the local variables were not included into the class file during compilation", "Missing Debug Information")
+				.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+		}
+		for (LocalVariable local : method.getLocals().values()) {
+			if (local.getName().equals(value)) {
+				return local.getIndex();
+			}
+		}
+		return -1;
 	}
 	//endregion
 }
