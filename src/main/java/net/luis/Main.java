@@ -29,6 +29,7 @@ public final class Main {
 	 *  - Add support for @Pattern annotation on other annotations -> Use Pattern#matches instead of compile & matcher
 	 *  - Add transformers for unused annotations
 	 *  - Allow parameters in method with @Scheduled annotation (int -> for current cycle, ScheduleFuture -> for canceling)
+	 *  - Overhaul DefaultStringFactory
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

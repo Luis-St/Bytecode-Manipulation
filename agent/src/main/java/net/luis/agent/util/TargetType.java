@@ -44,8 +44,11 @@ public enum TargetType {
 	// DCONST_0, DCONST_1
 	// BIPUSH + value
 	// SIPUSH + value
-	// LDC + value
+	// LDC (Number) + value
 	CONSTANT,
+	
+	// LDC (String) + value
+	STRING,
 	
 	// + IADD, LADD, FADD, DADD
 	// - ISUB, LSUB, FSUB, DSUB

@@ -146,7 +146,7 @@ public class TargetClassScanner extends ClassVisitor {
 				return;
 			}
 			this.lastOpcode = Opcodes.INVOKEDYNAMIC;
-			if (this.type != TargetType.CONSTANT) {
+			if (this.type != TargetType.STRING) {
 				return;
 			}
 			for (Object argument : arguments) {
@@ -234,7 +234,7 @@ public class TargetClassScanner extends ClassVisitor {
 			}
 			this.lastOpcode = opcode;
 			if (this.type == TargetType.CONSTANT && (opcode == Opcodes.BIPUSH || opcode == Opcodes.SIPUSH)) {
-				if (this.value.chars().allMatch(Character::isDigit) && operand == Integer.parseInt(this.value)) {
+				if (this.isNumber(operand, this.value)) {
 					this.target();
 				}
 			} else if (this.type == TargetType.NEW && opcode == Opcodes.NEWARRAY && this.value.equalsIgnoreCase(this.arrayOpcodeToString(operand))) {
@@ -249,22 +249,9 @@ public class TargetClassScanner extends ClassVisitor {
 				return;
 			}
 			this.lastOpcode = Opcodes.LDC;
-			if (this.type != TargetType.CONSTANT) {
-				return;
-			}
-			if (value instanceof Number number) {
-				if (this.isNumber(this.value)) {
-					if (this.matchNumber(number, this.value, '\0')) {
-						this.target();
-					}
-				} else {
-					char type = this.value.charAt(this.value.length() - 1);
-					String remaining = this.value.substring(0, this.value.length() - 1);
-					if (this.isNumber(remaining) && this.matchNumber(number, remaining, type)) {
-						this.target();
-					}
-				}
-			} else if (this.value.equals(value.toString())) {
+			if (this.type == TargetType.CONSTANT && value instanceof Number number && this.isNumber(number, this.value)) {
+				this.target();
+			} else if (this.type == TargetType.STRING && value instanceof String str && this.value.equals(str)) {
 				this.target();
 			}
 		}
@@ -362,7 +349,17 @@ public class TargetClassScanner extends ClassVisitor {
 			};
 		}
 		
-		private boolean isNumber(@NotNull String value) {
+		private boolean isNumber(@NotNull Number number, @NotNull String value) {
+			if (this.isValidNumber(value)) {
+				return this.matchNumber(number, value, '\0');
+			} else {
+				char type = value.charAt(value.length() - 1);
+				String remaining = value.substring(0, value.length() - 1);
+				return this.isValidNumber(remaining) && this.matchNumber(number, remaining, type);
+			}
+		}
+		
+		private boolean isValidNumber(@NotNull String value) {
 			boolean dot = false;
 			for (int i = 0; i < value.length(); i++) {
 				char c = value.charAt(i);

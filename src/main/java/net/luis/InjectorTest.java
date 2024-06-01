@@ -78,9 +78,12 @@ public class InjectorTest {
 		
 		if (list.getFirst() instanceof List) {
 			System.out.println("List");
+			System.out.println("null");
 		}
 		
 		list.add(null);
+		
+		System.out.println(true);
 	}
 	
 	private void validate() {

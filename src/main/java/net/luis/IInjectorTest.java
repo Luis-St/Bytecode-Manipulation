@@ -93,7 +93,7 @@ public interface IInjectorTest {
 	//region ACCESS_ARRAY
 	@Injector(method = "test(int)", target = @Target(type = TargetType.ACCESS_ARRAY))
 	default void injectAccessArray() {
-		System.out.println("Access array");
+		System.out.println("Access Array");
 	}
 	//endregion
 	
@@ -132,16 +132,11 @@ public interface IInjectorTest {
 	//region ASSIGN_ARRAY
 	@Injector(method = "test(int)", target = @Target(type = TargetType.ASSIGN_ARRAY, ordinal = 11))
 	default void injectAssignArray() {
-		System.out.println("Assign array");
+		System.out.println("Assign Array");
 	}
 	//endregion
 	
 	//region CONSTANT
-	@Injector(method = "test(int)", target = @Target(value = "String ", type = TargetType.CONSTANT))
-	default void injectConstantString() {
-		System.out.println("Constant with Value 'String '");
-	}
-	
 	@Injector(method = "test(int)", target = @Target(value = "100", type = TargetType.CONSTANT))
 	default void injectConstant100() {
 		System.out.println("Constant with Value '100'");
@@ -155,6 +150,23 @@ public interface IInjectorTest {
 	@Injector(method = "test(int)", target = @Target(value = "null", type = TargetType.CONSTANT))
 	default void injectConstantNull() {
 		System.out.println("Constant with Value 'null'");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "true", type = TargetType.CONSTANT))
+	default void injectConstantTrue() {
+		System.out.println("Constant with Value 'true'");
+	}
+	//endregion
+	
+	//region STRING
+	@Injector(method = "test(int)", target = @Target(value = "String ", type = TargetType.STRING))
+	default void injectString() {
+		System.out.println("String with Value 'String '");
+	}
+	
+	@Injector(method = "test(int)", target = @Target(value = "null", type = TargetType.STRING))
+	default void injectStringNull() {
+		System.out.println("String with Value 'null'");
 	}
 	//endregion
 	
