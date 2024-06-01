@@ -17,5 +17,5 @@ public @interface Caught {
 	
 	@NotNull CaughtAction value() default CaughtAction.NOTHING;
 	
-	Class<? extends Throwable> exceptionType() default Throwable.class;
+	@NotNull Class<? extends Throwable> exceptionType() default Throwable.class;
 }
