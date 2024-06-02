@@ -63,7 +63,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 			byte[] bytes = writer.toByteArray();
 			if (this.modified) {
-				System.out.println("Transformed Class: " + type);
+				System.out.println("Transformed Class: " + type.getClassName());
 				ASMUtils.saveClass(new File("transformed/" + className + ".class"), bytes);
 				this.modified = false;
 			}

@@ -1,5 +1,6 @@
 package net.luis.agent;
 
+import net.luis.agent.asm.generation.GenerationClassLoader;
 import net.luis.agent.asm.transformer.implementation.*;
 import net.luis.agent.asm.transformer.method.*;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +17,7 @@ public class Agent {
 	
 	public static void premain(@NotNull String agentArgs, @NotNull Instrumentation inst) {
 		System.out.println("Agent loaded");
+		generateRuntimeClasses();
 		AgentContext.get().initialize();
 		inst.addTransformer(new InterfaceTransformer());
 		inst.addTransformer(new InterfaceInjectionTransformer());
@@ -33,5 +35,9 @@ public class Agent {
 		inst.addTransformer(new DefaultTransformer());
 		inst.addTransformer(new RangeTransformer());
 		inst.addTransformer(new RestrictedAccessTransformer());
+	}
+	
+	private static void generateRuntimeClasses() {
+		GenerationClassLoader classLoader = new GenerationClassLoader();
 	}
 }

@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -24,8 +25,11 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public final class Main {
 	
+	private static final ScheduledExecutorService EXECUTOR;
+	
 	/*
 	 * ToDo:
+	 *  - Use String#concat instead of String#join in RestrictedAccessTransformer
 	 *  - Add transformers for unused annotations
 	 *  - Allow parameters in method with @Scheduled annotation (int -> for current cycle, ScheduleFuture -> for canceling) -> make threads daemon
 	 *  - Overhaul DefaultStringFactory
@@ -98,7 +102,24 @@ public final class Main {
 	}
 	
 	//@Scheduled(1000)
-	public static void scheduled() {
+	public static void scheduled(ScheduledFuture<?> future) {
 		System.out.println("Test Scheduled");
+		System.out.println(future);
+	}
+	
+	static {
+		ThreadFactory factory = new ThreadFactory() {
+			private final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+			
+			@Override
+			public @NotNull Thread newThread(@NotNull Runnable runnable) {
+				Thread thread = this.defaultFactory.newThread(runnable);
+				thread.setDaemon(true);
+				return thread;
+			}
+		};
+		EXECUTOR = new ScheduledThreadPoolExecutor(4, factory);
+		Map<String, ScheduledFuture<?>> map = new ConcurrentHashMap<>();
+		//map.put("Main#scheduled", EXECUTOR.scheduleAtFixedRate(() -> scheduled(map.get("Main#scheduled")), 0, 1, TimeUnit.SECONDS));
 	}
 }
