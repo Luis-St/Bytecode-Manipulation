@@ -1,6 +1,7 @@
 package net.luis.agent;
 
 import net.luis.agent.asm.generation.GenerationLoader;
+import net.luis.agent.asm.generation.RuntimeUtilsGenerator;
 import net.luis.agent.asm.transformer.implementation.*;
 import net.luis.agent.asm.transformer.method.*;
 import org.jetbrains.annotations.NotNull;
@@ -52,5 +53,6 @@ public class Agent {
 	
 	private static void generateRuntimeClasses() {
 		GenerationLoader loader = new GenerationLoader();
+		loader.loadClass(new RuntimeUtilsGenerator());
 	}
 }

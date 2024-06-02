@@ -69,6 +69,8 @@ public class Types {
 	public static final Type PATTERN = Type.getType(Pattern.class);
 	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
 	
+	public static final Type RUNTIME_UTILS = Type.getType("Lnet/luis/agent/generated/RuntimeUtils;");
+	
 	public static @NotNull Type convertToPrimitive(@NotNull Type wrapper) {
 		int index = Utils.indexOf(WRAPPERS, wrapper);
 		return index != -1 ? PRIMITIVES[index] : wrapper;
