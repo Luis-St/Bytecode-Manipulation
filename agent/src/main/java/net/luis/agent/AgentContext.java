@@ -6,6 +6,7 @@ import net.luis.agent.asm.scanner.ClassPathScanner;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
+import java.lang.instrument.Instrumentation;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,14 +21,14 @@ public class AgentContext {
 	
 	private static final AgentContext INSTANCE = new AgentContext();
 	
-	private final List<Type> classes = ClassPathScanner.getClasses().stream().filter(type -> !type.getDescriptor().contains("module-info")).collect(Collectors.toList());
+	private final List<Type> classes = ClassPathScanner.getClasses().stream().filter(type -> !type.getDescriptor().contains("module-info") && !type.getDescriptor().contains("package-info")).collect(Collectors.toList());
 	private final Map<Type, Class> cache = new HashMap<>();
 	
 	public static @NotNull AgentContext get() {
 		return INSTANCE;
 	}
 	
-	public void initialize() {
+	public void initialize(@NotNull Instrumentation inst) {
 		long start = System.currentTimeMillis();
 		this.classes.forEach(type -> this.cache.put(type, ClassFileScanner.scanClass(type)));
 		System.out.println("Initialized context with " + this.classes.size() + " classes in " + (System.currentTimeMillis() - start) + "ms");

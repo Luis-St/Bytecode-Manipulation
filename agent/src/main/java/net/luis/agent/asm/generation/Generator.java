@@ -28,5 +28,5 @@ public abstract class Generator {
 		return this.name;
 	}
 	
-	public abstract void generate(@NotNull ClassVisitor visitor);
+	public abstract void generate(@NotNull ClassVisitor cv);
 }

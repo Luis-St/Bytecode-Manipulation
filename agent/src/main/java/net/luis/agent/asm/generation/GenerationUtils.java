@@ -11,7 +11,7 @@ import org.objectweb.asm.*;
 
 public class GenerationUtils {
 	
-	public static void generateDefaultConstructor(@NotNull ClassVisitor visitor, @NotNull String className) {
+	public static void generateDefaultConstructor(@NotNull ClassVisitor visitor) {
 		MethodVisitor mv = visitor.visitMethod(Opcodes.ACC_PRIVATE, "<init>", "()V", null, null);
 		mv.visitCode();
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
