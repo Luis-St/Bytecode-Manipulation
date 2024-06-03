@@ -43,6 +43,11 @@ public class DefaultTransformer extends BaseClassTransformer {
 		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
 			
 			@Override
+			protected boolean isMethodValid(@NotNull Method method) {
+				return super.isMethodValid(method) && method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
+			}
+			
+			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
 				return new DefaultVisitor(visitor, method);
 			}

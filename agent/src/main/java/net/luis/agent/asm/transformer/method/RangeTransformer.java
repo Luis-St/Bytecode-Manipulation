@@ -44,6 +44,14 @@ public class RangeTransformer extends BaseClassTransformer {
 		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
 			
 			@Override
+			protected boolean isMethodValid(@NotNull Method method) {
+				if (!super.isMethodValid(method)) {
+					return false;
+				}
+				return method.isAnnotatedWithAny(ANNOS) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS));
+			}
+			
+			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
 				return new RangeVisitor(visitor, method);
 			}

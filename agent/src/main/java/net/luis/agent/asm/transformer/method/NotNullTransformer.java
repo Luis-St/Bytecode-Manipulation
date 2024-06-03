@@ -30,13 +30,21 @@ public class NotNullTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		Class clazz = AgentContext.get().getClass(type);
-		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) && clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(NOT_NULL));
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(NOT_NULL)) && clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new MethodOnlyClassVisitor(writer, type, () -> this.modified = true) {
+			
+			@Override
+			protected boolean isMethodValid(@NotNull Method method) {
+				if (!super.isMethodValid(method)) {
+					return false;
+				}
+				return method.isAnnotatedWith(NOT_NULL) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL));
+			}
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
