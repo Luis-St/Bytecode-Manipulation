@@ -38,11 +38,6 @@ public class Types {
 	public static final Type STRING = Type.getType(String.class);
 	public static final Type TYPE = Type.getType(Type.class);
 	
-	public static final Type VOID_METHOD = Type.getType("()V");
-	
-	public static final Type RUNTIME_EXCEPTION = Type.getType(RuntimeException.class);
-	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType(IllegalArgumentException.class);
-	
 	public static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
 	public static final Type IMPLEMENTED = Type.getType(Implemented.class);
@@ -71,6 +66,16 @@ public class Types {
 	
 	public static final Type RUNTIME_UTILS = Type.getType("Lnet/luis/agent/generated/RuntimeUtils;");
 	public static final Type DAEMON_THREAD_FACTORY = Type.getType("Lnet/luis/agent/generated/DaemonThreadFactory;");
+	public static final Type COUNTING_RUNNABLE = Type.getType("Lnet/luis/agent/generated/CountingRunnable;");
+	public static final Type CANCELABLE_RUNNABLE = Type.getType("Lnet/luis/agent/generated/CancelableRunnable;");
+	public static final Type CONTEXT_RUNNABLE = Type.getType("Lnet/luis/agent/generated/ContextRunnable;");
+	
+	public static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
+	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType("Ljava/lang/IllegalArgumentException;");
+	
+	public static final Type RUNNABLE = Type.getType("Ljava/lang/Runnable;");
+	
+	public static final Type VOID_METHOD = Type.getType("()V");
 	
 	public static @NotNull Type convertToPrimitive(@NotNull Type wrapper) {
 		int index = Utils.indexOf(WRAPPERS, wrapper);

@@ -15,8 +15,6 @@ import static net.luis.agent.asm.Types.*;
 
 public class DaemonThreadFactoryGenerator extends Generator {
 	
-	private static final Type THREAD_FACTORY = Type.getType("Ljava/util/concurrent/ThreadFactory;");
-	
 	public DaemonThreadFactoryGenerator() {
 		super(DAEMON_THREAD_FACTORY.getClassName());
 	}

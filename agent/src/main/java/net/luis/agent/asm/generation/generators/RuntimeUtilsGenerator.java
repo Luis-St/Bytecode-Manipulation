@@ -6,7 +6,7 @@ import org.objectweb.asm.*;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
-import static net.luis.agent.asm.generation.GenerationUtils.*;
+import static net.luis.agent.asm.generation.Generations.*;
 
 /**
  *
@@ -23,7 +23,7 @@ public class RuntimeUtilsGenerator extends Generator {
 	@Override
 	public void generate(@NotNull ClassVisitor cv) {
 		cv.visit(CLASS_VERSION, Opcodes.ACC_PUBLIC, RUNTIME_UTILS.getInternalName(), null, "java/lang/Object", null);
-		generateDefaultConstructor(cv);
+		generateDefaultConstructor(cv, RUNTIME_UTILS);
 		this.generateIsAccessAllowed(cv);
 		cv.visitEnd();
 	}
@@ -31,13 +31,11 @@ public class RuntimeUtilsGenerator extends Generator {
 	@SuppressWarnings("DuplicatedCode")
 	private void generateIsAccessAllowed(@NotNull ClassVisitor cv) {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "isAccessAllowed", "(Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Z", null, null);
-		//region Labels
-		Label methodStart = new Label();
+		Label start = new Label();
 		Label[] labels = new Label[] {
 			new Label(), new Label(), new Label(), new Label(), new Label(), new Label(), new Label()
 		};
-		Label methodEnd = new Label();
-		//endregion
+		Label end = new Label();
 		
 		//region Parameters
 		mv.visitParameter("target", 0);
@@ -50,7 +48,7 @@ public class RuntimeUtilsGenerator extends Generator {
 		//endregion
 		
 		mv.visitCode();
-		mv.visitLabel(methodStart);
+		mv.visitLabel(start);
 		
 		//region Parameter validation
 		instrumentNonNullCheck(mv, 0, "Target must not be null");
@@ -139,13 +137,13 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitInsn(Opcodes.IRETURN);
 		//endregion
 		
-		mv.visitLabel(methodEnd);
-		mv.visitLocalVariable("target", STRING.getDescriptor(), null, methodStart, methodEnd, 0);
-		mv.visitLocalVariable("pattern", BOOLEAN.getDescriptor(), null, methodStart, methodEnd, 1);
-		mv.visitLocalVariable("className", STRING.getDescriptor(), null, methodStart, methodEnd, 2);
-		mv.visitLocalVariable("methodName", STRING.getDescriptor(), null, methodStart, methodEnd, 3);
-		mv.visitLocalVariable("concat", STRING.getDescriptor(), null, labels[0], methodEnd, 4);
-		mv.visitLocalVariable("simple", STRING.getDescriptor(), null, labels[3], methodEnd, 5);
+		mv.visitLabel(end);
+		mv.visitLocalVariable("target", STRING.getDescriptor(), null, start, end, 0);
+		mv.visitLocalVariable("pattern", BOOLEAN.getDescriptor(), null, start, end, 1);
+		mv.visitLocalVariable("className", STRING.getDescriptor(), null, start, end, 2);
+		mv.visitLocalVariable("methodName", STRING.getDescriptor(), null, start, end, 3);
+		mv.visitLocalVariable("concat", STRING.getDescriptor(), null, labels[0], end, 4);
+		mv.visitLocalVariable("simple", STRING.getDescriptor(), null, labels[3], end, 5);
 		mv.visitMaxs(0, 0);
 		mv.visitEnd();
 	}
