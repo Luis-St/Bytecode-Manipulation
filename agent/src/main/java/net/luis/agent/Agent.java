@@ -1,14 +1,13 @@
 package net.luis.agent;
 
-import net.luis.agent.asm.generation.GenerationLoader;
-import net.luis.agent.asm.generation.RuntimeUtilsGenerator;
+import net.luis.agent.asm.generation.*;
 import net.luis.agent.asm.transformer.implementation.*;
 import net.luis.agent.asm.transformer.method.*;
 import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.Type;
 
 import java.lang.instrument.Instrumentation;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -26,9 +25,16 @@ public class Agent {
 	
 	//region Initialization
 	private static void initialize(@NotNull Instrumentation inst) {
-		AgentContext.get().initialize(inst);
 		inst.redefineModule(ModuleLayer.boot().findModule("java.base").orElseThrow(), Set.of(), Map.of(), Map.of("java.lang", Set.of(Agent.class.getModule())), Set.of(), Map.of());
-		generateRuntimeClasses();
+		AgentContext.get().initialize(generateRuntimeClasses());
+	}
+	
+	private static @NotNull Map<Type, byte[]> generateRuntimeClasses() {
+		Map<Type, byte[]> generated = new HashMap<>();
+		GenerationLoader loader = new GenerationLoader();
+		loader.loadClass(generated, new RuntimeUtilsGenerator());
+		loader.loadClass(generated, new DaemonThreadFactoryGenerator());
+		return generated;
 	}
 	
 	private static void initializeTransformers(@NotNull Instrumentation inst) {
@@ -50,9 +56,4 @@ public class Agent {
 		inst.addTransformer(new RestrictedAccessTransformer());
 	}
 	//endregion
-	
-	private static void generateRuntimeClasses() {
-		GenerationLoader loader = new GenerationLoader();
-		loader.loadClass(new RuntimeUtilsGenerator());
-	}
 }

@@ -70,6 +70,7 @@ public class Types {
 	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
 	
 	public static final Type RUNTIME_UTILS = Type.getType("Lnet/luis/agent/generated/RuntimeUtils;");
+	public static final Type DAEMON_THREAD_FACTORY = Type.getType("Lnet/luis/agent/generated/DaemonThreadFactory;");
 	
 	public static @NotNull Type convertToPrimitive(@NotNull Type wrapper) {
 		int index = Utils.indexOf(WRAPPERS, wrapper);

@@ -16,12 +16,12 @@ import static net.luis.agent.asm.generation.GenerationUtils.*;
 public class RuntimeUtilsGenerator extends Generator {
 	
 	public RuntimeUtilsGenerator() {
-		super("net.luis.agent.generated.RuntimeUtils");
+		super(RUNTIME_UTILS.getClassName());
 	}
 	
 	@Override
 	public void generate(@NotNull ClassVisitor cv) {
-		cv.visit(CLASS_VERSION, Opcodes.ACC_PUBLIC, "net/luis/agent/generated/RuntimeUtils", null, "java/lang/Object", null);
+		cv.visit(CLASS_VERSION, Opcodes.ACC_PUBLIC, RUNTIME_UTILS.getInternalName(), null, "java/lang/Object", null);
 		generateDefaultConstructor(cv);
 		this.generateIsAccessAllowed(cv);
 		cv.visitEnd();

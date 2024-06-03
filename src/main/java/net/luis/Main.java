@@ -25,7 +25,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public final class Main {
 	
-	private static final ScheduledExecutorService EXECUTOR;
+	//private static final ScheduledExecutorService EXECUTOR;
 	
 	/*
 	 * ToDo:
@@ -101,25 +101,24 @@ public final class Main {
 		throw new RuntimeException("Caught Exception");
 	}
 	
-	//@Scheduled(1000)
-	public static void scheduled(ScheduledFuture<?> future) {
+	@Scheduled(1000)
+	public static void scheduled() {
 		System.out.println("Test Scheduled");
-		System.out.println(future);
 	}
 	
 	static {
-		ThreadFactory factory = new ThreadFactory() {
-			private final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
-			
-			@Override
-			public @NotNull Thread newThread(@NotNull Runnable runnable) {
-				Thread thread = this.defaultFactory.newThread(runnable);
-				thread.setDaemon(true);
-				return thread;
-			}
-		};
-		EXECUTOR = new ScheduledThreadPoolExecutor(4, factory);
-		Map<String, ScheduledFuture<?>> map = new ConcurrentHashMap<>();
+		/*ThreadFactory factory = new ThreadFactory() {*/
+		/*	private final ThreadFactory defaultFactory = Executors.defaultThreadFactory()*/;
+		/*	*/
+		/*	@Override*/
+		/*	public @NotNull Thread newThread(@NotNull Runnable runnable) {*/
+		/*		Thread thread = this.defaultFactory.newThread(runnable);*/
+		/*		thread.setDaemon(true);*/
+		/*		return thread;*/
+		/*	}*/
+		/*};*/
+		/*EXECUTOR = new ScheduledThreadPoolExecutor(4, factory);*/
+		/*Map<String, ScheduledFuture<?>> map = new ConcurrentHashMap<>();*/
 		//map.put("Main#scheduled", EXECUTOR.scheduleAtFixedRate(() -> scheduled(map.get("Main#scheduled")), 0, 1, TimeUnit.SECONDS));
 	}
 }

@@ -149,12 +149,18 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
+		public void visitMaxs(int maxStack, int maxLocals) {}
+		
+		@Override
 		public void visitEnd() {
 			if (this.generated) {
 				this.mv.visitTypeInsn(Opcodes.NEW, SCHEDULED_EXECUTOR_POOL.getInternalName());
 				this.mv.visitInsn(Opcodes.DUP);
 				loadNumber(this.mv, Math.min(4, this.lookup.size()));
-				this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, SCHEDULED_EXECUTOR_POOL.getInternalName(), "<init>", "(I)V", false);
+				this.mv.visitTypeInsn(Opcodes.NEW, DAEMON_THREAD_FACTORY.getInternalName());
+				this.mv.visitInsn(Opcodes.DUP);
+				this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, DAEMON_THREAD_FACTORY.getInternalName(), "<init>", "()V", false);
+				this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, SCHEDULED_EXECUTOR_POOL.getInternalName(), "<init>", "(ILjava/util/concurrent/ThreadFactory;)V", false);
 				this.mv.visitFieldInsn(Opcodes.PUTSTATIC, this.type.getInternalName(), this.executor.getName(), this.executor.getType().getDescriptor());
 			}
 			for (Method method : this.lookup) {
@@ -174,6 +180,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			}
 			this.mv.visitInsn(Opcodes.RETURN);
 			super.visitEnd();
+			this.mv.visitMaxs(0, 0);
 		}
 		
 		private @NotNull Handle createHandle(@NotNull Method method) {

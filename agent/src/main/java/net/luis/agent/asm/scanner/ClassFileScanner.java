@@ -1,5 +1,6 @@
 package net.luis.agent.asm.scanner;
 
+import net.luis.agent.annotation.RestrictedAccess;
 import net.luis.agent.asm.data.Class;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
@@ -24,13 +25,18 @@ public class ClassFileScanner {
 		scanClass(readClass(type), visitor, Function.identity());
 	}
 	
+	@RestrictedAccess("net.luis.agent.AgentContext#initialize")
+	public static @NotNull Class scanGeneratedClass(@NotNull Type type, byte[] bytes) {
+		return scanClass(bytes, new ClassScanner(), ClassScanner::get);
+	}
+	
 	//region Helper methods
 	private static <T extends ClassVisitor, X> @NotNull X scanClass(@NotNull Type type, @NotNull T visitor, @NotNull Function<T, X> result) {
 		return scanClass(readClass(type), visitor, result);
 	}
 	
-	private static <T extends ClassVisitor, X> @NotNull X scanClass(byte @NotNull [] data, @NotNull T visitor, @NotNull Function<T, X> result) {
-		ClassReader reader = new ClassReader(data);
+	private static <T extends ClassVisitor, X> @NotNull X scanClass(byte @NotNull [] bytes, @NotNull T visitor, @NotNull Function<T, X> result) {
+		ClassReader reader = new ClassReader(bytes);
 		reader.accept(visitor, 0);
 		return result.apply(visitor);
 	}
