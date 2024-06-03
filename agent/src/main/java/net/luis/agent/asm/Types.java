@@ -73,7 +73,14 @@ public class Types {
 	public static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
 	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType("Ljava/lang/IllegalArgumentException;");
 	
+	public static final Type MAP = Type.getType("Ljava/util/Map;");
+	public static final Type CONCURRENT_HASH_MAP = Type.getType("Ljava/util/concurrent/ConcurrentHashMap;");
+	
 	public static final Type RUNNABLE = Type.getType("Ljava/lang/Runnable;");
+	public static final Type CONSUMER = Type.getType("Ljava/util/function/Consumer;");
+	public static final Type BI_CONSUMER = Type.getType("Ljava/util/function/BiConsumer;");
+	public static final Type THREAD_FACTORY = Type.getType("Ljava/util/concurrent/ThreadFactory;");
+	public static final Type SCHEDULED_FUTURE = Type.getType("Ljava/util/concurrent/ScheduledFuture;");
 	
 	public static final Type VOID_METHOD = Type.getType("()V");
 	

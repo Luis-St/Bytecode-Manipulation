@@ -129,11 +129,12 @@ public class RangeTransformer extends BaseClassTransformer {
 				Label start = new Label();
 				Label end = new Label();
 				Type type = this.method.getReturnType();
+				
 				int local = newLocal(this.mv, type);
-				String message = "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must be ";
 				this.mv.visitLabel(start);
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
 				
+				String message = "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must be ";
 				if (this.method.isAnnotatedWith(ABOVE)) {
 					this.instrument(this.method.getAnnotation(ABOVE), type, local, true, Opcodes.IFGT, message + "above");
 				}
