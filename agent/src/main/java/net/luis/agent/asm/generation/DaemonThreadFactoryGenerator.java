@@ -3,7 +3,6 @@ package net.luis.agent.asm.generation;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 
-import static net.luis.agent.asm.generation.GenerationUtils.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -14,14 +13,16 @@ import static net.luis.agent.asm.Types.*;
 
 public class DaemonThreadFactoryGenerator extends Generator {
 	
+	private static final Type THREAD_FACTORY = Type.getType("Ljava/util/concurrent/ThreadFactory;");
+	
 	public DaemonThreadFactoryGenerator() {
 		super(DAEMON_THREAD_FACTORY.getClassName());
 	}
 	
 	@Override
 	public void generate(@NotNull ClassVisitor cv) {
-		cv.visit(CLASS_VERSION, Opcodes.ACC_PUBLIC, DAEMON_THREAD_FACTORY.getInternalName(), null, "java/lang/Object", null);
-		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "defaultFactory", "Ljava/util/concurrent/ThreadFactory;", null, null).visitEnd();
+		cv.visit(CLASS_VERSION, Opcodes.ACC_PUBLIC, DAEMON_THREAD_FACTORY.getInternalName(), null, "java/lang/Object", new String[] { THREAD_FACTORY.getInternalName() });
+		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "defaultFactory", THREAD_FACTORY.getDescriptor(), null, null).visitEnd();
 		this.generateConstructor(cv);
 		this.generateNewThread(cv);
 		cv.visitEnd();
@@ -36,8 +37,8 @@ public class DaemonThreadFactoryGenerator extends Generator {
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
 		mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/concurrent/Executors", "defaultThreadFactory", "()Ljava/util/concurrent/ThreadFactory;", false);
-		mv.visitFieldInsn(Opcodes.PUTFIELD, DAEMON_THREAD_FACTORY.getInternalName(), "defaultFactory", "Ljava/util/concurrent/ThreadFactory;");
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/concurrent/Executors", "defaultThreadFactory", "()" + THREAD_FACTORY.getDescriptor(), false);
+		mv.visitFieldInsn(Opcodes.PUTFIELD, DAEMON_THREAD_FACTORY.getInternalName(), "defaultFactory", THREAD_FACTORY.getDescriptor());
 		mv.visitInsn(Opcodes.RETURN);
 		mv.visitLabel(end);
 		mv.visitLocalVariable("this", DAEMON_THREAD_FACTORY.getDescriptor(), null, start, end, 0);
@@ -55,7 +56,7 @@ public class DaemonThreadFactoryGenerator extends Generator {
 		mv.visitCode();
 		mv.visitLabel(start);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
-		mv.visitFieldInsn(Opcodes.GETFIELD, DAEMON_THREAD_FACTORY.getInternalName(), "defaultFactory", "Ljava/util/concurrent/ThreadFactory;");
+		mv.visitFieldInsn(Opcodes.GETFIELD, DAEMON_THREAD_FACTORY.getInternalName(), "defaultFactory", THREAD_FACTORY.getDescriptor());
 		mv.visitVarInsn(Opcodes.ALOAD, 1);
 		mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, "java/util/concurrent/ThreadFactory", "newThread", "(Ljava/lang/Runnable;)Ljava/lang/Thread;", true);
 		mv.visitVarInsn(Opcodes.ASTORE, 2);
@@ -68,6 +69,7 @@ public class DaemonThreadFactoryGenerator extends Generator {
 		mv.visitLocalVariable("this", DAEMON_THREAD_FACTORY.getDescriptor(), null, start, end, 0);
 		mv.visitLocalVariable("runnable", "Ljava/lang/Runnable;", null, start, end, 1);
 		mv.visitLocalVariable("thread", "Ljava/lang/Thread;", null, start, end, 2);
+		mv.visitMaxs(0, 0);
 		mv.visitEnd();
 	}
 }

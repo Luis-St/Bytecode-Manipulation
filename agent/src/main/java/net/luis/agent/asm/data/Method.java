@@ -157,6 +157,14 @@ public class Method implements ASMData {
 		return this.methodType == type;
 	}
 	
+	public boolean is(@NotNull String owner, @NotNull String name, @NotNull String descriptor) {
+		return this.is(Type.getObjectType(owner), name, Type.getType(descriptor));
+	}
+	
+	public boolean is(@NotNull Type owner, @NotNull String name, @NotNull Type descriptor) {
+		return this.owner.equals(owner) && this.name.equals(name) && this.type.equals(descriptor);
+	}
+	
 	public boolean isImplementedMethod() {
 		return this.is(MethodType.METHOD) && !this.is(TypeModifier.ABSTRACT);
 	}

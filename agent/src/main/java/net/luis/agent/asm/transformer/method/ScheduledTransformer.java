@@ -141,18 +141,8 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
-		public void visitInsn(int opcode) {
-			if (opcode == Opcodes.RETURN) {
-				return;
-			}
-			super.visitInsn(opcode);
-		}
-		
-		@Override
-		public void visitMaxs(int maxStack, int maxLocals) {}
-		
-		@Override
-		public void visitEnd() {
+		public void visitCode() {
+			super.visitCode();
 			if (this.generated) {
 				this.mv.visitTypeInsn(Opcodes.NEW, SCHEDULED_EXECUTOR_POOL.getInternalName());
 				this.mv.visitInsn(Opcodes.DUP);
@@ -162,7 +152,19 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, DAEMON_THREAD_FACTORY.getInternalName(), "<init>", "()V", false);
 				this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, SCHEDULED_EXECUTOR_POOL.getInternalName(), "<init>", "(ILjava/util/concurrent/ThreadFactory;)V", false);
 				this.mv.visitFieldInsn(Opcodes.PUTSTATIC, this.type.getInternalName(), this.executor.getName(), this.executor.getType().getDescriptor());
+				this.instrument();
 			}
+		}
+		
+		@Override
+		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
+			super.visitFieldInsn(opcode, owner, name, descriptor);
+			if (!this.generated && opcode == Opcodes.PUTSTATIC && this.executor.getOwner().getInternalName().equals(owner) && this.executor.getName().equals(name) && this.executor.getType().getDescriptor().equals(descriptor)) {
+				this.instrument();
+			}
+		}
+		
+		private void instrument() {
 			for (Method method : this.lookup) {
 				Annotation annotation = method.getAnnotation(SCHEDULED);
 				long initialDelay = annotation.getOrDefault("initialDelay");
@@ -178,9 +180,6 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				this.instrumentScheduleInvoke(fixedRate ? "scheduleAtFixedRate" : "scheduleWithFixedDelay");
 				this.mv.visitInsn(Opcodes.POP);
 			}
-			this.mv.visitInsn(Opcodes.RETURN);
-			super.visitEnd();
-			this.mv.visitMaxs(0, 0);
 		}
 		
 		private @NotNull Handle createHandle(@NotNull Method method) {

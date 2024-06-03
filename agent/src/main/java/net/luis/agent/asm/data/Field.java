@@ -98,6 +98,14 @@ public class Field implements ASMData {
 	public @NotNull String getSourceSignature() {
 		return this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
 	}
+	
+	public boolean is(@NotNull String owner, @NotNull String name, @NotNull String descriptor) {
+		return this.is(Type.getObjectType(owner), name, Type.getType(descriptor));
+	}
+	
+	public boolean is(@NotNull Type owner, @NotNull String name, @NotNull Type descriptor) {
+		return this.owner.equals(owner) && this.name.equals(name) && this.type.equals(descriptor);
+	}
 	//endregion
 	
 	//region Object overrides
