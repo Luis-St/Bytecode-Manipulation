@@ -8,12 +8,16 @@ import net.luis.utils.lang.StringUtils;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.logging.log4j.Level;
+import org.checkerframework.checker.units.qual.C;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -105,9 +109,25 @@ public final class Main {
 		System.out.println("Test Scheduled");
 	}
 	
+	public static void scheduled(int count) {
+		System.out.println(count);
+	}
+	
+	public static void scheduled(ScheduledFuture<?> future) {
+		System.out.println(future);
+	}
+	
+	public static void scheduled(int count, ScheduledFuture<?> future) {
+		System.out.println(count + " " + future);
+	}
+	
 	static {
 		EXECUTOR = new ScheduledThreadPoolExecutor(4, new DaemonThreadFactory());
 		EXECUTOR.scheduleAtFixedRate(Main::scheduled, 0, 1, TimeUnit.SECONDS);
+		EXECUTOR.scheduleAtFixedRate(new CountingRunnable(Main::scheduled), 0, 1, TimeUnit.SECONDS);
+		Map<String, ScheduledFuture<?>> lookup = new HashMap<>();
+		lookup.put("net.luis.Main#scheduled(ScheduledFuture)", EXECUTOR.scheduleAtFixedRate(new CancelableRunnable("net.luis.Main#scheduled(ScheduledFuture)", lookup, Main::scheduled), 0, 1, TimeUnit.SECONDS));
+		lookup.put("net.luis.Main#scheduled(int, ScheduledFuture)", EXECUTOR.scheduleAtFixedRate(new ContextRunnable("net.luis.Main#scheduled(int, ScheduledFuture)", lookup, Main::scheduled), 0, 1, TimeUnit.SECONDS));
 	}
 	
 	private static class DaemonThreadFactory implements ThreadFactory {
@@ -119,5 +139,62 @@ public final class Main {
 			thread.setDaemon(true);
 			return thread;
 		}
-	};
+	}
+	
+	private static class CountingRunnable implements Runnable {
+		private final Consumer<Integer> action;
+		private int count;
+		
+		private CountingRunnable(@NotNull Consumer<Integer> action) {
+			this.action = action;
+		}
+		
+		@Override
+		public void run() {
+			this.action.accept(this.count++);
+		}
+	}
+	
+	private static class CancelableRunnable implements Runnable {
+		private final String method;
+		private final Map<String, ScheduledFuture<?>> lookup;
+		private final Consumer<ScheduledFuture<?>> action;
+		private ScheduledFuture<?> future;
+		
+		private CancelableRunnable(@NotNull String method, @NotNull Map<String, ScheduledFuture<?>> lookup, @NotNull Consumer<ScheduledFuture<?>> action) {
+			this.method = method;
+			this.lookup = lookup;
+			this.action = action;
+		}
+		
+		@Override
+		public void run() {
+			if (this.future == null) {
+				this.future = this.lookup.get(this.method);
+			}
+			this.action.accept(this.future);
+		}
+	}
+	
+	private static class ContextRunnable implements Runnable {
+		private final String method;
+		private final Map<String, ScheduledFuture<?>> lookup;
+		private final BiConsumer<Integer, ScheduledFuture<?>> action;
+		private ScheduledFuture<?> future;
+		private int count;
+		
+		private ContextRunnable(@NotNull String method, @NotNull Map<String, ScheduledFuture<?>> lookup, @NotNull BiConsumer<Integer, ScheduledFuture<?>> action) {
+			this.method = method;
+			this.lookup = lookup;
+			this.action = action;
+		}
+		
+		@Override
+		public void run() {
+			if (this.future == null) {
+				this.future = this.lookup.get(this.method);
+			}
+			this.action.accept(this.count++, this.future);
+		}
+	}
 }

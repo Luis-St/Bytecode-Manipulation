@@ -1,10 +1,7 @@
 package net.luis.agent.asm;
 
-import net.luis.agent.AgentContext;
-import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.asm.type.ClassType;
 import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -315,22 +312,6 @@ public class Instrumentations {
 		}
 	}
 	//endregion
-	
-	public static void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Method method, boolean iface) {
-		instrumentMethodCall(visitor, method, iface, 0);
-	}
-	
-	public static void instrumentMethodCall(@NotNull MethodVisitor visitor, @NotNull Method method, boolean iface, int index) {
-		if (iface && !method.is(TypeModifier.STATIC)) {
-			visitor.visitVarInsn(Opcodes.ALOAD, index);
-			visitor.visitMethodInsn(Opcodes.INVOKEINTERFACE, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), true);
-		} else if (method.is(TypeModifier.STATIC)) {
-			Class clazz = AgentContext.get().getClass(method.getOwner());
-			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), clazz.is(ClassType.INTERFACE));
-		} else {
-			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, method.getOwner().getInternalName(), method.getName(), method.getType().getDescriptor(), false);
-		}
-	}
 	
 	public static void instrumentThrownException(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull String message) {
 		visitor.visitTypeInsn(Opcodes.NEW, type.getInternalName());

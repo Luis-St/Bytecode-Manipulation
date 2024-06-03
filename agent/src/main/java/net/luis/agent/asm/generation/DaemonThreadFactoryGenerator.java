@@ -3,6 +3,7 @@ package net.luis.agent.asm.generation;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 
+import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
 
 /**
@@ -55,6 +56,8 @@ public class DaemonThreadFactoryGenerator extends Generator {
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitCode();
 		mv.visitLabel(start);
+		instrumentNonNullCheck(mv, 1, "Runnable must not be null");
+		mv.visitInsn(Opcodes.POP);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
 		mv.visitFieldInsn(Opcodes.GETFIELD, DAEMON_THREAD_FACTORY.getInternalName(), "defaultFactory", THREAD_FACTORY.getDescriptor());
 		mv.visitVarInsn(Opcodes.ALOAD, 1);
