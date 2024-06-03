@@ -113,11 +113,11 @@ public final class Main {
 		System.out.println(count);
 	}
 	
-	public static void scheduled(ScheduledFuture<?> future) {
+	public static void scheduled(@NotNull ScheduledFuture<?> future) {
 		System.out.println(future);
 	}
 	
-	public static void scheduled(int count, ScheduledFuture<?> future) {
+	public static void scheduled(int count, @NotNull ScheduledFuture<?> future) {
 		System.out.println(count + " " + future);
 	}
 	

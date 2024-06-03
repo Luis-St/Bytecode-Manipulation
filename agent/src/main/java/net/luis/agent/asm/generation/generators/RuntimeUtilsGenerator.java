@@ -1,5 +1,6 @@
-package net.luis.agent.asm.generation;
+package net.luis.agent.asm.generation.generators;
 
+import net.luis.agent.asm.generation.Generator;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 

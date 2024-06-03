@@ -1,6 +1,8 @@
 package net.luis.agent;
 
 import net.luis.agent.asm.generation.*;
+import net.luis.agent.asm.generation.generators.concurrent.DaemonThreadFactoryGenerator;
+import net.luis.agent.asm.generation.generators.RuntimeUtilsGenerator;
 import net.luis.agent.asm.transformer.implementation.*;
 import net.luis.agent.asm.transformer.method.*;
 import org.jetbrains.annotations.NotNull;
