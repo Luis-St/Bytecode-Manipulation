@@ -51,7 +51,6 @@ public class AccessorTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
-		@SuppressWarnings("DuplicatedCode")
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
@@ -127,7 +126,6 @@ public class AccessorTransformer extends BaseClassTransformer {
 			this.generateAccessor(ifaceMethod, targetField);
 		}
 		
-		@SuppressWarnings("DuplicatedCode")
 		private void generateAccessor(@NotNull Method ifaceMethod, @NotNull Field targetField) {
 			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), ifaceMethod.getGenericSignature(), null);
 			Label start = new Label();

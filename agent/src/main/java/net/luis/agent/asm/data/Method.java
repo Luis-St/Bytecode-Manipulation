@@ -244,7 +244,6 @@ public class Method implements ASMData {
 			this.type = type;
 		}
 		
-		@SuppressWarnings("DuplicatedCode")
 		private Builder(@NotNull Method method) {
 			this.owner = method.owner;
 			this.name = method.name;

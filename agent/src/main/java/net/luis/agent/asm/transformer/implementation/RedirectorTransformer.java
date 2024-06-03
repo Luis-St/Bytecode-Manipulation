@@ -62,7 +62,6 @@ public class RedirectorTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
-		@SuppressWarnings("DuplicatedCode")
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
@@ -155,7 +154,6 @@ public class RedirectorTransformer extends BaseClassTransformer {
 		}
 		
 		//region Helper methods
-		@SuppressWarnings("DuplicatedCode")
 		private @NotNull String getRedirectorName(@NotNull Method ifaceMethod) {
 			Annotation annotation = ifaceMethod.getAnnotation(REDIRECTOR);
 			String target = annotation.get("method");

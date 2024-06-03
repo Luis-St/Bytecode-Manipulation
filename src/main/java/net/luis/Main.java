@@ -8,14 +8,12 @@ import net.luis.utils.lang.StringUtils;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
 import org.apache.logging.log4j.Level;
-import org.checkerframework.checker.units.qual.C;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -125,12 +123,13 @@ public final class Main {
 		EXECUTOR = new ScheduledThreadPoolExecutor(4, new DaemonThreadFactory());
 		EXECUTOR.scheduleAtFixedRate(Main::scheduled, 0, 1, TimeUnit.SECONDS);
 		EXECUTOR.scheduleAtFixedRate(new CountingRunnable(Main::scheduled), 0, 1, TimeUnit.SECONDS);
-		Map<String, ScheduledFuture<?>> lookup = new HashMap<>();
+		Map<String, ScheduledFuture<?>> lookup = new ConcurrentHashMap<>();
 		lookup.put("net.luis.Main#scheduled(ScheduledFuture)", EXECUTOR.scheduleAtFixedRate(new CancelableRunnable("net.luis.Main#scheduled(ScheduledFuture)", lookup, Main::scheduled), 0, 1, TimeUnit.SECONDS));
 		lookup.put("net.luis.Main#scheduled(int, ScheduledFuture)", EXECUTOR.scheduleAtFixedRate(new ContextRunnable("net.luis.Main#scheduled(int, ScheduledFuture)", lookup, Main::scheduled), 0, 1, TimeUnit.SECONDS));
 	}
 	
 	private static class DaemonThreadFactory implements ThreadFactory {
+		
 		private final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
 		
 		@Override
@@ -142,6 +141,7 @@ public final class Main {
 	}
 	
 	private static class CountingRunnable implements Runnable {
+		
 		private final Consumer<Integer> action;
 		private int count;
 		
@@ -156,6 +156,7 @@ public final class Main {
 	}
 	
 	private static class CancelableRunnable implements Runnable {
+		
 		private final String method;
 		private final Map<String, ScheduledFuture<?>> lookup;
 		private final Consumer<ScheduledFuture<?>> action;
@@ -177,6 +178,7 @@ public final class Main {
 	}
 	
 	private static class ContextRunnable implements Runnable {
+		
 		private final String method;
 		private final Map<String, ScheduledFuture<?>> lookup;
 		private final BiConsumer<Integer, ScheduledFuture<?>> action;

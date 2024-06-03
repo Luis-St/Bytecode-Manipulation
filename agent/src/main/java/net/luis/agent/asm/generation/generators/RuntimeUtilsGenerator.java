@@ -28,7 +28,6 @@ public class RuntimeUtilsGenerator extends Generator {
 		cv.visitEnd();
 	}
 	
-	@SuppressWarnings("DuplicatedCode")
 	private void generateIsAccessAllowed(@NotNull ClassVisitor cv) {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "isAccessAllowed", "(Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Z", null, null);
 		Label start = new Label();

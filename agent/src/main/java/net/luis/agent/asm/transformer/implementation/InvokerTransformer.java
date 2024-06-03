@@ -51,7 +51,6 @@ public class InvokerTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
-		@SuppressWarnings("DuplicatedCode")
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
@@ -119,7 +118,6 @@ public class InvokerTransformer extends BaseClassTransformer {
 			this.generateInvoker(ifaceMethod, targetMethod);
 		}
 		
-		@SuppressWarnings("DuplicatedCode")
 		private void generateInvoker(@NotNull Method ifaceMethod, @NotNull Method targetMethod) {
 			MethodVisitor visitor = super.visitMethod(Opcodes.ACC_PUBLIC, ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), ifaceMethod.getGenericSignature(), null);
 			Label start = new Label();

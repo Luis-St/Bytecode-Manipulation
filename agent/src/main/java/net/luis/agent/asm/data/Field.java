@@ -165,7 +165,6 @@ public class Field implements ASMData {
 			this.access = access;
 		}
 		
-		@SuppressWarnings("DuplicatedCode")
 		private Builder(@NotNull Field field) {
 			this.owner = field.owner;
 			this.name = field.name;

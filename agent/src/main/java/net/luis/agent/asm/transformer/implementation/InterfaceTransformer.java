@@ -86,7 +86,6 @@ public class InterfaceTransformer extends BaseClassTransformer {
 			return values;
 		}
 		
-		@SuppressWarnings("DuplicatedCode")
 		private @NotNull String getTarget(@NotNull Method method) {
 			Annotation annotation = method.getAnnotation(INJECTOR);
 			String target = annotation.get("method");

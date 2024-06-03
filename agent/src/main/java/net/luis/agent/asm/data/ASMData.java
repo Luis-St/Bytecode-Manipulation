@@ -17,23 +17,17 @@ import java.util.*;
 public interface ASMData {
 	
 	//region Getters
-	@NotNull
-	String getName();
+	@NotNull String getName();
 	
-	@NotNull
-	Type getType();
+	@NotNull Type getType();
 	
-	@Nullable
-	String getGenericSignature();
+	@Nullable String getGenericSignature();
 	
-	@NotNull
-	TypeAccess getAccess();
+	@NotNull TypeAccess getAccess();
 	
-	@NotNull
-	Set<TypeModifier> getModifiers();
+	@NotNull Set<TypeModifier> getModifiers();
 	
-	@NotNull
-	Map<Type, Annotation> getAnnotations();
+	@NotNull Map<Type, Annotation> getAnnotations();
 	//endregion
 	
 	//region Functional getters
@@ -45,8 +39,7 @@ public interface ASMData {
 		return this.getName() + this.getType();
 	}
 	
-	@NotNull
-	String getSourceSignature();
+	@NotNull String getSourceSignature();
 	
 	default int getOpcodes() {
 		return this.getAccess().getOpcode() | TypeModifier.toOpcodes(this.getModifiers());

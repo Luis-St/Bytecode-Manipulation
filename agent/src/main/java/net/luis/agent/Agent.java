@@ -32,8 +32,8 @@ public class Agent {
 	}
 	
 	private static @NotNull Map<Type, byte[]> generateRuntimeClasses() {
-		Map<Type, byte[]> generated = new HashMap<>();
 		GenerationLoader loader = new GenerationLoader();
+		Map<Type, byte[]> generated = new HashMap<>();
 		loader.loadClass(generated, new RuntimeUtilsGenerator());
 		loader.loadClass(generated, new DaemonThreadFactoryGenerator());
 		return generated;
