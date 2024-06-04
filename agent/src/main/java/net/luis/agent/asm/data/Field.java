@@ -1,5 +1,6 @@
 package net.luis.agent.asm.data;
 
+import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.TypeAccess;
 import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.Mutable;
@@ -95,8 +96,11 @@ public class Field implements ASMData {
 	
 	//region Functional getters
 	@Override
-	public @NotNull String getSourceSignature() {
-		return this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
+	public @NotNull String getSourceSignature(boolean full) {
+		if (full) {
+			return this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
+		}
+		return Types.getSimpleName(this.owner) + "#" + this.name;
 	}
 	
 	public boolean is(@NotNull String owner, @NotNull String name, @NotNull String descriptor) {
@@ -131,7 +135,7 @@ public class Field implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature();
+		return this.getSourceSignature(true);
 	}
 	//endregion
 	

@@ -100,14 +100,14 @@ public class NotNullTransformer extends BaseClassTransformer {
 		//region Validation
 		private void validateMethod() {
 			if (!this.method.is(MethodType.METHOD)) {
-				throw CrashReport.create("Annotation @NotNull can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getName()).exception();
+				throw CrashReport.create("Annotation @NotNull can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).exception();
 			}
 			
 			if (this.method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @NotNull must not return void", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature()).exception();
+				throw CrashReport.create("Method annotated with @NotNull must not return void", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).exception();
 			}
 			if (this.method.returnsAny(PRIMITIVES)) {
-				throw CrashReport.create("Method annotated with @NotNull must not return a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature())
+				throw CrashReport.create("Method annotated with @NotNull must not return a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true))
 					.addDetail("Return Type", this.method.getReturnType()).exception();
 			}
 		}

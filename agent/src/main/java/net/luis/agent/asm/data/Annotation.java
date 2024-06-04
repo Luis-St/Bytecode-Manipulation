@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -59,6 +60,14 @@ public class Annotation {
 	//endregion
 	
 	//region Functional getters
+	public @NotNull String getSourceSignature(boolean full) {
+		String base = "@" + this.type.getClassName();
+		if (full) {
+			return base + this.values.entrySet().stream().map(entry -> entry.getKey() + " = " + String.valueOf(entry.getValue())).collect(Collectors.joining(", ", "(", ")"));
+		}
+		return base;
+	}
+	
 	public <X> @Nullable X get(@Nullable String key) {
 		if (this.values.containsKey(key)) {
 			return (X) this.values.get(key);
@@ -106,7 +115,7 @@ public class Annotation {
 	
 	@Override
 	public String toString() {
-		return "@" + this.type.getClassName();
+		return this.getSourceSignature(false);
 	}
 	//endregion
 	

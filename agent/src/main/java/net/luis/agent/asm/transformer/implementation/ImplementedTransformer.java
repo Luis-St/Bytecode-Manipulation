@@ -62,9 +62,9 @@ public class ImplementedTransformer extends BaseClassTransformer {
 							this.validateMethod(method, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
 							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
 							}
 						}
 					}
@@ -73,7 +73,7 @@ public class ImplementedTransformer extends BaseClassTransformer {
 		}
 		
 		protected void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
-			String signature = ifaceMethod.getSourceSignature();
+			String signature = ifaceMethod.getSourceSignature(true);
 			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw createReport("Method annotated with @Implemented must be public", ifaceMethod.getOwner(), signature).exception();
@@ -93,7 +93,7 @@ public class ImplementedTransformer extends BaseClassTransformer {
 			if (!targetMethod.is(TypeAccess.PUBLIC)) {
 				throw createReport("Method annotated with @Implemented must be public in target class", ifaceMethod.getOwner(), signature)
 					.addDetailBefore("Interface", "Target Class", targetClass.getType())
-					.addDetailBefore("Interface", "Target Method", targetMethod.getSourceSignature()).exception();
+					.addDetailBefore("Interface", "Target Method", targetMethod.getSourceSignature(true)).exception();
 			}
 		}
 	}

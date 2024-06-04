@@ -101,8 +101,11 @@ public class Parameter implements ASMData {
 	}
 	
 	@Override
-	public @NotNull String getSourceSignature() {
-		return this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " : " + this.type.getClassName();
+	public @NotNull String getSourceSignature(boolean full) {
+		if (full) {
+			return this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " (" + this.index + ") : " + this.type.getClassName();
+		}
+		return this.owner.getSourceSignature(false) + "#" + this.name + " (" + this.index + ")";
 	}
 	
 	public @NotNull String getMessageName() {
@@ -134,7 +137,7 @@ public class Parameter implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature();
+		return this.getSourceSignature(false);
 	}
 	//endregion
 	

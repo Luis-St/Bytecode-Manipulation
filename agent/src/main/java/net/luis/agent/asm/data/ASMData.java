@@ -39,7 +39,7 @@ public interface ASMData {
 		return this.getName() + this.getType();
 	}
 	
-	@NotNull String getSourceSignature();
+	@NotNull String getSourceSignature(boolean full);
 	
 	default int getOpcodes() {
 		return this.getAccess().getOpcode() | TypeModifier.toOpcodes(this.getModifiers());

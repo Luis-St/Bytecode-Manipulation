@@ -6,7 +6,6 @@ import org.objectweb.asm.*;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
-import static net.luis.agent.asm.generation.Generations.*;
 
 /**
  *

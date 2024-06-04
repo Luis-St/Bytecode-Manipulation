@@ -1,5 +1,6 @@
 package net.luis.agent.asm.data;
 
+import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,6 +74,12 @@ public class InnerClass {
 	}
 	//endregion
 	
+	//region Functional getters
+	public @NotNull String getSourceSignature(boolean full) {
+		return full ? this.type.getClassName() : Types.getSimpleName(this.type);
+	}
+	//endregion
+	
 	//region Object overrides
 	@Override
 	public boolean equals(Object o) {
@@ -94,7 +101,7 @@ public class InnerClass {
 	
 	@Override
 	public String toString() {
-		return this.type.getClassName();
+		return this.getSourceSignature(true);
 	}
 	//endregion
 	

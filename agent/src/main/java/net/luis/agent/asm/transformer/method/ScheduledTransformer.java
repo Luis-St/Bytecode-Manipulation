@@ -14,8 +14,6 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
@@ -60,35 +58,36 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			for (Method method : data.getMethods().values()) {
 				if (method.isAnnotatedWith(SCHEDULED)) {
 					//region Validation
+					String signature = method.getSourceSignature(true);
 					if (!method.is(MethodType.METHOD)) {
-						throw CrashReport.create("Annotation @Scheduled can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getName()).exception();
+						throw CrashReport.create("Annotation @Scheduled can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", signature).exception();
 					}
 					if (!method.is(TypeModifier.STATIC)) {
-						throw CrashReport.create("Method annotated with @Scheduled must be static", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).exception();
+						throw CrashReport.create("Method annotated with @Scheduled must be static", REPORT_CATEGORY).addDetail("Method", signature).exception();
 					}
 					if (!method.returns(VOID)) {
-						throw CrashReport.create("Method annotated with @Scheduled must return void", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).addDetail("Return Type", method.getReturnType()).exception();
+						throw CrashReport.create("Method annotated with @Scheduled must return void", REPORT_CATEGORY).addDetail("Method", signature).addDetail("Return Type", method.getReturnType()).exception();
 					}
 					if (method.getExceptionCount() > 0) {
-						throw CrashReport.create("Method annotated with @Scheduled must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).addDetail("Exceptions", method.getExceptions()).exception();
+						throw CrashReport.create("Method annotated with @Scheduled must not throw exceptions", REPORT_CATEGORY).addDetail("Method", signature).addDetail("Exceptions", method.getExceptions()).exception();
 					}
 					if (method.isAnnotatedWith(ASYNC)) {
-						throw CrashReport.create("Method annotated with @Scheduled must not be annotated with @Async", REPORT_CATEGORY).addDetail("Method", method.getName()).exception();
+						throw CrashReport.create("Method annotated with @Scheduled must not be annotated with @Async", REPORT_CATEGORY).addDetail("Method", signature).exception();
 					}
 					if (method.getParameterCount() > 0) {
 						if (method.getParameterCount() == 1) {
 							if (!method.getParameter(0).is(SCHEDULED_FUTURE) && !method.getParameter(0).is(INT)) {
-								throw CrashReport.create("Unsupported parameter type for method annotated with @Scheduled, must be ScheduledFuture<?> or int", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature())
-									.addDetail("Parameter Index", method.getParameter(0).getIndex()).addDetail("Parameter Type", method.getParameter(0).getType()).exception();
+								throw CrashReport.create("Unsupported parameter type for method annotated with @Scheduled, must be ScheduledFuture<?> or int", REPORT_CATEGORY).addDetail("Method", signature)
+									.addDetail("Parameter Index", method.getParameter(0).getIndex()).addDetail("Parameter Type", method.getParameter(0).getType()).addDetail("Parameter Name", method.getParameter(0).getName()).exception();
 							}
 						} else if (method.getParameterCount() == 2) {
 							if (!method.getParameter(0).is(INT) || !method.getParameter(1).is(SCHEDULED_FUTURE)) {
-								throw CrashReport.create("Unsupported parameter types for method annotated with @Scheduled, must be int and ScheduledFuture<?>", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature())
-									.addDetail("Parameter Index", method.getParameter(0).getIndex()).addDetail("Parameter Type", method.getParameter(0).getType())
-									.addDetail("Parameter Index", method.getParameter(1).getIndex()).addDetail("Parameter Type", method.getParameter(1).getType()).exception();
+								throw CrashReport.create("Unsupported parameter types for method annotated with @Scheduled, must be int and ScheduledFuture<?>", REPORT_CATEGORY).addDetail("Method", signature)
+									.addDetail("Parameter Index", method.getParameter(0).getIndex()).addDetail("Parameter Type", method.getParameter(0).getType()).addDetail("Parameter Name", method.getParameter(0).getName())
+									.addDetail("Parameter Index", method.getParameter(1).getIndex()).addDetail("Parameter Type", method.getParameter(1).getType()).addDetail("Parameter Name", method.getParameter(1).getName()).exception();
 							}
 						} else {
-							throw CrashReport.create("Method annotated with @Scheduled must have 0 or 1 parameters", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature())
+							throw CrashReport.create("Method annotated with @Scheduled must have 0 or 1 parameters", REPORT_CATEGORY).addDetail("Method", signature)
 								.addDetail("Parameter Count", method.getParameterCount()).exception();
 						}
 					}
@@ -233,11 +232,11 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		
 		private void instrumentCancelableRunnable(@NotNull Method method, int index) {
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
-			this.mv.visitLdcInsn(method.getSourceSignature());
+			this.mv.visitLdcInsn(method.getFullSignature());
 			this.mv.visitFieldInsn(Opcodes.GETSTATIC, this.type.getInternalName(), this.executor.getName(), this.executor.getType().getDescriptor());
 			this.mv.visitTypeInsn(Opcodes.NEW, CANCELABLE_RUNNABLE.getInternalName());
 			this.mv.visitInsn(Opcodes.DUP);
-			this.mv.visitLdcInsn(method.getSourceSignature());
+			this.mv.visitLdcInsn(method.getFullSignature());
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitInvokeDynamicInsn("accept", "()Ljava/util/function/Consumer;", METAFACTORY_HANDLE, Type.getType("(Ljava/lang/Object;)V"), this.createHandle(method), Type.getType("(Ljava/util/concurrent/ScheduledFuture;)V"));
 			this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, CANCELABLE_RUNNABLE.getInternalName(), "<init>", "(Ljava/lang/String;Ljava/util/Map;Ljava/util/function/Consumer;)V", false);
@@ -248,11 +247,11 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		
 		private void instrumentContextRunnable(@NotNull Method method, int index) {
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
-			this.mv.visitLdcInsn(method.getSourceSignature());
+			this.mv.visitLdcInsn(method.getFullSignature());
 			this.mv.visitFieldInsn(Opcodes.GETSTATIC, this.type.getInternalName(), this.executor.getName(), this.executor.getType().getDescriptor());
 			this.mv.visitTypeInsn(Opcodes.NEW, CONTEXT_RUNNABLE.getInternalName());
 			this.mv.visitInsn(Opcodes.DUP);
-			this.mv.visitLdcInsn(method.getSourceSignature());
+			this.mv.visitLdcInsn(method.getFullSignature());
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitInvokeDynamicInsn("accept", "()Ljava/util/function/BiConsumer;", METAFACTORY_HANDLE, Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V"), this.createHandle(method), Type.getType("(Ljava/lang/Integer;Ljava/util/concurrent/ScheduledFuture;)V"));
 			this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, CONTEXT_RUNNABLE.getInternalName(), "<init>", "(Ljava/lang/String;Ljava/util/Map;Ljava/util/function/BiConsumer;)V", false);

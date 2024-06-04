@@ -1,5 +1,6 @@
 package net.luis.agent.asm.data;
 
+import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.TypeAccess;
 import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
@@ -80,8 +81,11 @@ public class RecordComponent implements ASMData {
 	
 	//region Functional getters
 	@Override
-	public @NotNull String getSourceSignature() {
-		return this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
+	public @NotNull String getSourceSignature(boolean full) {
+		if (full) {
+			return this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
+		}
+		return Types.getSimpleName(this.owner) + "#" + this.name;
 	}
 	//endregion
 	
@@ -105,7 +109,7 @@ public class RecordComponent implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature();
+		return this.getSourceSignature(true);
 	}
 	//endregion
 	

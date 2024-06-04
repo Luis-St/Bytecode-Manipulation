@@ -64,16 +64,16 @@ public class AsyncTransformer extends BaseClassTransformer {
 			}
 			//region Validation
 			if (!method.is(MethodType.METHOD)) {
-				throw CrashReport.create("Annotation @Async can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getName()).exception();
+				throw CrashReport.create("Annotation @Async can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).exception();
 			}
 			if (!method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).addDetail("Return Type", method.getType().getReturnType()).exception();
+				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).addDetail("Return Type", method.getType().getReturnType()).exception();
 			}
 			if (method.getExceptionCount() > 0) {
-				throw CrashReport.create("Method annotated with @Async must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature()).addDetail("Exceptions", method.getExceptions()).exception();
+				throw CrashReport.create("Method annotated with @Async must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).addDetail("Exceptions", method.getExceptions()).exception();
 			}
 			if (method.isAnnotatedWith(SCHEDULED)) {
-				throw CrashReport.create("Method annotated with @Async must not be annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", method.getName()).exception();
+				throw CrashReport.create("Method annotated with @Async must not be annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).exception();
 			}
 			//endregion
 			access = access & ~method.getAccess().getOpcode();

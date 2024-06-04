@@ -70,19 +70,22 @@ public class RangeTransformer extends BaseClassTransformer {
 			super(Opcodes.ASM9, visitor);
 			this.method = method;
 			//region Parameter validation
+			String signature = method.getSourceSignature(true);
 			for (Parameter parameter : method.getParameters().values()) {
 				if (parameter.isAnnotatedWithAny(ANNOS)) {
 					if (!parameter.isAny(NUMBERS)) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", method.getSourceSignature())
-							.addDetail("Parameter At", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter", parameter.getName()).exception();
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", signature)
+							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 					}
 					if (parameter.getAnnotations().values().stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", method.getSourceSignature())
-							.addDetail("Parameter At", parameter.getIndex()).addDetail("Annotations", parameter.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature)
+							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
+							.addDetail("Annotations", parameter.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
 					}
 					if (parameter.getAnnotations().values().stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", method.getSourceSignature())
-							.addDetail("Parameter At", parameter.getIndex()).addDetail("Annotations", parameter.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature)
+							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
+							.addDetail("Annotations", parameter.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
 					}
 					this.lookup.add(parameter);
 				}
@@ -94,15 +97,15 @@ public class RangeTransformer extends BaseClassTransformer {
 					throw CrashReport.create(INVALID_CATEGORY, "Annotation @Above, @AboveEqual, @Below or @BelowEqual can not be applied to constructors and static initializers").addDetail("Method", method.getName()).exception();
 				}
 				if (!method.returnsAny(NUMBERS)) {
-					throw CrashReport.create(INVALID_CATEGORY, "Method annotated with @Above, @AboveEqual, @Below or @BelowEqual must return a number type").addDetail("Method", method.getSourceSignature())
+					throw CrashReport.create(INVALID_CATEGORY, "Method annotated with @Above, @AboveEqual, @Below or @BelowEqual must return a number type").addDetail("Method", signature)
 						.addDetail("Return Type", method.getReturnType()).exception();
 				}
 				if (method.getAnnotations().values().stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", method.getSourceSignature())
+					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature)
 						.addDetail("Annotations", method.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
 				}
 				if (method.getAnnotations().values().stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", method.getSourceSignature())
+					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature)
 						.addDetail("Annotations", method.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
 				}
 			}

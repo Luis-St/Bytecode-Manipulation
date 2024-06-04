@@ -178,9 +178,9 @@ public class PatternTransformer extends BaseClassTransformer {
 				annotations.addFirst(PATTERN);
 			}
 			if (data instanceof Method) {
-				return CrashReport.create(message.apply("method"), REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature()).addDetail("Pattern Annotations", annotations).exception();
+				return CrashReport.create(message.apply("method"), REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Pattern Annotations", annotations).exception();
 			} else if (data instanceof Parameter parameter) {
-				return CrashReport.create(message.apply("parameter"), REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex())
+				return CrashReport.create(message.apply("parameter"), REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
 					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).addDetail("Pattern Annotations", annotations).exception();
 			}
 			throw new IllegalArgumentException("Invalid data type, expected Method or Parameter but got " + data.getClass().getSimpleName());

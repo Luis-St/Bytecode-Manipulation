@@ -1,5 +1,6 @@
 package net.luis.agent.asm.data;
 
+import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -152,8 +153,8 @@ public class Class implements ASMData {
 	}
 	
 	@Override
-	public @NotNull String getSourceSignature() {
-		return this.type.getClassName();
+	public @NotNull String getSourceSignature(boolean full) {
+		return full ? this.type.getClassName() : Types.getSimpleName(this.type);
 	}
 	
 	public boolean is(@NotNull ClassType type) {
@@ -191,7 +192,7 @@ public class Class implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature();
+		return this.getSourceSignature(true);
 	}
 	//endregion
 	

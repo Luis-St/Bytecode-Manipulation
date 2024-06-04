@@ -257,7 +257,8 @@ public class Instrumentations {
 		if (value.isEmpty()) {
 			if (!parameter.isNamed()) {
 				throw CrashReport.create("Unable to map " + type + " parameter to target by name, because the parameter name was not included into the class file during compilation", "Missing Debug Information")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 			}
 			String name = parameter.getName();
 			if ("_this".equals(name)) {
@@ -276,8 +277,9 @@ public class Instrumentations {
 				max++;
 			}
 			if (index >= max) {
-				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the index is out of bounds", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature())
-					.addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Index", index).addDetail("Max", max).exception();
+				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the index is out of bounds", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true))
+					.addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
+					.addDetail("Index", index).addDetail("Max", max).exception();
 			}
 			return index;
 		} else if ("this".equals(value)) {
@@ -290,8 +292,9 @@ public class Instrumentations {
 				return index;
 			}
 		}
-		throw CrashReport.create("Unable to find target for " + type + " parameter", Utils.capitalize(type) + " Implementation Error").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature())
-			.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Local Annotation Value", value).exception();
+		throw CrashReport.create("Unable to find target for " + type + " parameter", Utils.capitalize(type) + " Implementation Error").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true))
+			.addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
+			.addDetail("Local Annotation Value", value).exception();
 	}
 	//endregion
 	
@@ -413,8 +416,8 @@ public class Instrumentations {
 	
 	private static void checkStatic(@NotNull String type, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
 		if (method.is(TypeModifier.STATIC)) {
-			throw CrashReport.create("Unable to map " + type + " parameter to 'this', because the method is static", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature())
-				.addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+			throw CrashReport.create("Unable to map " + type + " parameter to 'this', because the method is static", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true))
+				.addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 		}
 	}
 	
@@ -422,7 +425,8 @@ public class Instrumentations {
 		for (Parameter param : method.getParameters().values()) {
 			if (!param.isNamed()) {
 				throw CrashReport.create("Unable to find target by name for " + type + " parameter, because the name was not included into the class file during compilation", "Missing Debug Information")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 			}
 			if (param.getName().equals(value)) {
 				return param.getLoadIndex();
@@ -430,7 +434,8 @@ public class Instrumentations {
 		}
 		if (method.getLocals().isEmpty()) {
 			throw CrashReport.create("Unable to find target by name for " + type + " parameter, because the local variables were not included into the class file during compilation", "Missing Debug Information")
-				.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature()).addDetail("Method", method.getSourceSignature()).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+				.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+				.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 		}
 		for (LocalVariable local : method.getLocals().values()) {
 			if (local.getName().equals(value)) {

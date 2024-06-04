@@ -327,7 +327,7 @@ public class TargetClassScanner extends ClassVisitor {
 				}
 				if (!parameter.isNamed()) {
 					throw CrashReport.create("Unable to find parameter by name, because the parameter name was not included into the class file during compilation", MISSING_INFORMATION).addDetail("Method", this.method.getFullSignature())
-						.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).exception();
+						.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 				}
 				if (parameter.getName().equals(this.value)) {
 					this.target();

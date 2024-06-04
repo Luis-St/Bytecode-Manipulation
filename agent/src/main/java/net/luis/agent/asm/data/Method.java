@@ -1,5 +1,6 @@
 package net.luis.agent.asm.data;
 
+import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Mutable;
 import org.jetbrains.annotations.NotNull;
@@ -133,8 +134,11 @@ public class Method implements ASMData {
 	}
 	
 	@Override
-	public @NotNull String getSourceSignature() {
-		return this.owner.getClassName() + "#" + this.name + Arrays.stream(this.type.getArgumentTypes()).map(Type::getClassName).collect(Collectors.joining(", ", "(", ")"));
+	public @NotNull String getSourceSignature(boolean full) {
+		if (full) {
+			return this.owner.getClassName() + "#" + this.name + Arrays.stream(this.type.getArgumentTypes()).map(Types::getSimpleName).collect(Collectors.joining(", ", "(", ")"));
+		}
+		return Types.getSimpleName(this.owner) + "#" + this.name;
 	}
 	
 	public @NotNull Type getReturnType() {
@@ -209,7 +213,7 @@ public class Method implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature();
+		return this.getSourceSignature(true);
 	}
 	//endregion
 	

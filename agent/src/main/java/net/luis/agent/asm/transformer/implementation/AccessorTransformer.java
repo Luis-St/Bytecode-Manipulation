@@ -63,9 +63,9 @@ public class AccessorTransformer extends BaseClassTransformer {
 							this.validateMethod(method, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
 							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
 							}
 						}
 					}
@@ -74,7 +74,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 		}
 		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
-			String signature = ifaceMethod.getSourceSignature();
+			String signature = ifaceMethod.getSourceSignature(true);
 			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Accessor must be public", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Accessor", signature).exception();
@@ -99,7 +99,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 			Method existingMethod = targetClass.getMethod(ifaceMethod.getFullSignature());
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of accessor already has method with same signature", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Accessor", signature)
-					.addDetail("Existing Method", existingMethod.getSourceSignature()).exception();
+					.addDetail("Existing Method", existingMethod.getSourceSignature(true)).exception();
 			}
 			String accessorTarget = this.getAccessorName(ifaceMethod);
 			Field targetField = targetClass.getField(accessorTarget);

@@ -1,5 +1,6 @@
 package net.luis.agent.asm.data;
 
+import net.luis.agent.asm.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -66,6 +67,15 @@ public class LocalVariable {
 	}
 	//endregion
 	
+	//region Functional getters
+	public @NotNull String getSourceSignature(boolean full) {
+		if (full) {
+			return this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " : " + this.type.getClassName();
+		}
+		return this.owner.getSourceSignature(false) + "#" + this.name;
+	}
+	//endregion
+	
 	//region Object overrides
 	@Override
 	public boolean equals(Object o) {
@@ -86,7 +96,7 @@ public class LocalVariable {
 	
 	@Override
 	public String toString() {
-		return this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " : " + this.type.getClassName();
+		return this.getSourceSignature(false);
 	}
 	//endregion
 	

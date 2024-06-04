@@ -1,11 +1,7 @@
 package net.luis.agent.asm.generation;
 
-import net.luis.agent.asm.ASMUtils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-
-import java.io.File;
 
 /**
  *

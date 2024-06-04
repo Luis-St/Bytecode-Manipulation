@@ -63,9 +63,9 @@ public class InvokerTransformer extends BaseClassTransformer {
 							this.validateMethod(method, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
 							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature()).exception();
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
 							}
 						}
 					}
@@ -74,7 +74,7 @@ public class InvokerTransformer extends BaseClassTransformer {
 		}
 		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
-			String signature = ifaceMethod.getSourceSignature();
+			String signature = ifaceMethod.getSourceSignature(true);
 			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Invoker must be public", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature).exception();
@@ -89,26 +89,26 @@ public class InvokerTransformer extends BaseClassTransformer {
 			Method existingMethod = targetClass.getMethod(ifaceMethod.getFullSignature());
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of invoker already has method with same signature", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature)
-					.addDetail("Existing Method", existingMethod.getSourceSignature()).exception();
+					.addDetail("Existing Method", existingMethod.getSourceSignature(true)).exception();
 			}
 			String invokerTarget = this.getInvokerName(ifaceMethod);
 			List<Method> possibleTargets = ASMUtils.getBySignature(invokerTarget, targetClass);
 			if (possibleTargets.isEmpty()) {
 				throw CrashReport.create("Could not find target method for invoker", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature).addDetail("Target", invokerTarget)
-					.addDetail("Possible Targets", targetClass.getMethods(this.getRawInvokerName(invokerTarget)).stream().map(Method::getSourceSignature).toList()).exception();
+					.addDetail("Possible Targets", targetClass.getMethods(this.getRawInvokerName(invokerTarget)).stream().map(Method::toString).toList()).exception();
 			}
 			if (possibleTargets.size() > 1) {
 				throw CrashReport.create("Found multiple possible targets for invoker", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature).addDetail("Target", invokerTarget)
-					.addDetail("Possible Targets", possibleTargets.stream().map(Method::getSourceSignature).toList()).exception();
+					.addDetail("Possible Targets", possibleTargets.stream().map(Method::toString).toList()).exception();
 			}
 			Method targetMethod = possibleTargets.getFirst();
 			if (targetMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Target method of invoker is public, no invoker required", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature)
-					.addDetail("Target Method", targetMethod.getSourceSignature()).exception();
+					.addDetail("Target Method", targetMethod.getSourceSignature(true)).exception();
 			}
 			if (!targetMethod.is(ifaceMethod.getType())) {
 				throw CrashReport.create("Invoker method signature does not match target method signature", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature)
-					.addDetail("Target Method", targetMethod.getSourceSignature()).exception();
+					.addDetail("Target Method", targetMethod.getSourceSignature(true)).exception();
 			}
 			
 			if (!Objects.equals(targetMethod.getGenericSignature(), ifaceMethod.getGenericSignature())) {
