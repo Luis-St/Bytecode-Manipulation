@@ -31,7 +31,7 @@ public final class Main {
 	 * ToDo:
 	 *  - Add transformers for unused annotations
 	 *  - Support recursive scan of methods in MethodScanner -> to include lambda expressions
-	 *  - Support recursive patterns -> @Pattern on annotation -> same as @Pattern on method (one level deep)
+	 *  - Support for all annotation targets (NotNull -> Locals, Fields; Pattern -> Fields; ...)
 	 *  - Overhaul DefaultStringFactory
 	 */
 	
@@ -42,6 +42,7 @@ public final class Main {
 		new InjectorTest().test(1);
 		
 		execute("ls", null, null);
+		parseUUID("550e8400-e29b-41d4-a716-446655440000");
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
 		caught();
@@ -68,6 +69,10 @@ public final class Main {
 		System.out.println("Command: " + command);
 		System.out.println("Args: " + Arrays.toString(args));
 		System.out.println("Values: " + values);
+	}
+	
+	public static void parseUUID(@UUID String uuid) {
+		System.out.println("UUID: " + uuid);
 	}
 	
 	@Pattern("^.*$")

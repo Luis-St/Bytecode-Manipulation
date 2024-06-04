@@ -184,6 +184,10 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		//region Instrumentation
 		private void instrument() {
 			int index = -1;
+			Label start = new Label();
+			Label end = new Label();
+			
+			this.mv.visitLabel(start);
 			if (this.lookup.stream().anyMatch(this::requiresLookup)) {
 				index = newLocal(this.mv, CONCURRENT_HASH_MAP);
 				this.mv.visitTypeInsn(Opcodes.NEW, CONCURRENT_HASH_MAP.getInternalName());
@@ -203,6 +207,10 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				} else if (method.getParameterCount() == 2) {
 					this.instrumentContextRunnable(method, index);
 				}
+			}
+			this.mv.visitLabel(end);
+			if (index != -1) {
+				this.mv.visitLocalVariable("generated$ScheduledTransformer$Temp" + index, CONCURRENT_HASH_MAP.getDescriptor(), "Ljava/util/Map<Ljava/lang/String;Ljava/util/concurrent/ScheduledFuture<*>;>;", start, end, index);
 			}
 		}
 		
