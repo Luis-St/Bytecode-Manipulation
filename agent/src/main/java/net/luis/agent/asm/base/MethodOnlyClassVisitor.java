@@ -1,6 +1,6 @@
 package net.luis.agent.asm.base;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.Method;
 import net.luis.agent.asm.type.TypeModifier;
@@ -35,7 +35,7 @@ public class MethodOnlyClassVisitor extends ContextBasedClassVisitor {
 	
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-		Class clazz = AgentContext.get().getClass(this.type);
+		Class clazz = Agent.getClass(this.type);
 		Method method = clazz.getMethod(name + descriptor);
 		MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 		if (method == null) {

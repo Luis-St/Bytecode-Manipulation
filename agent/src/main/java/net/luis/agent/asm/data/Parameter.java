@@ -1,6 +1,5 @@
 package net.luis.agent.asm.data;
 
-import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.TypeAccess;
 import net.luis.agent.asm.type.TypeModifier;

@@ -1,64 +1,51 @@
 package net.luis.agent;
 
-import net.luis.agent.asm.generation.GenerationLoader;
-import net.luis.agent.asm.generation.generators.RuntimeUtilsGenerator;
-import net.luis.agent.asm.generation.generators.concurrent.*;
-import net.luis.agent.asm.transformer.implementation.*;
-import net.luis.agent.asm.transformer.method.*;
+import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.scanner.ClassFileScanner;
+import net.luis.agent.asm.scanner.ClassPathScanner;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
-import java.lang.instrument.Instrumentation;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  *
- * @author Luis
+ * @author Luis-St
  *
  */
 
 public class Agent {
 	
-	public static void premain(@NotNull String agentArgs, @NotNull Instrumentation inst) {
-		System.out.println("Agent loaded");
-		initialize(inst);
-		initializeTransformers(inst);
+	private static final List<Type> classes = ClassPathScanner.getClasses().stream().filter(type -> !type.getDescriptor().contains("module-info") && !type.getDescriptor().contains("package-info")).toList();
+	private static final List<Type> generated = new ArrayList<>();
+	private static final Map<Type, Class> cache = new HashMap<>();
+	
+	public static void initialize(@NotNull Map<Type, byte[]> generatedLookup) {
+		long start = System.currentTimeMillis();
+		classes.forEach(type -> cache.put(type, ClassFileScanner.scanClass(type)));
+		System.out.println("Loaded " + classes.size() + " classes");
+		generated.addAll(generatedLookup.keySet());
+		generated.forEach(type -> cache.put(type, ClassFileScanner.scanGeneratedClass(type, generatedLookup.get(type))));
+		System.out.println("Loaded " + generated.size() + " generated classes");
+		System.out.println("Initialized agent in " + (System.currentTimeMillis() - start) + "ms");
 	}
 	
-	//region Initialization
-	private static void initialize(@NotNull Instrumentation inst) {
-		inst.redefineModule(ModuleLayer.boot().findModule("java.base").orElseThrow(), Set.of(), Map.of(), Map.of("java.lang", Set.of(Agent.class.getModule())), Set.of(), Map.of());
-		AgentContext.get().initialize(generateRuntimeClasses());
-	}
-	
-	private static @NotNull Map<Type, byte[]> generateRuntimeClasses() {
-		GenerationLoader loader = new GenerationLoader();
-		Map<Type, byte[]> generated = new HashMap<>();
-		loader.loadClass(generated, new RuntimeUtilsGenerator());
-		loader.loadClass(generated, new DaemonThreadFactoryGenerator());
-		loader.loadClass(generated, new CountingRunnableGenerator());
-		loader.loadClass(generated, new CancelableRunnableGenerator());
-		loader.loadClass(generated, new ContextRunnableGenerator());
+	public static @NotNull List<Type> getGenerated() {
 		return generated;
 	}
 	
-	private static void initializeTransformers(@NotNull Instrumentation inst) {
-		inst.addTransformer(new InterfaceTransformer());
-		inst.addTransformer(new InterfaceInjectionTransformer());
-		inst.addTransformer(new ImplementedTransformer());
-		inst.addTransformer(new AccessorTransformer());
-		inst.addTransformer(new AssignorTransformer());
-		inst.addTransformer(new InvokerTransformer());
-		inst.addTransformer(new InjectorTransformer());
-		inst.addTransformer(new RedirectorTransformer());
-		inst.addTransformer(new ScheduledTransformer());
-		inst.addTransformer(new CaughtTransformer());
-		inst.addTransformer(new AsyncTransformer());
-		inst.addTransformer(new PatternTransformer());
-		inst.addTransformer(new NotNullTransformer());
-		inst.addTransformer(new DefaultTransformer());
-		inst.addTransformer(new RangeTransformer());
-		inst.addTransformer(new RestrictedAccessTransformer());
+	public static @NotNull Class getClass(@NotNull Type type) {
+		Class clazz = ClassFileScanner.scanClass(type);
+		if (cache.containsKey(type)) {
+			return cache.get(type);
+		} else {
+			cache.put(type, clazz);
+			return clazz;
+		}
 	}
-	//endregion
+	
+	public static @NotNull Stream<Class> stream() {
+		return classes.stream().map(Agent::getClass);
+	}
 }

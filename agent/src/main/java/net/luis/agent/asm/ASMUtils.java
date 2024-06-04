@@ -1,6 +1,6 @@
 package net.luis.agent.asm;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.util.Utils;
@@ -30,7 +30,7 @@ public class ASMUtils {
 	
 	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull Type annotationType) {
 		Map<String, List<String>> lookup = new HashMap<>();
-		AgentContext.get().stream().filter(data -> data.isAnnotatedWith(annotationType)).forEach(data -> {
+		Agent.stream().filter(data -> data.isAnnotatedWith(annotationType)).forEach(data -> {
 			List<Type> types = data.getAnnotation(annotationType).get("targets");
 			if (types == null || types.isEmpty()) {
 				return;

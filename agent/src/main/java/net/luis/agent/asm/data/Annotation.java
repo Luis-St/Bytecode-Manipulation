@@ -1,8 +1,6 @@
 package net.luis.agent.asm.data;
 
-import net.luis.agent.AgentContext;
-import net.luis.agent.asm.ASMUtils;
-import net.luis.agent.asm.Types;
+import net.luis.agent.Agent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -76,7 +74,7 @@ public class Annotation {
 	}
 	
 	public <X> @Nullable X getDefault(@Nullable String key) {
-		Class data = AgentContext.get().getClass(this.type);
+		Class data = Agent.getClass(this.type);
 		List<Method> methods = data.getMethods(key);
 		if (methods.size() != 1) {
 			return null;

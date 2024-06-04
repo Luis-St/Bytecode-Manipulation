@@ -1,9 +1,8 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.MethodOnlyClassVisitor;
-import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.TypeAccess;
@@ -33,8 +32,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClass(type);
-		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
+		return Agent.getClass(type).getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(DEFAULT));
 	}
 	//endregion
 	
@@ -90,7 +88,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 		private @NotNull Type getFactory(@NotNull Parameter parameter) {
 			Annotation annotation = parameter.getAnnotation(DEFAULT);
 			Type factory = annotation.getOrDefault("factory");
-			Field field = AgentContext.get().getClass(factory).getField("INSTANCE");
+			Field field = Agent.getClass(factory).getField("INSTANCE");
 			if (field == null) {
 				throw CrashReport.create("Missing INSTANCE field in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
 			}

@@ -1,10 +1,10 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.ContextBasedClassVisitor;
-import net.luis.agent.asm.data.Class;
-import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.data.Annotation;
+import net.luis.agent.asm.data.Method;
 import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,8 +32,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClass(type);
-		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(RESTRICTED_ACCESS));
+		return Agent.getClass(type).getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(RESTRICTED_ACCESS));
 	}
 	//endregion
 	
@@ -50,8 +49,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		
 		@Override
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-			Class clazz = AgentContext.get().getClass(this.type);
-			Method method = clazz.getMethod(name + descriptor);
+			Method method = Agent.getClass(this.type).getMethod(name + descriptor);
 			MethodVisitor visitor = this.cv.visitMethod(access, name, descriptor, signature, exceptions);
 			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(RESTRICTED_ACCESS)) {
 				return visitor;

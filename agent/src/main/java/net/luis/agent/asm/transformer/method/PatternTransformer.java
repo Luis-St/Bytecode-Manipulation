@@ -1,6 +1,6 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.MethodOnlyClassVisitor;
 import net.luis.agent.asm.data.Class;
@@ -36,7 +36,7 @@ public class PatternTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClass(type);
+		Class clazz = Agent.getClass(type);
 		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) && clazz.getMethods().values().stream().noneMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
 	}
 	//endregion
@@ -52,7 +52,7 @@ public class PatternTransformer extends BaseClassTransformer {
 		
 		private PatternClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
-			this.lookup = AgentContext.get().stream().filter(clazz -> clazz.is(ClassType.ANNOTATION) && clazz.isAnnotatedWith(PATTERN))
+			this.lookup = Agent.stream().filter(clazz -> clazz.is(ClassType.ANNOTATION) && clazz.isAnnotatedWith(PATTERN))
 				.collect(Collectors.toMap(Class::getType, clazz -> Objects.requireNonNull(clazz.getAnnotation(PATTERN).get("value"))));
 		}
 		

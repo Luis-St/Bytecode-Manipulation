@@ -1,6 +1,6 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.MethodOnlyClassVisitor;
 import net.luis.agent.asm.data.Class;
@@ -34,7 +34,7 @@ public class RangeTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClass(type);
+		Class clazz = Agent.getClass(type);
 		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS)) && clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS));
 	}
 	//endregion

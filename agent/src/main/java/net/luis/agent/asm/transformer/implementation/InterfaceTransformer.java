@@ -1,10 +1,10 @@
 package net.luis.agent.asm.transformer.implementation;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.MethodOnlyClassVisitor;
-import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.data.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
@@ -26,14 +26,14 @@ public class InterfaceTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClass(type);
+		Class clazz = Agent.getClass(type);
 		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(INJECTOR));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
-		List<Type> targets = AgentContext.get().getClass(type).getAnnotation(INJECT_INTERFACE).get("targets");
+		List<Type> targets = Agent.getClass(type).getAnnotation(INJECT_INTERFACE).get("targets");
 		return new InterfaceClassVisitor(writer, type, targets == null ? new ArrayList<>() : targets, () -> this.modified = true);
 	}
 	

@@ -1,6 +1,6 @@
 package net.luis.agent.asm.transformer.implementation;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.Types;
 import net.luis.agent.asm.base.BaseClassTransformer;
@@ -65,10 +65,9 @@ public class RedirectorTransformer extends BaseClassTransformer {
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
-				AgentContext context = AgentContext.get();
-				Class targetClass = context.getClass(Type.getObjectType(name));
+				Class targetClass = Agent.getClass(Type.getObjectType(name));
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = context.getClass(iface);
+					Class ifaceClass = Agent.getClass(iface);
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(REDIRECTOR)) {
 							this.validateMethod(method, targetClass);
@@ -146,7 +145,7 @@ public class RedirectorTransformer extends BaseClassTransformer {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			
 			String fullSignature = name + descriptor;
-			Method method = AgentContext.get().getClass(this.type).getMethod(fullSignature);
+			Method method = Agent.getClass(this.type).getMethod(fullSignature);
 			if (this.redirectors.containsKey(fullSignature) && method != null) {
 				this.markModified();
 				return new RedirectorMethodVisitor(visitor, method, this.redirectors.get(fullSignature));

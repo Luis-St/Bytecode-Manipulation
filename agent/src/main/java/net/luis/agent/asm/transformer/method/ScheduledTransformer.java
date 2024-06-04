@@ -1,6 +1,6 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.data.Class;
@@ -33,8 +33,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClass(type);
-		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(SCHEDULED));
+		return Agent.getClass(type).getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(SCHEDULED));
 	}
 	//endregion
 	
@@ -54,7 +53,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		
 		private ScheduledClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
-			Class data = AgentContext.get().getClass(type);
+			Class data = Agent.getClass(type);
 			for (Method method : data.getMethods().values()) {
 				if (method.isAnnotatedWith(SCHEDULED)) {
 					//region Validation
@@ -111,7 +110,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				this.cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR.getDescriptor(), null, null).visitEnd();
 				this.generated = true;
 				this.executor = Field.builder(this.type, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR).access(TypeAccess.PRIVATE).addModifier(TypeModifier.STATIC).addModifier(TypeModifier.FINAL).build();
-				AgentContext.get().getClass(this.type).getFields().put(this.executor.getName(), this.executor);
+				Agent.getClass(this.type).getFields().put(this.executor.getName(), this.executor);
 			}
 		}
 		
@@ -134,7 +133,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				visitor.visitMaxs(0, 0);
 				visitor.visitEnd();
 				Method method = Method.builder(this.type, "<clinit>", VOID_METHOD).addModifier(TypeModifier.STATIC).build();
-				AgentContext.get().getClass(this.type).getMethods().put(method.getFullSignature(), method);
+				Agent.getClass(this.type).getMethods().put(method.getFullSignature(), method);
 			}
 			super.visitEnd();
 			this.markModified();

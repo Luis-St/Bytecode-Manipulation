@@ -1,6 +1,6 @@
 package net.luis.agent.asm.transformer.implementation;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.ContextBasedClassVisitor;
@@ -58,7 +58,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			}
 			
 			private void updateClass(@NotNull List<Type> injects) {
-				AgentContext.get().getClass(this.type).getInterfaces().addAll(injects);
+				Agent.getClass(this.type).getInterfaces().addAll(injects);
 			}
 		};
 	}

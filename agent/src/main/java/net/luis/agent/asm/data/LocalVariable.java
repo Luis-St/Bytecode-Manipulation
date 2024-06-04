@@ -1,6 +1,5 @@
 package net.luis.agent.asm.data;
 
-import net.luis.agent.asm.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;

@@ -1,10 +1,10 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.MethodOnlyClassVisitor;
-import net.luis.agent.asm.data.Class;
-import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.data.Annotation;
+import net.luis.agent.asm.data.Method;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.util.CaughtAction;
 import net.luis.agent.util.DefaultStringFactory;
@@ -30,8 +30,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClass(type);
-		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
+		return Agent.getClass(type).getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(CAUGHT));
 	}
 	//endregion
 	

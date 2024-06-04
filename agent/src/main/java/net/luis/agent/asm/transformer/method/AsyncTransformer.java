@@ -1,6 +1,6 @@
 package net.luis.agent.asm.transformer.method;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.data.Class;
@@ -34,8 +34,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = AgentContext.get().getClass(type);
-		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
+		return Agent.getClass(type).getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(ASYNC));
 	}
 	//endregion
 	
@@ -53,7 +52,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 		
 		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
-			this.data = AgentContext.get().getClass(type);
+			this.data = Agent.getClass(type);
 		}
 		
 		@Override

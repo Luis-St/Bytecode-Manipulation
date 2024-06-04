@@ -1,6 +1,6 @@
 package net.luis.agent.asm.transformer.implementation;
 
-import net.luis.agent.AgentContext;
+import net.luis.agent.Agent;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
@@ -55,10 +55,9 @@ public class AssignorTransformer extends BaseClassTransformer {
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
-				AgentContext context = AgentContext.get();
-				Class targetClass = context.getClass(Type.getObjectType(name));
+				Class targetClass = Agent.getClass(Type.getObjectType(name));
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = context.getClass(iface);
+					Class ifaceClass = Agent.getClass(iface);
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(ASSIGNOR)) {
 							this.validateMethod(method, targetClass);
@@ -187,8 +186,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 		}
 		
 		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Field targetField) {
-			Class data = AgentContext.get().getClass(target);
-			data.getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
+			Agent.getClass(target).getMethods().put(ifaceMethod.getFullSignature(), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
 			targetField.getModifiers().remove(TypeModifier.FINAL);
 		}
 		//endregion
