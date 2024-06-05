@@ -3,6 +3,7 @@ package net.luis.agent;
 import net.luis.agent.asm.generation.GenerationLoader;
 import net.luis.agent.asm.generation.generators.RuntimeUtilsGenerator;
 import net.luis.agent.asm.generation.generators.concurrent.*;
+import net.luis.agent.asm.scanner.ClassFileScanner;
 import net.luis.agent.asm.transformer.implementation.*;
 import net.luis.agent.asm.transformer.method.*;
 import org.jetbrains.annotations.NotNull;
@@ -20,10 +21,16 @@ import java.util.*;
 public class AgentMain {
 	
 	public static void premain(@NotNull String agentArgs, @NotNull Instrumentation inst) {
-		System.out.println("Loading agent");
-		initialize(inst);
-		initializeTransformers(inst);
-		System.out.println("Agent loaded");
+		ClassFileScanner.scanClass(Type.getType("Lnet/luis/InjectorTest;"));
+		
+		
+		
+		
+		
+		//System.out.println("Loading agent");
+		//initialize(inst);
+		//initializeTransformers(inst);
+		//System.out.println("Agent loaded");
 	}
 	
 	//region Initialization

@@ -54,12 +54,37 @@ public class MethodScanner extends MethodVisitor {
 	}
 	
 	@Override
+	public AnnotationVisitor visitTypeAnnotation(int typeRef, @Nullable TypePath typePath, @NotNull String descriptor, boolean visible) {
+		TypeReference reference = new TypeReference(typeRef);
+		
+		System.out.println("Type Reference: " + Integer.toString(reference.getSort(), 16));
+		System.out.println("  Type Path: " + typePath);
+		System.out.println("  Descriptor: " + descriptor);
+		System.out.println("  Visible: " + visible);
+		return super.visitTypeAnnotation(typeRef, typePath, descriptor, visible);
+	}
+	
+	@Override
 	public void visitLocalVariable(@NotNull String name, @NotNull String descriptor, @Nullable String genericSignature, @NotNull Label start, @NotNull Label end, int index) {
 		int offset = this.parameters.size() + (this.method.is(TypeModifier.STATIC) ? 0 : 1);
 		if (index < offset) {
 			return;
 		}
 		this.method.getLocals().put(index, LocalVariable.builder(this.method, index, name, Type.getType(descriptor)).genericSignature(genericSignature).build());
+	}
+	
+	@Override
+	public AnnotationVisitor visitLocalVariableAnnotation(int typeRef, @Nullable TypePath typePath, @NotNull Label[] start, @NotNull Label[] end, int[] index, @NotNull String descriptor, boolean visible) {
+		TypeReference reference = new TypeReference(typeRef);
+	
+		System.out.println("Type Reference: " + Integer.toString(reference.getSort(), 16));
+		System.out.println("  Type Path: " + typePath);
+		System.out.println("  Start: " + Arrays.toString(start));
+		System.out.println("  End: " + Arrays.toString(end));
+		System.out.println("  Index: " + Arrays.toString(index));
+		System.out.println("  Descriptor: " + descriptor);
+		System.out.println("  Visible: " + visible);
+		return super.visitLocalVariableAnnotation(typeRef, typePath, start, end, index, descriptor, visible);
 	}
 	
 	@Override

@@ -1,6 +1,8 @@
 package net.luis;
 
 import net.luis.agent.annotation.Caught;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -21,14 +23,14 @@ public class InjectorTest {
 		throw new RuntimeException("Silent Throw");
 	}
 	
-	public void test(int index) {
-		List<Object> list = new ArrayList<>();
+	public void test(int index, int @NotNull [] test) {
+		@NotNull List<@Nullable Object> list = new ArrayList<>();
 		list.add(List.of(1 + index, 2 - index, 3));
 		
-		int[] array = new int[] { 1, 2 * index, 3 };
+		int @NotNull [] array = new int[] { 1, 2 * index, 3 };
 		list.add(array);
 		
-		int[][] multiArray = new int[][] { { 1, 2, 3 }, { 4, 5, 6 / index } };
+		int @NotNull [] @NotNull [] multiArray = new int[][] { { 1, 2, 3 }, { 4, 5, 6 / index } };
 		list.add(multiArray);
 		
 		if (index >= array.length) {
