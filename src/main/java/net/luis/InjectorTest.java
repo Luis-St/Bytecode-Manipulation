@@ -26,13 +26,13 @@ public class InjectorTest {
 	}
 	
 	public void test(int index, int @NotNull [] test) {
-		@NotNull List<@Nullable Object> list = new ArrayList<>();
+		@NotNull List<Object> list = new ArrayList<>();
 		list.add(List.of(1 + index, 2 - index, 3));
 		
-		int @NotNull [] array = new int[] { 1, 2 * index, 3 };
+		int[] array = { 1, 2 * index, 3 };
 		list.add(array);
 		
-		int @NotNull [] @NotNull [] multiArray = new int[][] { { 1, 2, 3 }, { 4, 5, 6 / index } };
+		int[][] multiArray = { { 1, 2, 3 }, { 4, 5, 6 / index } };
 		list.add(multiArray);
 		
 		if (index >= array.length) {
@@ -81,7 +81,9 @@ public class InjectorTest {
 		System.out.println(this.i);
 		this.i = i + j;
 		
-		if (list.getFirst() instanceof @NotNull List<?> inner) {
+		if (list.getFirst() instanceof List) {
+			@NotNull List<?> inner = (List<?>) list.getFirst();
+			System.out.println(inner);
 			System.out.println("List");
 			System.out.println("null");
 		}

@@ -12,8 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
@@ -25,6 +24,10 @@ import static net.luis.agent.asm.Types.*;
  */
 
 public class NotNullTransformer extends BaseClassTransformer {
+	
+	public NotNullTransformer() {
+		super(true);
+	}
 	
 	//region Type filtering
 	@Override
@@ -43,7 +46,10 @@ public class NotNullTransformer extends BaseClassTransformer {
 				if (!super.isMethodValid(method)) {
 					return false;
 				}
-				return method.isAnnotatedWith(NOT_NULL) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL));
+				if (method.isAnnotatedWith(NOT_NULL)) {
+					return true;
+				}
+				return method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || method.getLocals().values().stream().anyMatch(local -> local.isAnnotatedWith(NOT_NULL));
 			}
 			
 			@Override
@@ -57,34 +63,41 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
-		private final List<Parameter> lookup = new ArrayList<>();
+		private final List<Parameter> parameters = new ArrayList<>();
+		private final Map<Integer, LocalVariable> locals = new HashMap<>();
 		private final Method method;
 		
 		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(Opcodes.ASM9, visitor);
 			this.method = method;
-			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(NOT_NULL)).forEach(this.lookup::add);
+			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(NOT_NULL)).forEach(this.parameters::add);
+			method.getLocals().values().stream().filter(local -> local.isAnnotatedWith(NOT_NULL)).forEach(local -> this.locals.put(local.getIndex(), local));
 		}
 		
-		private @NotNull String getMessage(@NotNull Parameter parameter) {
-			Annotation annotation = parameter.getAnnotation(NOT_NULL);
-			String value = annotation.getOrDefault("value");
-			if (!value.isBlank()) {
-				if (Utils.isSingleWord(value.strip())) {
-					return Utils.capitalize(value.strip()) + " must not be null";
-				}
-				return value;
-			}
-			return parameter.getMessageName() + " must not be null";
+		@Override
+		public void visitFrame(int type, int numLocal, Object[] local, int numStack, Object[] stack) {
+			super.visitFrame(type, numLocal, local, numStack, stack);
 		}
 		
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
-			for (Parameter parameter : this.lookup) {
-				instrumentNonNullCheck(this.mv, parameter.getLoadIndex(), this.getMessage(parameter));
+			for (Parameter parameter : this.parameters) {
+				this.validateParameter(parameter);
+				instrumentNonNullCheck(this.mv, parameter.getLoadIndex(), this.getMessage(parameter.getAnnotation(NOT_NULL), parameter.getMessageName()));
 				this.mv.visitInsn(Opcodes.POP);
 			}
+		}
+		
+		@Override
+		public void visitVarInsn(int opcode, int varIndex) {
+			if (isStore(opcode) && this.locals.containsKey(varIndex)) {
+				LocalVariable local = this.locals.get(varIndex);
+				this.validateLocal(local);
+				instrumentNonNullCheck(this.mv, -1, this.getMessage(local.getAnnotation(NOT_NULL), local.getMessageName()));
+				this.mv.visitTypeInsn(Opcodes.CHECKCAST, local.getType().getInternalName());
+			}
+			super.visitVarInsn(opcode, varIndex);
 		}
 		
 		@Override
@@ -97,12 +110,36 @@ public class NotNullTransformer extends BaseClassTransformer {
 			this.mv.visitInsn(opcode);
 		}
 		
-		//region Validation
+		//region Helper methods
+		private @NotNull String getMessage(@NotNull Annotation annotation, @NotNull String messageName) {
+			String value = annotation.getOrDefault("value");
+			if (!value.isBlank()) {
+				if (Utils.isSingleWord(value.strip())) {
+					return Utils.capitalize(value.strip()) + " must not be null";
+				}
+				return value;
+			}
+			return messageName + " must not be null";
+		}
+		
+		private void validateParameter(@NotNull Parameter parameter) {
+			if (parameter.isAny(PRIMITIVES)) {
+				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true))
+					.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
+			}
+		}
+		
+		private void validateLocal(@NotNull LocalVariable local) {
+			if (local.isAny(PRIMITIVES)) {
+				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true))
+					.addDetail("Local Variable Index", local.getIndex()).addDetail("Local Variable  Type", local.getType()).addDetail("Local Variable  Name", local.getName()).exception();
+			}
+		}
+		
 		private void validateMethod() {
 			if (!this.method.is(MethodType.METHOD)) {
 				throw CrashReport.create("Annotation @NotNull can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).exception();
 			}
-			
 			if (this.method.returns(VOID)) {
 				throw CrashReport.create("Method annotated with @NotNull must not return void", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).exception();
 			}

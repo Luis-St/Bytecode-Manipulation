@@ -1,5 +1,7 @@
 package net.luis.agent.asm.data;
 
+import net.luis.agent.asm.Types;
+import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -80,6 +82,14 @@ public class LocalVariable {
 		return this.owner.getSourceSignature(false) + "#" + this.name;
 	}
 	
+	public boolean is(@NotNull Type type) {
+		return this.type.equals(type);
+	}
+	
+	public boolean isAny(@NotNull Type... type) {
+		return Arrays.stream(type).anyMatch(this::is);
+	}
+	
 	public @NotNull Annotation getAnnotation(@NotNull Type type) {
 		return this.getAnnotations().get(type);
 	}
@@ -90,6 +100,10 @@ public class LocalVariable {
 	
 	public boolean isAnnotatedWithAny(@NotNull Type... type) {
 		return Arrays.stream(type).anyMatch(this::isAnnotatedWith);
+	}
+	
+	public @NotNull String getMessageName() {
+		return Utils.capitalize(Utils.getSeparated(Types.getSimpleName(this.type))) + " (local #" + this.index + ")";
 	}
 	//endregion
 	
