@@ -21,16 +21,10 @@ import java.util.*;
 public class AgentMain {
 	
 	public static void premain(@NotNull String agentArgs, @NotNull Instrumentation inst) {
-		ClassFileScanner.scanClass(Type.getType("Lnet/luis/InjectorTest;"));
-		
-		
-		
-		
-		
-		//System.out.println("Loading agent");
-		//initialize(inst);
-		//initializeTransformers(inst);
-		//System.out.println("Agent loaded");
+		System.out.println("Loading agent");
+		initialize(inst);
+		initializeTransformers(inst);
+		System.out.println("Agent loaded");
 	}
 	
 	//region Initialization
