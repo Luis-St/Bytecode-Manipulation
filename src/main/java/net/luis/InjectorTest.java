@@ -4,6 +4,8 @@ import net.luis.agent.annotation.Caught;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -55,6 +57,7 @@ public class InjectorTest {
 		}
 		
 		this.validate();
+		System.out.println(Arrays.toString(test));
 		
 		int j = -i;
 		if (j > i) {
@@ -78,12 +81,20 @@ public class InjectorTest {
 		System.out.println(this.i);
 		this.i = i + j;
 		
-		if (list.getFirst() instanceof List) {
+		if (list.getFirst() instanceof @NotNull List<?> inner) {
 			System.out.println("List");
 			System.out.println("null");
 		}
 		
 		list.add(null);
+		
+		try (@NotNull ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+			stream.write(12);
+			stream.write(13);
+			System.out.println(Arrays.toString(stream.toByteArray()));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 		
 		System.out.println(true);
 	}

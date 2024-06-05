@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
-import java.util.Objects;
+import java.util.*;
 
 /**
  *
@@ -19,13 +19,15 @@ public class LocalVariable {
 	private final String name;
 	private final Type type;
 	private final String genericSignature;
+	private final Map<Type, Annotation> annotations;
 	
-	private LocalVariable(@NotNull Method owner, int index, @NotNull String name, @NotNull Type type, @Nullable String genericSignature) {
+	private LocalVariable(@NotNull Method owner, int index, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull Map<Type, Annotation> annotations) {
 		this.owner = Objects.requireNonNull(owner);
 		this.index = index;
 		this.name = Objects.requireNonNull(name);
 		this.type = Objects.requireNonNull(type);
 		this.genericSignature = genericSignature;
+		this.annotations = Objects.requireNonNull(annotations);
 	}
 	
 	public static @NotNull Builder builder(@NotNull Method owner) {
@@ -64,6 +66,10 @@ public class LocalVariable {
 	public @Nullable String getGenericSignature() {
 		return this.genericSignature;
 	}
+	
+	public @NotNull Map<Type, Annotation> getAnnotations() {
+		return this.annotations;
+	}
 	//endregion
 	
 	//region Functional getters
@@ -72,6 +78,18 @@ public class LocalVariable {
 			return this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " : " + this.type.getClassName();
 		}
 		return this.owner.getSourceSignature(false) + "#" + this.name;
+	}
+	
+	public @NotNull Annotation getAnnotation(@NotNull Type type) {
+		return this.getAnnotations().get(type);
+	}
+	
+	public boolean isAnnotatedWith(@NotNull Type type) {
+		return this.getAnnotations().containsKey(type);
+	}
+	
+	public boolean isAnnotatedWithAny(@NotNull Type... type) {
+		return Arrays.stream(type).anyMatch(this::isAnnotatedWith);
 	}
 	//endregion
 	
@@ -102,6 +120,7 @@ public class LocalVariable {
 	//region Builder
 	public static class Builder {
 		
+		private final Map<Type, Annotation> annotations = new HashMap<>();
 		private Method owner;
 		private int index;
 		private String name;
@@ -131,6 +150,7 @@ public class LocalVariable {
 			this.name = localVariable.name;
 			this.type = localVariable.type;
 			this.genericSignature = localVariable.genericSignature;
+			this.annotations.putAll(localVariable.annotations);
 		}
 		//endregion
 		
@@ -159,8 +179,31 @@ public class LocalVariable {
 			return this;
 		}
 		
+		//region Annotations
+		public @NotNull Builder annotations(@NotNull Map<Type, Annotation> annotations) {
+			this.annotations.clear();
+			this.annotations.putAll(annotations);
+			return this;
+		}
+		
+		public @NotNull Builder clearAnnotations() {
+			this.annotations.clear();
+			return this;
+		}
+		
+		public @NotNull Builder addAnnotation(@NotNull Type type, @NotNull Annotation annotation) {
+			this.annotations.put(type, annotation);
+			return this;
+		}
+		
+		public @NotNull Builder removeAnnotation(@NotNull Type type) {
+			this.annotations.remove(type);
+			return this;
+		}
+		//endregion
+		
 		public @NotNull LocalVariable build() {
-			return new LocalVariable(this.owner, this.index, this.name, this.type, this.genericSignature);
+			return new LocalVariable(this.owner, this.index, this.name, this.type, this.genericSignature, this.annotations);
 		}
 	}
 	//endregion

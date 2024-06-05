@@ -19,6 +19,7 @@ public class MethodScanner extends MethodVisitor {
 	private final Method method;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
 	private final Map<Integer, Map<Type, Annotation>> parameterAnnotations = new HashMap<>();
+	private final Map<Integer, Map<Type, Annotation>> localAnnotations = new HashMap<>();
 	private int parameterIndex;
 	
 	public MethodScanner(@NotNull Method method) {
@@ -56,11 +57,13 @@ public class MethodScanner extends MethodVisitor {
 	@Override
 	public AnnotationVisitor visitTypeAnnotation(int typeRef, @Nullable TypePath typePath, @NotNull String descriptor, boolean visible) {
 		TypeReference reference = new TypeReference(typeRef);
-		
-		System.out.println("Type Reference: " + Integer.toString(reference.getSort(), 16));
-		System.out.println("  Type Path: " + typePath);
-		System.out.println("  Descriptor: " + descriptor);
-		System.out.println("  Visible: " + visible);
+		if (reference.getSort() == TypeReference.METHOD_FORMAL_PARAMETER) {
+			int index = reference.getFormalParameterIndex();
+			Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
+			if (!this.parameterAnnotations.getOrDefault(index, new HashMap<>()).containsKey(annotation.getType())) {
+				this.parameterAnnotations.computeIfAbsent(index, i -> new HashMap<>()).put(annotation.getType(), annotation);
+			}
+		}
 		return super.visitTypeAnnotation(typeRef, typePath, descriptor, visible);
 	}
 	
@@ -74,17 +77,13 @@ public class MethodScanner extends MethodVisitor {
 	}
 	
 	@Override
-	public AnnotationVisitor visitLocalVariableAnnotation(int typeRef, @Nullable TypePath typePath, @NotNull Label[] start, @NotNull Label[] end, int[] index, @NotNull String descriptor, boolean visible) {
-		TypeReference reference = new TypeReference(typeRef);
-	
-		System.out.println("Type Reference: " + Integer.toString(reference.getSort(), 16));
-		System.out.println("  Type Path: " + typePath);
-		System.out.println("  Start: " + Arrays.toString(start));
-		System.out.println("  End: " + Arrays.toString(end));
-		System.out.println("  Index: " + Arrays.toString(index));
-		System.out.println("  Descriptor: " + descriptor);
-		System.out.println("  Visible: " + visible);
-		return super.visitLocalVariableAnnotation(typeRef, typePath, start, end, index, descriptor, visible);
+	public @Nullable AnnotationVisitor visitLocalVariableAnnotation(int typeRef, @Nullable TypePath typePath, @NotNull Label[] start, @NotNull Label[] end, int @NotNull [] index, @NotNull String descriptor, boolean visible) {
+		if (index.length != 1) {
+			return null;
+		}
+		Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
+		this.localAnnotations.computeIfAbsent(index[0], p -> new HashMap<>()).put(annotation.getType(), annotation);
+		return new AnnotationScanner(annotation.getValues()::put);
 	}
 	
 	@Override
@@ -94,6 +93,12 @@ public class MethodScanner extends MethodVisitor {
 			Parameter.Builder builder = Parameter.builder(this.method).index(i).type(types[i]).annotations(this.parameterAnnotations.getOrDefault(i, new HashMap<>()));
 			Map.Entry<String, Set<TypeModifier>> entry = this.parameters.getOrDefault(i, Map.entry("arg" + i, EnumSet.noneOf(TypeModifier.class)));
 			this.method.getParameters().put(i, builder.name(entry.getKey()).modifiers(entry.getValue()).build());
+		}
+		for (Map.Entry<Integer, Map<Type, Annotation>> entry : this.localAnnotations.entrySet()) {
+			LocalVariable local = this.method.getLocal(entry.getKey());
+			if (local != null) {
+				local.getAnnotations().putAll(entry.getValue());
+			}
 		}
 	}
 }
