@@ -33,6 +33,7 @@ public final class Main {
 	 *  - Overhaul DefaultStringFactory
 	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
 	 *  - Extract all code generated in transformers into RuntimeUtils to avoid frame computation
+	 *  - InterfaceTransformer -> Add Redirector restriction -> add boolean to annotation
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
