@@ -203,10 +203,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 	
 	private static class InjectorMethodVisitor extends MethodVisitor {
 		
-		private static final int FLAG_LINE_NUMBER = 128;
-		private static final Field LABEL_LINE;
-		private static final Field LABEL_FLAGS;
-		
 		private final Map</*Line Number*/Integer, List<InjectorData>> injectors = new HashMap<>();
 		private int lastLine = -1;
 		
@@ -226,13 +222,7 @@ public class InjectorTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitLabel(@NotNull Label label) {
-			int line = -1;
-			try {
-				short flags = LABEL_FLAGS.getShort(label);
-				if ((flags & FLAG_LINE_NUMBER) != 0) {
-					line = LABEL_LINE.getInt(label);
-				}
-			} catch (Exception ignored) {}
+			int line = ASMUtils.getLine(label);
 			if (line != -1) {
 				if (this.lastLine != -1 && line - this.lastLine > 1) {
 					for (int i = this.lastLine + 1; i < line; i++) {
@@ -340,17 +330,6 @@ public class InjectorTransformer extends BaseClassTransformer {
 			this.mv.visitMethodInsn(isInstance ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKESTATIC, ifaceMethod.getOwner().getInternalName(), ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), true);
 		}
 		//endregion
-		
-		static {
-			try {
-				LABEL_LINE = Label.class.getDeclaredField("lineNumber");
-				LABEL_LINE.setAccessible(true);
-				LABEL_FLAGS = Label.class.getDeclaredField("flags");
-				LABEL_FLAGS.setAccessible(true);
-			} catch (NoSuchFieldException e) {
-				throw new ExceptionInInitializerError(e);
-			}
-		}
 	}
 	
 	private record InjectorData(int line, @NotNull Method ifaceMethod, @NotNull Method method) {}

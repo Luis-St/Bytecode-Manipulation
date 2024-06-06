@@ -6,6 +6,7 @@ import net.luis.agent.asm.data.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 
 import java.io.File;
@@ -17,6 +18,10 @@ import java.util.stream.Stream;
  @author Luis-St */
 
 public class ASMUtils {
+	
+	private static final java.lang.reflect.Field LABEL_LINE;
+	private static final java.lang.reflect.Field LABEL_FLAGS;
+	private static final int FLAG_LINE_NUMBER = 128;
 	
 	public static void saveClass(@NotNull File file, byte @NotNull [] data) {
 		try {
@@ -40,6 +45,17 @@ public class ASMUtils {
 			}
 		});
 		return lookup;
+	}
+	
+	public static int getLine(@NotNull Label label) {
+		int line = -1;
+		try {
+			short flags = LABEL_FLAGS.getShort(label);
+			if ((flags & FLAG_LINE_NUMBER) != 0) {
+				line = LABEL_LINE.getInt(label);
+			}
+		} catch (Exception ignored) {}
+		return line;
 	}
 	
 	public static @NotNull List<Method> getBySignature(@NotNull String signature, @NotNull Class data) {
@@ -139,4 +155,15 @@ public class ASMUtils {
 		return target;
 	}
 	//endregion
+	
+	static {
+		try {
+			LABEL_LINE = Label.class.getDeclaredField("lineNumber");
+			LABEL_LINE.setAccessible(true);
+			LABEL_FLAGS = Label.class.getDeclaredField("flags");
+			LABEL_FLAGS.setAccessible(true);
+		} catch (NoSuchFieldException e) {
+			throw new ExceptionInInitializerError(e);
+		}
+	}
 }
