@@ -28,11 +28,11 @@ public class Method implements ASMData {
 	private final Map<Type, Annotation> annotations;
 	private final Map<Integer, Parameter> parameters;
 	private final List<Type> exceptions;
-	private final Map<Integer, LocalVariable> locals;
+	private final List<LocalVariable> locals;
 	private final Mutable<Object> annotationDefault;
 	
 	private Method(@NotNull Type owner, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull TypeAccess access, @NotNull Set<TypeModifier> modifiers,
-				   @NotNull Map<Type, Annotation> annotations, @NotNull Map<Integer, Parameter> parameters, @NotNull List<Type> exceptions, @NotNull Map<Integer, LocalVariable> locals, @NotNull Mutable<Object> annotationDefault) {
+				   @NotNull Map<Type, Annotation> annotations, @NotNull Map<Integer, Parameter> parameters, @NotNull List<Type> exceptions, @NotNull List<LocalVariable> locals, @NotNull Mutable<Object> annotationDefault) {
 		MethodType methodType = MethodType.fromName(name);
 		this.owner = Objects.requireNonNull(owner);
 		this.name = Objects.requireNonNull(name);
@@ -115,7 +115,7 @@ public class Method implements ASMData {
 		return this.exceptions;
 	}
 	
-	public @NotNull Map<Integer, LocalVariable> getLocals() {
+	public @NotNull List<LocalVariable> getLocals() {
 		return this.locals;
 	}
 	
@@ -129,8 +129,16 @@ public class Method implements ASMData {
 		return this.parameters.get(index);
 	}
 	
-	public @Nullable LocalVariable getLocal(int index) {
-		return this.locals.get(index);
+	public @NotNull List<LocalVariable> getLocals(int localIndex) {
+		return this.locals.stream().filter(local -> local.getIndex() == localIndex).collect(Collectors.toList());
+	}
+	
+	public @Nullable LocalVariable getLocal(int localIndex, int labelIndex) {
+		return this.locals.stream().filter(local -> local.getIndex() == localIndex && local.isInBounds(labelIndex)).findFirst().orElse(null);
+	}
+	
+	public @Nullable LocalVariable getLocal(int localIndex, int start, int end) {
+		return this.locals.stream().filter(local -> local.getIndex() == localIndex && local.isBoundary(start, end)).findFirst().orElse(null);
 	}
 	
 	@Override
@@ -184,6 +192,10 @@ public class Method implements ASMData {
 	public boolean isLocal(int index) {
 		return this.is(TypeModifier.STATIC) ? index >= this.parameters.size() : index > this.parameters.size();
 	}
+	
+	public void updateLocalBounds(@NotNull Set</*Insert After Index*/Integer> inserts) {
+		this.locals.forEach(local -> local.updateBounds(inserts));
+	}
 	//endregion
 	
 	//region Object overrides
@@ -224,7 +236,7 @@ public class Method implements ASMData {
 		private final Map<Type, Annotation> annotations = new HashMap<>();
 		private final Map<Integer, Parameter> parameters = new HashMap<>();
 		private final List<Type> exceptions = new ArrayList<>();
-		private final Map<Integer, LocalVariable> locals = new HashMap<>();
+		private final List<LocalVariable> locals = new ArrayList<>();
 		private final Mutable<Object> annotationDefault = new Mutable<>();
 		private Type owner;
 		private String name;
@@ -258,7 +270,7 @@ public class Method implements ASMData {
 			this.annotations.putAll(method.annotations);
 			this.parameters.putAll(method.parameters);
 			this.exceptions.addAll(method.exceptions);
-			this.locals.putAll(method.locals);
+			this.locals.addAll(method.locals);
 			this.annotationDefault.set(method.annotationDefault.get());
 		}
 		//endregion
@@ -381,9 +393,9 @@ public class Method implements ASMData {
 		//endregion
 		
 		//region Locals
-		public @NotNull Builder locals(@NotNull Map<Integer, LocalVariable> locals) {
+		public @NotNull Builder locals(@NotNull List<LocalVariable> locals) {
 			this.locals.clear();
-			this.locals.putAll(locals);
+			this.locals.addAll(locals);
 			return this;
 		}
 		
@@ -392,13 +404,13 @@ public class Method implements ASMData {
 			return this;
 		}
 		
-		public @NotNull Builder addLocal(int index, @NotNull LocalVariable local) {
-			this.locals.put(index, local);
+		public @NotNull Builder addLocal(@NotNull LocalVariable local) {
+			this.locals.add(local);
 			return this;
 		}
 		
-		public @NotNull Builder removeLocal(int index) {
-			this.locals.remove(index);
+		public @NotNull Builder removeLocal(@NotNull LocalVariable local) {
+			this.locals.remove(local);
 			return this;
 		}
 		//endregion

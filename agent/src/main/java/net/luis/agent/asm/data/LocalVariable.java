@@ -22,13 +22,15 @@ public class LocalVariable {
 	private final Type type;
 	private final String genericSignature;
 	private final Map<Type, Annotation> annotations;
+	private Boundary boundary;
 	
-	private LocalVariable(@NotNull Method owner, int index, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull Map<Type, Annotation> annotations) {
+	private LocalVariable(@NotNull Method owner, int index, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull Boundary boundary, @NotNull Map<Type, Annotation> annotations) {
 		this.owner = Objects.requireNonNull(owner);
 		this.index = index;
 		this.name = Objects.requireNonNull(name);
 		this.type = Objects.requireNonNull(type);
 		this.genericSignature = genericSignature;
+		this.boundary = Objects.requireNonNull(boundary);
 		this.annotations = Objects.requireNonNull(annotations);
 	}
 	
@@ -69,6 +71,14 @@ public class LocalVariable {
 		return this.genericSignature;
 	}
 	
+	public int getStart() {
+		return this.boundary.start;
+	}
+	
+	public int getEnd() {
+		return this.boundary.end;
+	}
+	
 	public @NotNull Map<Type, Annotation> getAnnotations() {
 		return this.annotations;
 	}
@@ -77,9 +87,9 @@ public class LocalVariable {
 	//region Functional getters
 	public @NotNull String getSourceSignature(boolean full) {
 		if (full) {
-			return this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " : " + this.type.getClassName();
+			return this.owner.getOwner().getClassName() + "()#" + this.owner.getName() + "#" + this.name + "(#" + this.index + ") (L" + this.boundary.start + " - L" + this.boundary.end + ") : " + this.type.getClassName();
 		}
-		return this.owner.getSourceSignature(false) + "#" + this.name;
+		return this.owner.getSourceSignature(false) + "()#" + this.name  + " (#" + this.index + ") (L" + this.boundary.start + " - L" + this.boundary.end + ")";
 	}
 	
 	public boolean is(@NotNull Type type) {
@@ -105,6 +115,18 @@ public class LocalVariable {
 	public @NotNull String getMessageName() {
 		return Utils.capitalize(Utils.getSeparated(Types.getSimpleName(this.type))) + " (local #" + this.index + ")";
 	}
+	
+	public boolean isInBounds(int labelIndex) {
+		return this.boundary.start <= labelIndex && labelIndex < this.boundary.end;
+	}
+	
+	public boolean isBoundary(int start, int end) {
+		return this.boundary.start == start && this.boundary.end == end;
+	}
+	
+	public void updateBounds(@NotNull Set</*Insert After Index*/Integer> inserts) {
+		this.boundary = this.boundary.update(inserts);
+	}
 	//endregion
 	
 	//region Object overrides
@@ -117,12 +139,15 @@ public class LocalVariable {
 		if (!this.owner.getFullSignature().equals(that.owner.getFullSignature())) return false;
 		if (!this.name.equals(that.name)) return false;
 		if (!this.type.equals(that.type)) return false;
-		return Objects.equals(this.genericSignature, that.genericSignature);
+		if (!Objects.equals(this.genericSignature, that.genericSignature)) return false;
+		if (!this.annotations.equals(that.annotations)) return false;
+		return Objects.equals(this.boundary, that.boundary);
 	}
 	
 	@Override
+	@SuppressWarnings("NonFinalFieldReferencedInHashCode")
 	public int hashCode() {
-		return Objects.hash(this.owner.getFullSignature(), this.index, this.name, this.type, this.genericSignature);
+		return Objects.hash(this.owner.getFullSignature(), this.index, this.name, this.type, this.genericSignature, this.annotations, this.boundary);
 	}
 	
 	@Override
@@ -140,6 +165,7 @@ public class LocalVariable {
 		private String name;
 		private Type type;
 		private String genericSignature;
+		private Boundary boundary;
 		
 		//region Constructors
 		private Builder(@NotNull Method owner) {
@@ -164,6 +190,7 @@ public class LocalVariable {
 			this.name = localVariable.name;
 			this.type = localVariable.type;
 			this.genericSignature = localVariable.genericSignature;
+			this.boundary = localVariable.boundary;
 			this.annotations.putAll(localVariable.annotations);
 		}
 		//endregion
@@ -193,6 +220,11 @@ public class LocalVariable {
 			return this;
 		}
 		
+		public @NotNull Builder bounds(int start, int end) {
+			this.boundary = new Boundary(start, end);
+			return this;
+		}
+		
 		//region Annotations
 		public @NotNull Builder annotations(@NotNull Map<Type, Annotation> annotations) {
 			this.annotations.clear();
@@ -217,7 +249,31 @@ public class LocalVariable {
 		//endregion
 		
 		public @NotNull LocalVariable build() {
-			return new LocalVariable(this.owner, this.index, this.name, this.type, this.genericSignature, this.annotations);
+			return new LocalVariable(this.owner, this.index, this.name, this.type, this.genericSignature, this.boundary, this.annotations);
+		}
+	}
+	//endregion
+	
+	//region Boundary
+	private record Boundary(int start, int end) {
+		
+		public @NotNull Boundary update(@NotNull Set</*Insert After Index*/Integer> inserts) {
+			if (inserts.isEmpty()) {
+				return this;
+			}
+			int newStart = this.start;
+			int newEnd = this.end;
+			
+			for (int insert : inserts) {
+				if (insert >= this.end) {
+					continue;
+				}
+				if (this.start > insert) {
+					newStart++;
+				}
+				newEnd++;
+			}
+			return new Boundary(newStart, newEnd);
 		}
 	}
 	//endregion

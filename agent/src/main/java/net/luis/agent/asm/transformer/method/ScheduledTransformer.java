@@ -1,8 +1,7 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.ContextBasedClassVisitor;
+import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -117,9 +116,10 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		@Override
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
+			Method method = Agent.getClass(this.type).getMethod(name + descriptor);
 			if ("<clinit>".equals(name)) {
 				this.initialized = true;
-				return new ScheduledMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.type, this.lookup, this.executor, this.generated);
+				return new ScheduledMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.type, method, this.lookup, this.executor, this.generated);
 			}
 			return visitor;
 		}
@@ -127,28 +127,29 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		@Override
 		public void visitEnd() {
 			if (!this.initialized) {
+				Method method = Method.builder(this.type, "<clinit>", VOID_METHOD).addModifier(TypeModifier.STATIC).build();
+				Agent.getClass(this.type).getMethods().put(method.getFullSignature(), method);
 				MethodVisitor visitor = this.visitMethod(Opcodes.ACC_STATIC, "<clinit>", VOID_METHOD.getDescriptor(), null, null);
 				visitor.visitCode();
 				visitor.visitInsn(Opcodes.RETURN);
 				visitor.visitMaxs(0, 0);
 				visitor.visitEnd();
-				Method method = Method.builder(this.type, "<clinit>", VOID_METHOD).addModifier(TypeModifier.STATIC).build();
-				Agent.getClass(this.type).getMethods().put(method.getFullSignature(), method);
 			}
 			super.visitEnd();
 			this.markModified();
 		}
 	}
 	
-	private static class ScheduledMethodVisitor extends MethodVisitor {
+	private static class ScheduledMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private final Type type;
 		private final List<Method> lookup;
 		private final Field executor;
 		private final boolean generated;
 		
-		private ScheduledMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull List<Method> lookup, @NotNull Field executor, boolean generated) {
-			super(Opcodes.ASM9, visitor);
+		private ScheduledMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull Method method, @NotNull List<Method> lookup, @NotNull Field executor, boolean generated) {
+			super(visitor);
+			this.setMethod(method);
 			this.type = type;
 			this.lookup = lookup;
 			this.executor = executor;
@@ -185,7 +186,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			Label start = new Label();
 			Label end = new Label();
 			
-			this.mv.visitLabel(start);
+			this.insertLabel(start);
 			if (this.lookup.stream().anyMatch(this::requiresLookup)) {
 				index = newLocal(this.mv, CONCURRENT_HASH_MAP);
 				this.mv.visitTypeInsn(Opcodes.NEW, CONCURRENT_HASH_MAP.getInternalName());
@@ -206,9 +207,9 @@ public class ScheduledTransformer extends BaseClassTransformer {
 					this.instrumentContextRunnable(method, index);
 				}
 			}
-			this.mv.visitLabel(end);
+			this.insertLabel(end);
 			if (index != -1) {
-				this.mv.visitLocalVariable("generated$ScheduledTransformer$Temp" + index, CONCURRENT_HASH_MAP.getDescriptor(), "Ljava/util/Map<Ljava/lang/String;Ljava/util/concurrent/ScheduledFuture<*>;>;", start, end, index);
+				this.visitLocalVariable(index, "generated$ScheduledTransformer$Temp" + index, CONCURRENT_HASH_MAP, "Ljava/util/Map<Ljava/lang/String;Ljava/util/concurrent/ScheduledFuture<*>;>;", start, end);
 			}
 		}
 		

@@ -1,8 +1,7 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.MethodOnlyClassVisitor;
+import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.TypeAccess;
@@ -52,14 +51,15 @@ public class DefaultTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class DefaultVisitor extends MethodVisitor {
+	private static class DefaultVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid String Factory";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
 		
 		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
-			super(Opcodes.ASM9, visitor);
+			super(visitor);
+			this.setMethod(method);
 			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(DEFAULT)).forEach(this.lookup::add);
 		}
 		
@@ -80,7 +80,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 				
 				this.visitVarInsn(Opcodes.ASTORE, parameter.getLoadIndex());
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
-				this.mv.visitLabel(label);
+				this.insertLabel(label);
 			}
 		}
 		

@@ -1,6 +1,7 @@
 package net.luis.agent.asm.scanner;
 
 import net.luis.agent.asm.ASMUtils;
+import net.luis.agent.asm.base.LabelTrackingMethodVisitor;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.TypeModifier;
@@ -9,6 +10,8 @@ import net.luis.agent.util.TargetType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
+
+import java.util.List;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
@@ -70,7 +73,7 @@ public class TargetClassScanner extends ClassVisitor {
 		return super.visitMethod(access, name, descriptor, signature, exceptions);
 	}
 	
-	private static class TargetMethodScanner extends MethodVisitor {
+	private static class TargetMethodScanner extends LabelTrackingMethodVisitor {
 		
 		private static final String MISSING_INFORMATION = "Missing Debug Information";
 		private static final String NOT_FOUND = "Not Found";
@@ -86,7 +89,6 @@ public class TargetClassScanner extends ClassVisitor {
 		private int visited;
 		
 		private TargetMethodScanner(@NotNull Method method, @NotNull Annotation target) {
-			super(Opcodes.ASM9);
 			this.method = method;
 			this.value = target.getOrDefault("value");
 			this.type = TargetType.valueOf(target.get("type"));
@@ -311,10 +313,14 @@ public class TargetClassScanner extends ClassVisitor {
 					throw CrashReport.create("Unable to find local variable by name, because the local variable name was not included into the class file during compilation", MISSING_INFORMATION)
 						.addDetail("Method", this.method.getFullSignature()).exception();
 				}
-				LocalVariable local = this.method.getLocal(index);
+				List<LocalVariable> locals = this.method.getLocals(index);
+				if (locals.isEmpty()) {
+					throw CrashReport.create("Local variable not found", NOT_FOUND).addDetail("Method", this.method.getFullSignature()).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
+						.addDetail("Local Variable Index", index).addDetail("Local Variables", this.method.getLocals().stream().map(LocalVariable::toString).toList()).exception();
+				}
+				LocalVariable local = locals.stream().filter(l -> l.isInBounds(this.getCurrentLabelIndex())).findFirst().orElse(null);
 				if (local == null) {
-					throw CrashReport.create("Local Variable not found", NOT_FOUND).addDetail("Method", this.method.getFullSignature())
-						.addDetail("Local Variable Index", index).addDetail("Local Variable Indexes", this.method.getLocals().keySet()).exception();
+					return;
 				}
 				if (local.getName().equals(this.value)) {
 					this.target();
@@ -322,12 +328,12 @@ public class TargetClassScanner extends ClassVisitor {
 			} else {
 				Parameter parameter = this.method.getParameters().get(this.method.is(TypeModifier.STATIC) ? index : index - 1);
 				if (parameter == null) {
-					throw CrashReport.create("Parameter not found", NOT_FOUND).addDetail("Method", this.method.getFullSignature())
+					throw CrashReport.create("Parameter not found", NOT_FOUND).addDetail("Method", this.method.getFullSignature()).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
 						.addDetail("Parameter Index", index).addDetail("Parameter Indexes", this.method.getParameters().values().stream().map(Parameter::getIndex).toList()).exception();
 				}
 				if (!parameter.isNamed()) {
-					throw CrashReport.create("Unable to find parameter by name, because the parameter name was not included into the class file during compilation", MISSING_INFORMATION).addDetail("Method", this.method.getFullSignature())
-						.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
+					throw CrashReport.create("Unable to find parameter by name, because the parameter names were not included into the class file during compilation", MISSING_INFORMATION).addDetail("Method", this.method.getFullSignature())
+						.addDetail("Target Parameter Name", this.value).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name (Generated)", parameter.getName()).exception();
 				}
 				if (parameter.getName().equals(this.value)) {
 					this.target();

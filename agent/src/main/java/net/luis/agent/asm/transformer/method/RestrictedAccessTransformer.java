@@ -1,10 +1,8 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.ContextBasedClassVisitor;
-import net.luis.agent.asm.data.Annotation;
-import net.luis.agent.asm.data.Method;
+import net.luis.agent.asm.base.*;
+import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -65,7 +63,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class RestrictedAccessMethodVisitor extends MethodVisitor {
+	private static class RestrictedAccessMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final Type STACK_TRACE_ARRAY = Type.getType("[Ljava/lang/StackTraceElement;");
 		private static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
@@ -76,7 +74,8 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		private final boolean pattern;
 		
 		private RestrictedAccessMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
-			super(Opcodes.ASM9, visitor);
+			super(visitor);
+			this.setMethod(method);
 			this.type = method.getOwner();
 			this.method = method;
 			Annotation annotation = method.getAnnotation(RESTRICTED_ACCESS);
@@ -95,7 +94,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			int array = newLocal(this.mv, STACK_TRACE_ARRAY);
 			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Thread", "getStackTrace", "()[Ljava/lang/StackTraceElement;", false);
-			this.mv.visitLabel(start);
+			this.insertLabel(start);
 			this.mv.visitVarInsn(Opcodes.ASTORE, array);
 			
 			this.mv.visitVarInsn(Opcodes.ALOAD, array);
@@ -105,7 +104,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			
 			if (this.values.isEmpty()) {
 				instrumentThrownException(this.mv, RUNTIME_EXCEPTION, this.getMessage());
-				this.mv.visitLabel(end);
+				this.insertLabel(end);
 				return;
 			}
 			
@@ -114,7 +113,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			this.mv.visitInsn(Opcodes.ICONST_2);
 			this.mv.visitInsn(Opcodes.AALOAD);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StackTraceElement", "getClassName", "()Ljava/lang/String;", false);
-			this.mv.visitLabel(clazzVariable);
+			this.insertLabel(clazzVariable);
 			this.mv.visitVarInsn(Opcodes.ASTORE, clazz);
 			
 			int method = newLocal(this.mv, STRING);
@@ -122,7 +121,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			this.mv.visitInsn(Opcodes.ICONST_2);
 			this.mv.visitInsn(Opcodes.AALOAD);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StackTraceElement", "getMethodName", "()Ljava/lang/String;", false);
-			this.mv.visitLabel(methodVariable);
+			this.insertLabel(methodVariable);
 			this.mv.visitVarInsn(Opcodes.ASTORE, method);
 			
 			for (String value : this.values) {
@@ -136,10 +135,10 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			
 			instrumentThrownException(this.mv, RUNTIME_EXCEPTION, this.getMessage());
 			
-			this.mv.visitLabel(end);
-			this.mv.visitLocalVariable("generated$RestrictedAccessTransformer$Temp" + array, STACK_TRACE_ARRAY.getDescriptor(), null, start, end, array);
-			this.mv.visitLocalVariable("generated$RestrictedAccessTransformer$Temp" + clazz, STRING.getDescriptor(), null, clazzVariable, end, clazz);
-			this.mv.visitLocalVariable("generated$RestrictedAccessTransformer$Temp" + method, STRING.getDescriptor(), null, methodVariable, end, method);
+			this.insertLabel(end);
+			this.visitLocalVariable(array, "generated$RestrictedAccessTransformer$Temp" + array, STACK_TRACE_ARRAY, null, start, end);
+			this.visitLocalVariable(clazz, "generated$RestrictedAccessTransformer$Temp" + clazz, STRING, null, clazzVariable, end);
+			this.visitLocalVariable(method, "generated$RestrictedAccessTransformer$Temp" + method, STRING, null, methodVariable, end);
 		}
 		
 		//region Helper methods

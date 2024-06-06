@@ -365,6 +365,8 @@ public class Instrumentations {
 	public static int newLocal(@NotNull MethodVisitor visitor, @NotNull Type type) {
 		if (visitor instanceof LocalVariablesSorter sorter) {
 			return sorter.newLocal(type);
+		} else if (visitor.getDelegate() != null) {
+			return newLocal(visitor.getDelegate(), type);
 		}
 		throw new IllegalStateException("LocalVariablesSorter is required as base visitor");
 	}
@@ -437,7 +439,7 @@ public class Instrumentations {
 				.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
 				.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 		}
-		for (LocalVariable local : method.getLocals().values()) {
+		for (LocalVariable local : method.getLocals()) {
 			if (local.getName().equals(value)) {
 				return local.getIndex();
 			}

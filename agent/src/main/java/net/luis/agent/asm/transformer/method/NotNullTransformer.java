@@ -1,8 +1,7 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.MethodOnlyClassVisitor;
+import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -49,7 +48,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 				if (method.isAnnotatedWith(NOT_NULL)) {
 					return true;
 				}
-				return method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || method.getLocals().values().stream().anyMatch(local -> local.isAnnotatedWith(NOT_NULL));
+				return method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || method.getLocals().stream().anyMatch(local -> local.isAnnotatedWith(NOT_NULL));
 			}
 			
 			@Override
@@ -59,19 +58,18 @@ public class NotNullTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class NotNullVisitor extends MethodVisitor {
+	private static class NotNullVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final List<Parameter> parameters = new ArrayList<>();
-		private final Map<Integer, LocalVariable> locals = new HashMap<>();
 		private final Method method;
 		
 		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
-			super(Opcodes.ASM9, visitor);
+			super(visitor);
+			this.setMethod(method);
 			this.method = method;
 			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(NOT_NULL)).forEach(this.parameters::add);
-			method.getLocals().values().stream().filter(local -> local.isAnnotatedWith(NOT_NULL)).forEach(local -> this.locals.put(local.getIndex(), local));
 		}
 		
 		@Override
@@ -90,14 +88,31 @@ public class NotNullTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
-		public void visitVarInsn(int opcode, int varIndex) {
-			if (isStore(opcode) && this.locals.containsKey(varIndex)) {
-				LocalVariable local = this.locals.get(varIndex);
+		public void visitVarInsn(int opcode, int index) {
+			if (isStore(opcode) && this.method.isLocal(index)) {
+				List<LocalVariable> locals = this.method.getLocals(index);
+				if (locals.isEmpty() || locals.stream().noneMatch(local -> local.isAnnotatedWith(NOT_NULL))) {
+					super.visitVarInsn(opcode, index);
+					return;
+				}
+				
+				LocalVariable local = locals.stream().filter(l -> l.isAnnotatedWith(NOT_NULL)).filter(l -> l.getIndex() == index && l.isInBounds(this.getCurrentLabelIndex())).findFirst().orElse(null);
+				if (local == null) {
+					System.out.println("Local variable with index " + index + " and label index " + this.getCurrentLabelIndex() + " not found in method " + this.method.getSourceSignature(true));
+					this.method.getLocals().forEach(l -> System.out.println(" - " + l.getSourceSignature(false)));
+					super.visitVarInsn(opcode, index);
+					return;
+				}
+				if (!local.isAnnotatedWith(NOT_NULL)) {
+					super.visitVarInsn(opcode, index);
+					return;
+				}
+				
 				this.validateLocal(local);
 				instrumentNonNullCheck(this.mv, -1, this.getMessage(local.getAnnotation(NOT_NULL), local.getMessageName()));
 				this.mv.visitTypeInsn(Opcodes.CHECKCAST, local.getType().getInternalName());
 			}
-			super.visitVarInsn(opcode, varIndex);
+			super.visitVarInsn(opcode, index);
 		}
 		
 		@Override

@@ -1,8 +1,7 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.MethodOnlyClassVisitor;
+import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -58,16 +57,18 @@ public class RangeTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class RangeVisitor extends MethodVisitor {
+	private static class RangeVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String INVALID_CATEGORY = "Invalid Annotated Element";
 		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
+		private final List<int[]> locals = new ArrayList<>();
 		private final Method method;
 		
 		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
-			super(Opcodes.ASM9, visitor);
+			super(visitor);
+			this.setMethod(method);
 			this.method = method;
 			//region Parameter validation
 			String signature = method.getSourceSignature(true);
@@ -142,7 +143,7 @@ public class RangeTransformer extends BaseClassTransformer {
 				Type type = this.method.getReturnType();
 				
 				int local = newLocal(this.mv, type);
-				this.mv.visitLabel(start);
+				this.insertLabel(start);
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
 				
 				String message = "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must be ";
@@ -160,9 +161,9 @@ public class RangeTransformer extends BaseClassTransformer {
 				}
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
-				this.mv.visitLabel(end);
+				this.insertLabel(end);
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), local);
-				this.mv.visitLocalVariable("generated$RangeTransformer$Temp" + local, type.getDescriptor(), null, start, end, local);
+				this.visitLocalVariable(local, "generated$RangeTransformer$Temp" + local, type, null, start, end);
 			}
 			this.mv.visitInsn(opcode);
 		}
@@ -180,12 +181,13 @@ public class RangeTransformer extends BaseClassTransformer {
 			} else {
 				loadNumber(this.mv, value);
 				loadNumberAsDouble(this.mv, type, loadIndex);
+				loadNumberAsDouble(this.mv, type, loadIndex);
 			}
 			this.mv.visitInsn(Opcodes.DCMPL);
 			this.mv.visitJumpInsn(compare, label);
 			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, message + " " + value);
 			this.mv.visitJumpInsn(Opcodes.GOTO, label);
-			this.mv.visitLabel(label);
+			this.insertLabel(label);
 		}
 		
 		private boolean isValidOpcode(int opcode) {

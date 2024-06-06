@@ -1,8 +1,7 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.MethodOnlyClassVisitor;
+import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -74,7 +73,7 @@ public class PatternTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class PatternMethodVisitor extends MethodVisitor {
+	private static class PatternMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
@@ -82,7 +81,8 @@ public class PatternTransformer extends BaseClassTransformer {
 		private final Method method;
 		
 		private PatternMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method, @NotNull Map<Type, String> lookup) {
-			super(Opcodes.ASM9, visitor);
+			super(visitor);
+			this.setMethod(method);
 			this.lookup = lookup;
 			this.method = method;
 			this.validate(method);
@@ -104,7 +104,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, parameter.getMessageName() + " must match pattern '" + value + "'");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
-				this.mv.visitLabel(label);
+				this.insertLabel(label);
 			}
 		}
 		
@@ -116,16 +116,16 @@ public class PatternTransformer extends BaseClassTransformer {
 				Label start = new Label();
 				Label end = new Label();
 				int local = newLocal(this.mv, this.method.getReturnType());
-				this.mv.visitLabel(start);
+				this.insertLabel(start);
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
 				
 				instrumentPatternCheck(this.mv, value, local, end);
 				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must match pattern '" + value + "'");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
-				this.mv.visitLabel(end);
+				this.insertLabel(end);
 				this.mv.visitVarInsn(Opcodes.ALOAD, local);
-				this.mv.visitLocalVariable("generated$PatternTransformer$Temp" + local, STRING.getDescriptor(), null, start, end, local);
+				this.visitLocalVariable(local, "generated$PatternTransformer$Temp" + local, STRING, null, start, end);
 			}
 			this.mv.visitInsn(opcode);
 		}

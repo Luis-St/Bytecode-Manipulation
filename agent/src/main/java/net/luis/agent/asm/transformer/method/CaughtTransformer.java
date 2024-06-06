@@ -1,10 +1,8 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.MethodOnlyClassVisitor;
-import net.luis.agent.asm.data.Annotation;
-import net.luis.agent.asm.data.Method;
+import net.luis.agent.asm.base.*;
+import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.util.CaughtAction;
 import net.luis.agent.util.DefaultStringFactory;
@@ -50,7 +48,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class CaughtVisitor extends MethodVisitor {
+	private static class CaughtVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
@@ -62,7 +60,8 @@ public class CaughtTransformer extends BaseClassTransformer {
 		private final Type returnType;
 		
 		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
-			super(Opcodes.ASM9, visitor);
+			super(visitor);
+			this.setMethod(method);
 			Annotation annotation = method.getAnnotation(CAUGHT);
 			this.action = CaughtAction.valueOf(annotation.getOrDefault("value"));
 			this.exceptionType = annotation.getOrDefault("exceptionType");
@@ -76,7 +75,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 		public void visitCode() {
 			this.mv.visitCode();
 			this.mv.visitTryCatchBlock(this.start, this.end, this.handler, this.exceptionType.getInternalName());
-			this.mv.visitLabel(this.start);
+			this.insertLabel(this.start);
 		}
 		
 		@Override
@@ -84,9 +83,9 @@ public class CaughtTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitEnd() {
-			this.mv.visitLabel(this.end);
+			this.insertLabel(this.end);
 			this.mv.visitJumpInsn(Opcodes.GOTO, this.handler);
-			this.mv.visitLabel(this.handler);
+			this.insertLabel(this.handler);
 			int local = newLocal(this.mv, this.exceptionType);
 			this.mv.visitVarInsn(Opcodes.ASTORE, local);
 			
@@ -101,8 +100,9 @@ public class CaughtTransformer extends BaseClassTransformer {
 				loadDefaultConst(this.mv, this.returnType);
 				this.mv.visitInsn(this.returnType.getOpcode(Opcodes.IRETURN));
 			}
+			this.visitLocalVariable(local, "e", this.exceptionType, null, this.start, this.end);
 			this.mv.visitMaxs(0, 0);
-			this.mv.visitEnd();
+			super.visitEnd();
 		}
 	}
 }
