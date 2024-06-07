@@ -19,6 +19,12 @@ public class InjectorTest {
 	private static String string = "String";
 	
 	private int i = 0;
+	@NotNull
+	private String str;
+	
+	public InjectorTest(@NotNull String str) {
+		this.str = str;
+	}
 	
 	@Caught
 	private static void silentThrow() {
@@ -93,12 +99,20 @@ public class InjectorTest {
 		try (@NotNull ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
 			stream.write(12);
 			stream.write(13);
-			System.out.println(Arrays.toString(stream.toByteArray()));
+			this.str = Arrays.toString(stream.toByteArray());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		
 		System.out.println(true);
+	}
+	
+	public @NotNull String getStr() {
+		return this.str;
+	}
+	
+	public void setStr(@NotNull String str) {
+		this.str = str;
 	}
 	
 	private void validate() {

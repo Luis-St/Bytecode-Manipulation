@@ -29,18 +29,20 @@ public final class Main {
 	 * ToDo:
 	 *  - Add transformers for unused annotations
 	 *  - Support recursive scan of methods in MethodScanner -> to include lambda expressions
-	 *  - Support for all annotation targets (NotNull -> Locals, Fields; Pattern -> Fields; ...)
 	 *  - Overhaul DefaultStringFactory
 	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
-	 *  - Extract all code generated in transformers into RuntimeUtils to avoid frame computation
 	 *  - InterfaceTransformer -> Add Redirector restriction -> add boolean to annotation
+	 *  - Allow range on wrapper types
+	 *  - InjectInterface -> Only one target -> Class[] targets -> String value
+	 *  - Store all method, fields in a map to allow direct access
+	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
 		
-		new InjectorTest().test(1, new int[] { 1 });
+		new InjectorTest("ABC").test(1, new int[] { 1 });
 		
 		execute("ls", null, null);
 		parseUUID("550e8400-e29b-41d4-a716-446655440000");

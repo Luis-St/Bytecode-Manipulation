@@ -75,11 +75,6 @@ public class NotNullTransformer extends BaseClassTransformer {
 		}
 		
 		@Override
-		public void visitFrame(int type, int numLocal, Object[] local, int numStack, Object[] stack) {
-			super.visitFrame(type, numLocal, local, numStack, stack);
-		}
-		
-		@Override
 		public void visitCode() {
 			this.mv.visitCode();
 			for (Parameter parameter : this.parameters) {
@@ -87,6 +82,19 @@ public class NotNullTransformer extends BaseClassTransformer {
 				instrumentNonNullCheck(this.mv, parameter.getLoadIndex(), this.getMessage(parameter.getAnnotation(NOT_NULL), parameter.getMessageName()));
 				this.mv.visitInsn(Opcodes.POP);
 			}
+		}
+		
+		@Override
+		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
+			Type type = Type.getType(descriptor);
+			if (opcode == Opcodes.PUTFIELD && type.getSort() == Type.OBJECT) {
+				Field field = Agent.getClass(Type.getObjectType(owner)).getField(name);
+				if (field != null && field.isAnnotatedWith(NOT_NULL)) {
+					instrumentNonNullCheck(this.mv, -1, this.getMessage(field.getAnnotation(NOT_NULL), getSimpleName(field.getOwner()) + "#" + name));
+					this.mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
+				}
+			}
+			super.visitFieldInsn(opcode, owner, name, descriptor);
 		}
 		
 		@Override
