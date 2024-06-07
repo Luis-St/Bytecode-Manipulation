@@ -282,9 +282,9 @@ public interface IInjectorTest {
 	//endregion
 	
 	//region LAMBDA
-	@Inject(method = "test(int, int[])", target = @Target(value = "System#getProperty", type = TargetType.INVOKE))
-	static void injectLambdaTest() {
-		System.out.println("Lambda");
+	@Inject(method = "test(int, int[])", target = @Target(value = "System#getProperty", type = TargetType.INVOKE, mode = TargetMode.AFTER))
+	static void injectLambdaTest(@Local int k) {
+		System.out.println("Lambda - " + k);
 	}
 	//endregion
 }

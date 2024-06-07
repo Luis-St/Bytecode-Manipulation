@@ -1,6 +1,5 @@
 package net.luis.agent.asm.base;
 
-import net.luis.agent.annotation.util.Local;
 import net.luis.agent.asm.data.LocalVariable;
 import net.luis.agent.asm.data.Method;
 import org.jetbrains.annotations.*;
@@ -37,7 +36,7 @@ public class LabelTrackingMethodVisitor extends MethodVisitor {
 		return index;
 	}
 	
-	public int getCurrentLabelIndex() {
+	public int getScopeIndex() {
 		return this.labels.size() - 1;
 	}
 	
@@ -71,7 +70,7 @@ public class LabelTrackingMethodVisitor extends MethodVisitor {
 	public void visitEnd() {
 		super.visitEnd();
 		if (this.method != null) {
-			this.method.updateLocalBounds(this.getInserts());
+			this.method.updateLocalScopes(this.getInserts());
 			for (Local local : this.locals) {
 				this.method.getLocals().add(LocalVariable.builder(this.method, local.index, local.name, local.type).genericSignature(local.signature).bounds(local.start, local.end).build());
 			}

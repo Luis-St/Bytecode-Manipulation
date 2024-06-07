@@ -107,8 +107,8 @@ public class InjectorTest {
 		
 		CompletableFuture.runAsync(() -> {
 			System.out.println("Im out of InjectorTest#test(int, int[])");
-			System.out.println(System.getProperty("java.version"));
-			System.out.println("Test");
+			int k = Integer.parseInt(System.getProperty("java.version").substring(0, 2));
+			System.out.println("Major Java Version: " + k);
 		}).join();
 		
 		System.out.println(true);

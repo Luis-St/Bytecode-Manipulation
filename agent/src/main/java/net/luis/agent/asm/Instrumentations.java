@@ -263,7 +263,7 @@ public class Instrumentations {
 	//endregion
 	
 	//region @This and @Local
-	public static int getLoadIndex(@NotNull String type, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
+	public static int getLoadIndex(@NotNull String type, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method, int scopeIndex) {
 		if (parameter.isAnnotatedWith(THIS)) {
 			checkStatic(type, parameter, ifaceMethod, method);
 			return 0;
@@ -279,7 +279,7 @@ public class Instrumentations {
 			String name = parameter.getName();
 			if ("_this".equals(name)) {
 				checkStatic(type, parameter, ifaceMethod, method);
-				System.out.println("Found parameter which specifies 'this' as target using the @Local annotation, use the @This annotation instead");
+				System.out.println("Found parameter which specifies 'this' as target using the @Local(\"_this\") annotation, use the @This annotation instead");
 				return 0;
 			}
 			int index = getLoadIndex(type, name, parameter, ifaceMethod, method);
@@ -288,16 +288,28 @@ public class Instrumentations {
 			}
 		} else if (value.chars().allMatch(Character::isDigit)) {
 			int index = Integer.parseInt(value);
-			int max = method.getParameterCount() + method.getLocalCount();
-			if (!method.is(TypeModifier.STATIC)) {
-				max++;
+			if (index == 0 && !method.is(TypeModifier.STATIC)) {
+				System.out.println("Found parameter which specifies 'this' as target using the @Local(\"0\") annotation, use the @This annotation instead");
+				return 0;
 			}
-			if (index >= max) {
-				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the index is out of bounds", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true))
-					.addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-					.addDetail("Index", index).addDetail("Max", max).exception();
+			int max = method.getParameterCount() + (method.is(TypeModifier.STATIC) ? 0 : 1);
+			if (max > index) {
+				return index;
 			}
-			return index;
+			List<LocalVariable> locals = method.getLocals(index);
+			if (locals.isEmpty()) {
+				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the local variables were not included into the class file during compilation", "Missing Debug Information")
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
+			}
+			LocalVariable local = locals.stream().filter(l -> l.isInScope(scopeIndex)).findFirst().orElse(null);
+			if (local == null) {
+				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the index is not available in the current scope", Utils.capitalize(type) + " Implementation Error")
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).addDetail("Scope Index", scopeIndex)
+					.addDetail("Possible Local Variables", locals).exception();
+			}
+			return local.getIndex();
 		} else if ("this".equals(value)) {
 			checkStatic(type, parameter, ifaceMethod, method);
 			System.out.println("Found parameter which specifies 'this' as target using the @Local annotation, use the @This annotation instead");

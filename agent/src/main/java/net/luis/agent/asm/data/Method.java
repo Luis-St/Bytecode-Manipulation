@@ -134,11 +134,11 @@ public class Method implements ASMData {
 	}
 	
 	public @Nullable LocalVariable getLocal(int localIndex, int labelIndex) {
-		return this.locals.stream().filter(local -> local.getIndex() == localIndex && local.isInBounds(labelIndex)).findFirst().orElse(null);
+		return this.locals.stream().filter(local -> local.getIndex() == localIndex && local.isInScope(labelIndex)).findFirst().orElse(null);
 	}
 	
 	public @Nullable LocalVariable getLocal(int localIndex, int start, int end) {
-		return this.locals.stream().filter(local -> local.getIndex() == localIndex && local.isBoundary(start, end)).findFirst().orElse(null);
+		return this.locals.stream().filter(local -> local.getIndex() == localIndex && local.isScope(start, end)).findFirst().orElse(null);
 	}
 	
 	@Override
@@ -193,8 +193,8 @@ public class Method implements ASMData {
 		return this.is(TypeModifier.STATIC) ? index >= this.parameters.size() : index > this.parameters.size();
 	}
 	
-	public void updateLocalBounds(@NotNull Set</*Insert After Index*/Integer> inserts) {
-		this.locals.forEach(local -> local.updateBounds(inserts));
+	public void updateLocalScopes(@NotNull Set</*Insert After Index*/Integer> inserts) {
+		this.locals.forEach(local -> local.updateScope(inserts));
 	}
 	//endregion
 	

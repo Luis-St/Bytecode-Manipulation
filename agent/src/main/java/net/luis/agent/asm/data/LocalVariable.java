@@ -22,15 +22,15 @@ public class LocalVariable {
 	private final Type type;
 	private final String genericSignature;
 	private final Map<Type, Annotation> annotations;
-	private Boundary boundary;
+	private Scope scope;
 	
-	private LocalVariable(@NotNull Method owner, int index, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull Boundary boundary, @NotNull Map<Type, Annotation> annotations) {
+	private LocalVariable(@NotNull Method owner, int index, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull LocalVariable.Scope scope, @NotNull Map<Type, Annotation> annotations) {
 		this.owner = Objects.requireNonNull(owner);
 		this.index = index;
 		this.name = Objects.requireNonNull(name);
 		this.type = Objects.requireNonNull(type);
 		this.genericSignature = genericSignature;
-		this.boundary = Objects.requireNonNull(boundary);
+		this.scope = Objects.requireNonNull(scope);
 		this.annotations = Objects.requireNonNull(annotations);
 	}
 	
@@ -72,11 +72,11 @@ public class LocalVariable {
 	}
 	
 	public int getStart() {
-		return this.boundary.start;
+		return this.scope.start;
 	}
 	
 	public int getEnd() {
-		return this.boundary.end;
+		return this.scope.end;
 	}
 	
 	public @NotNull Map<Type, Annotation> getAnnotations() {
@@ -87,9 +87,9 @@ public class LocalVariable {
 	//region Functional getters
 	public @NotNull String getSourceSignature(boolean full) {
 		if (full) {
-			return this.owner.getOwner().getClassName() + "()#" + this.owner.getName() + "#" + this.name + "(#" + this.index + ") (L" + this.boundary.start + " - L" + this.boundary.end + ") : " + this.type.getClassName();
+			return this.owner.getOwner().getClassName() + "()#" + this.owner.getName() + "#" + this.name + "(#" + this.index + ") (Scope " + this.scope.start + " - " + this.scope.end + ") : " + this.type.getClassName();
 		}
-		return this.owner.getSourceSignature(false) + "()#" + this.name  + " (#" + this.index + ") (L" + this.boundary.start + " - L" + this.boundary.end + ")";
+		return this.owner.getSourceSignature(false) + "()#" + this.name  + " (#" + this.index + ") (Scope " + this.scope.start + " - " + this.scope.end + ")";
 	}
 	
 	public boolean is(@NotNull Type type) {
@@ -116,16 +116,16 @@ public class LocalVariable {
 		return Utils.capitalize(Utils.getSeparated(Types.getSimpleName(this.type))) + " (local #" + this.index + ")";
 	}
 	
-	public boolean isInBounds(int labelIndex) {
-		return this.boundary.start <= labelIndex && labelIndex < this.boundary.end;
+	public boolean isInScope(int scope) {
+		return this.scope.start <= scope && scope < this.scope.end;
 	}
 	
-	public boolean isBoundary(int start, int end) {
-		return this.boundary.start == start && this.boundary.end == end;
+	public boolean isScope(int start, int end) {
+		return this.scope.start == start && this.scope.end == end;
 	}
 	
-	public void updateBounds(@NotNull Set</*Insert After Index*/Integer> inserts) {
-		this.boundary = this.boundary.update(inserts);
+	public void updateScope(@NotNull Set</*Insert After Index*/Integer> inserts) {
+		this.scope = this.scope.update(inserts);
 	}
 	//endregion
 	
@@ -141,13 +141,13 @@ public class LocalVariable {
 		if (!this.type.equals(that.type)) return false;
 		if (!Objects.equals(this.genericSignature, that.genericSignature)) return false;
 		if (!this.annotations.equals(that.annotations)) return false;
-		return Objects.equals(this.boundary, that.boundary);
+		return Objects.equals(this.scope, that.scope);
 	}
 	
 	@Override
 	@SuppressWarnings("NonFinalFieldReferencedInHashCode")
 	public int hashCode() {
-		return Objects.hash(this.owner.getFullSignature(), this.index, this.name, this.type, this.genericSignature, this.annotations, this.boundary);
+		return Objects.hash(this.owner.getFullSignature(), this.index, this.name, this.type, this.genericSignature, this.annotations, this.scope);
 	}
 	
 	@Override
@@ -165,7 +165,7 @@ public class LocalVariable {
 		private String name;
 		private Type type;
 		private String genericSignature;
-		private Boundary boundary;
+		private Scope scope;
 		
 		//region Constructors
 		private Builder(@NotNull Method owner) {
@@ -190,7 +190,7 @@ public class LocalVariable {
 			this.name = localVariable.name;
 			this.type = localVariable.type;
 			this.genericSignature = localVariable.genericSignature;
-			this.boundary = localVariable.boundary;
+			this.scope = localVariable.scope;
 			this.annotations.putAll(localVariable.annotations);
 		}
 		//endregion
@@ -221,7 +221,7 @@ public class LocalVariable {
 		}
 		
 		public @NotNull Builder bounds(int start, int end) {
-			this.boundary = new Boundary(start, end);
+			this.scope = new Scope(start, end);
 			return this;
 		}
 		
@@ -249,15 +249,15 @@ public class LocalVariable {
 		//endregion
 		
 		public @NotNull LocalVariable build() {
-			return new LocalVariable(this.owner, this.index, this.name, this.type, this.genericSignature, this.boundary, this.annotations);
+			return new LocalVariable(this.owner, this.index, this.name, this.type, this.genericSignature, this.scope, this.annotations);
 		}
 	}
 	//endregion
 	
-	//region Boundary
-	private record Boundary(int start, int end) {
+	//region Scope
+	private record Scope(int start, int end) {
 		
-		public @NotNull Boundary update(@NotNull Set</*Insert After Index*/Integer> inserts) {
+		public @NotNull Scope update(@NotNull Set</*Insert After Index*/Integer> inserts) {
 			if (inserts.isEmpty()) {
 				return this;
 			}
@@ -273,7 +273,7 @@ public class LocalVariable {
 				}
 				newEnd++;
 			}
-			return new Boundary(newStart, newEnd);
+			return new Scope(newStart, newEnd);
 		}
 	}
 	//endregion

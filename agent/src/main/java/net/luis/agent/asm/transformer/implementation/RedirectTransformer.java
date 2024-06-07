@@ -3,8 +3,7 @@ package net.luis.agent.asm.transformer.implementation;
 import net.luis.agent.Agent;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.Types;
-import net.luis.agent.asm.base.BaseClassTransformer;
-import net.luis.agent.asm.base.ContextBasedClassVisitor;
+import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
@@ -176,13 +175,13 @@ public class RedirectTransformer extends BaseClassTransformer {
 		//endregion
 	}
 	
-	private static class RedirectMethodVisitor extends MethodVisitor {
+	private static class RedirectMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private final Method method;
 		private final List<RedirectData> redirects;
 		
 		private RedirectMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull List<RedirectData> redirects) {
-			super(Opcodes.ASM9, visitor);
+			super(visitor);
 			this.method = method;
 			this.redirects = redirects;
 		}
@@ -231,7 +230,7 @@ public class RedirectTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(Opcodes.ALOAD, 0);
 			}
 			for (Parameter parameter : ifaceMethod.getParameters().values()) {
-				this.mv.visitVarInsn(parameter.getType().getOpcode(Opcodes.ILOAD), getLoadIndex("redirect", parameter, ifaceMethod, this.method));
+				this.mv.visitVarInsn(parameter.getType().getOpcode(Opcodes.ILOAD), getLoadIndex("redirect", parameter, ifaceMethod, this.method, this.getScopeIndex()));
 			}
 			this.mv.visitMethodInsn(ifaceMethod.is(TypeModifier.STATIC) ? Opcodes.INVOKESTATIC : Opcodes.INVOKEINTERFACE, ifaceMethod.getOwner().getInternalName(), ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), true);
 		}

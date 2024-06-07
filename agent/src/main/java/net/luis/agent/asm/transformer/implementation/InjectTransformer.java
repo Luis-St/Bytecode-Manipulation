@@ -339,7 +339,7 @@ public class InjectTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(Opcodes.ALOAD, 0);
 			}
 			for (Parameter parameter : ifaceMethod.getParameters().values()) {
-				this.mv.visitVarInsn(parameter.getType().getOpcode(Opcodes.ILOAD), getLoadIndex("inject", parameter, ifaceMethod, method));
+				this.mv.visitVarInsn(parameter.getType().getOpcode(Opcodes.ILOAD), getLoadIndex("inject", parameter, ifaceMethod, method, this.getScopeIndex()));
 			}
 			this.mv.visitMethodInsn(isInstance ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKESTATIC, ifaceMethod.getOwner().getInternalName(), ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), true);
 		}

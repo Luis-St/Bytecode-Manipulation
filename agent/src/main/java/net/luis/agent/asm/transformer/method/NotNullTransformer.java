@@ -100,7 +100,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		@Override
 		public void visitVarInsn(int opcode, int index) {
 			if (this.includeLocals && isStore(opcode) && this.method.isLocal(index)) {
-				LocalVariable local = this.method.getLocals(index).stream().filter(l -> l.isAnnotatedWith(NOT_NULL)).filter(l -> l.isInBounds(this.getCurrentLabelIndex())).findFirst().orElse(null);
+				LocalVariable local = this.method.getLocals(index).stream().filter(l -> l.isAnnotatedWith(NOT_NULL)).filter(l -> l.isInScope(this.getScopeIndex())).findFirst().orElse(null);
 				if (local != null && local.isAnnotatedWith(NOT_NULL)) {
 					this.validateLocal(local);
 					instrumentNonNullCheck(this.mv, -1, this.getMessage(local.getAnnotation(NOT_NULL), local.getMessageName()));
@@ -142,7 +142,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		private void validateLocal(@NotNull LocalVariable local) {
 			if (local.isAny(PRIMITIVES)) {
 				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true))
-					.addDetail("Local Variable Index", local.getIndex()).addDetail("Local Variable  Type", local.getType()).addDetail("Local Variable  Name", local.getName()).exception();
+					.addDetail("Local Variable Index", local.getIndex()).addDetail("Local Variable  Type", local.getType()).addDetail("Local Variable Name", local.getName()).exception();
 			}
 		}
 		

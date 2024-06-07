@@ -385,7 +385,7 @@ public class TargetClassScanner extends ClassVisitor {
 					throw CrashReport.create("Local variable not found", NOT_FOUND).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
 						.addDetail("Local Variable Index", index).addDetail("Local Variables", this.method.getLocals().stream().map(LocalVariable::toString).toList()).exception();
 				}
-				LocalVariable local = locals.stream().filter(l -> l.isInBounds(this.getCurrentLabelIndex())).findFirst().orElse(null);
+				LocalVariable local = locals.stream().filter(l -> l.isInScope(this.getScopeIndex())).findFirst().orElse(null);
 				if (local == null) {
 					return;
 				}
