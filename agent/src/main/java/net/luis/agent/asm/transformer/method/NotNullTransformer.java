@@ -64,12 +64,14 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		private final List<Parameter> parameters = new ArrayList<>();
 		private final Method method;
+		private final boolean includeLocals;
 		
 		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
 			this.setMethod(method);
 			this.method = method;
 			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(NOT_NULL)).forEach(this.parameters::add);
+			this.includeLocals = method.getLocals().stream().anyMatch(local -> local.isAnnotatedWith(NOT_NULL));
 		}
 		
 		@Override
@@ -89,28 +91,13 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitVarInsn(int opcode, int index) {
-			if (isStore(opcode) && this.method.isLocal(index)) {
-				List<LocalVariable> locals = this.method.getLocals(index);
-				if (locals.isEmpty() || locals.stream().noneMatch(local -> local.isAnnotatedWith(NOT_NULL))) {
-					super.visitVarInsn(opcode, index);
-					return;
+			if (this.includeLocals && isStore(opcode) && this.method.isLocal(index)) {
+				LocalVariable local = this.method.getLocals(index).stream().filter(l -> l.isAnnotatedWith(NOT_NULL)).filter(l -> l.isInBounds(this.getCurrentLabelIndex())).findFirst().orElse(null);
+				if (local != null && local.isAnnotatedWith(NOT_NULL)) {
+					this.validateLocal(local);
+					instrumentNonNullCheck(this.mv, -1, this.getMessage(local.getAnnotation(NOT_NULL), local.getMessageName()));
+					this.mv.visitTypeInsn(Opcodes.CHECKCAST, local.getType().getInternalName());
 				}
-				
-				LocalVariable local = locals.stream().filter(l -> l.isAnnotatedWith(NOT_NULL)).filter(l -> l.getIndex() == index && l.isInBounds(this.getCurrentLabelIndex())).findFirst().orElse(null);
-				if (local == null) {
-					System.out.println("Local variable with index " + index + " and label index " + this.getCurrentLabelIndex() + " not found in method " + this.method.getSourceSignature(true));
-					this.method.getLocals().forEach(l -> System.out.println(" - " + l.getSourceSignature(false)));
-					super.visitVarInsn(opcode, index);
-					return;
-				}
-				if (!local.isAnnotatedWith(NOT_NULL)) {
-					super.visitVarInsn(opcode, index);
-					return;
-				}
-				
-				this.validateLocal(local);
-				instrumentNonNullCheck(this.mv, -1, this.getMessage(local.getAnnotation(NOT_NULL), local.getMessageName()));
-				this.mv.visitTypeInsn(Opcodes.CHECKCAST, local.getType().getInternalName());
 			}
 			super.visitVarInsn(opcode, index);
 		}

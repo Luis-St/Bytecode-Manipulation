@@ -79,7 +79,9 @@ public class MethodScanner extends MethodVisitor {
 		if (index < offset) {
 			return;
 		}
-		this.method.getLocals().add(LocalVariable.builder(this.method, index, name, Type.getType(descriptor)).genericSignature(genericSignature).bounds(this.labels.indexOf(start), this.labels.indexOf(end)).build());
+		int s = Math.max(0, this.labels.indexOf(start) - 1); // Start label is the next label after the declaration
+		int e = this.labels.indexOf(end);
+		this.method.getLocals().add(LocalVariable.builder(this.method, index, name, Type.getType(descriptor)).genericSignature(genericSignature).bounds(s, e).build());
 	}
 	
 	@Override
@@ -88,7 +90,7 @@ public class MethodScanner extends MethodVisitor {
 			return null;
 		}
 		Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
-		this.localAnnotations.computeIfAbsent(new int[] { index[0], this.labels.indexOf(start[0]), this.labels.indexOf(end[0]) }, p -> new HashMap<>()).put(annotation.getType(), annotation);
+		this.localAnnotations.computeIfAbsent(new int[] { index[0], Math.max(0, this.labels.indexOf(start[0]) - 1), this.labels.indexOf(end[0]) }, p -> new HashMap<>()).put(annotation.getType(), annotation);
 		return new AnnotationScanner(annotation.getValues()::put);
 	}
 	
@@ -102,7 +104,7 @@ public class MethodScanner extends MethodVisitor {
 		}
 		for (Map.Entry<int[], Map<Type, Annotation>> entry : this.localAnnotations.entrySet()) {
 			int[] key = entry.getKey();
-			LocalVariable local = this.method.getLocal(key[0], key[1], key[2]);
+			LocalVariable local = this.method.getLocal(key[0], key[1], key[2]); // Revert the offset added above
 			if (local != null) {
 				local.getAnnotations().putAll(entry.getValue());
 			}
