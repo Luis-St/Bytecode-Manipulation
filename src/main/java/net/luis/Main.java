@@ -31,7 +31,6 @@ public final class Main {
 	 *  - Support recursive scan of methods in MethodScanner -> to include lambda expressions
 	 *  - Overhaul DefaultStringFactory
 	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
-	 *  - Allow range on wrapper types
 	 *  - Store all method, fields in a map to allow direct access
 	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor -> LocalVariable#getActualType
 	 *  - Rename Injector -> Inject & Redirector -> Redirect
@@ -89,7 +88,7 @@ public final class Main {
 	}
 	
 	@Above(0)
-	public static int validateIndex(@BelowEqual(1) int index) {
+	public static int validateIndex(@BelowEqual(1) Integer index) {
 		System.out.println("Index: " + index);
 		return index;
 	}

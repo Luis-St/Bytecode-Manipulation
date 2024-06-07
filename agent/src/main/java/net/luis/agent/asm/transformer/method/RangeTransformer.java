@@ -6,6 +6,7 @@ import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.MethodType;
+import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
@@ -63,7 +64,6 @@ public class RangeTransformer extends BaseClassTransformer {
 		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
-		private final List<int[]> locals = new ArrayList<>();
 		private final Method method;
 		
 		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
@@ -74,7 +74,7 @@ public class RangeTransformer extends BaseClassTransformer {
 			String signature = method.getSourceSignature(true);
 			for (Parameter parameter : method.getParameters().values()) {
 				if (parameter.isAnnotatedWithAny(ANNOS)) {
-					if (!parameter.isAny(NUMBERS)) {
+					if (this.isNoNumber(parameter.getType())) {
 						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", signature)
 							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 					}
@@ -97,7 +97,7 @@ public class RangeTransformer extends BaseClassTransformer {
 				if (!this.method.is(MethodType.METHOD)) {
 					throw CrashReport.create(INVALID_CATEGORY, "Annotation @Above, @AboveEqual, @Below or @BelowEqual can not be applied to constructors and static initializers").addDetail("Method", method.getName()).exception();
 				}
-				if (!method.returnsAny(NUMBERS)) {
+				if (this.isNoNumber(method.getReturnType())) {
 					throw CrashReport.create(INVALID_CATEGORY, "Method annotated with @Above, @AboveEqual, @Below or @BelowEqual must return a number type").addDetail("Method", signature)
 						.addDetail("Return Type", method.getReturnType()).exception();
 				}
@@ -137,7 +137,7 @@ public class RangeTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitInsn(int opcode) {
-			if (this.isValidOpcode(opcode) && this.method.isAnnotatedWithAny(ANNOS)) {
+			if (isReturn(opcode) && this.method.isAnnotatedWithAny(ANNOS)) {
 				Label start = new Label();
 				Label end = new Label();
 				Type type = this.method.getReturnType();
@@ -169,6 +169,10 @@ public class RangeTransformer extends BaseClassTransformer {
 		}
 		
 		//region Helper methods
+		private boolean isNoNumber(@NotNull Type type) {
+			return Utils.indexOf(NUMBERS, convertToPrimitive(type)) == -1;
+		}
+		
 		private void instrument(@NotNull Annotation annotation, @NotNull Type type, int loadIndex, boolean above, int compare, String message) {
 			Label label = new Label();
 			Double value = annotation.get("value");
@@ -181,17 +185,12 @@ public class RangeTransformer extends BaseClassTransformer {
 			} else {
 				loadNumber(this.mv, value);
 				loadNumberAsDouble(this.mv, type, loadIndex);
-				loadNumberAsDouble(this.mv, type, loadIndex);
 			}
 			this.mv.visitInsn(Opcodes.DCMPL);
 			this.mv.visitJumpInsn(compare, label);
 			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, message + " " + value);
 			this.mv.visitJumpInsn(Opcodes.GOTO, label);
 			this.insertLabel(label);
-		}
-		
-		private boolean isValidOpcode(int opcode) {
-			return opcode == Opcodes.IRETURN || opcode == Opcodes.LRETURN || opcode == Opcodes.FRETURN || opcode == Opcodes.DRETURN;
 		}
 		//endregion
 	}

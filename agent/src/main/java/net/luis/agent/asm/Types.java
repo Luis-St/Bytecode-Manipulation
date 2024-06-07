@@ -94,6 +94,14 @@ public class Types {
 		return index != -1 ? WRAPPERS[index] : primitive;
 	}
 	
+	public static boolean isPrimitive(@NotNull Type type) {
+		return Utils.indexOf(PRIMITIVES, type) != -1;
+	}
+	
+	public static boolean isWrapper(@NotNull Type type) {
+		return Utils.indexOf(WRAPPERS, type) != -1;
+	}
+	
 	public static @NotNull String getSimpleName(@NotNull Type type) {
 		String name = type.getClassName();
 		int index = name.lastIndexOf('.');

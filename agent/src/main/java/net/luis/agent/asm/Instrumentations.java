@@ -130,45 +130,61 @@ public class Instrumentations {
 	//region Number loading as
 	public static void loadNumberAsInt(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
 		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
-		if (type.equals(LONG)) {
-			visitor.visitInsn(Opcodes.L2I);
-		} else if (type.equals(FLOAT)) {
-			visitor.visitInsn(Opcodes.F2I);
-		} else if (type.equals(DOUBLE)) {
-			visitor.visitInsn(Opcodes.D2I);
+		if (isWrapper(type)) {
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, type.getInternalName(), "intValue", "()I", false);
+		} else {
+			if (type.equals(LONG)) {
+				visitor.visitInsn(Opcodes.L2I);
+			} else if (type.equals(FLOAT)) {
+				visitor.visitInsn(Opcodes.F2I);
+			} else if (type.equals(DOUBLE)) {
+				visitor.visitInsn(Opcodes.D2I);
+			}
 		}
 	}
 	
 	public static void loadNumberAsLong(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
 		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
-		if (type.equals(BYTE) || type.equals(SHORT) || type.equals(INT)) {
-			visitor.visitInsn(Opcodes.I2L);
-		} else if (type.equals(FLOAT)) {
-			visitor.visitInsn(Opcodes.F2L);
-		} else if (type.equals(DOUBLE)) {
-			visitor.visitInsn(Opcodes.D2L);
+		if (isWrapper(type)) {
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, type.getInternalName(), "longValue", "()J", false);
+		} else {
+			if (type.equals(BYTE) || type.equals(SHORT) || type.equals(INT)) {
+				visitor.visitInsn(Opcodes.I2L);
+			} else if (type.equals(FLOAT)) {
+				visitor.visitInsn(Opcodes.F2L);
+			} else if (type.equals(DOUBLE)) {
+				visitor.visitInsn(Opcodes.D2L);
+			}
 		}
 	}
 	
 	public static void loadNumberAsFloat(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
 		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
-		if (type.equals(BYTE) || type.equals(SHORT) || type.equals(INT)) {
-			visitor.visitInsn(Opcodes.I2F);
-		} else if (type.equals(LONG)) {
-			visitor.visitInsn(Opcodes.L2F);
-		} else if (type.equals(DOUBLE)) {
-			visitor.visitInsn(Opcodes.D2F);
+		if (isWrapper(type)) {
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, type.getInternalName(), "floatValue", "()F", false);
+		} else {
+			if (type.equals(BYTE) || type.equals(SHORT) || type.equals(INT)) {
+				visitor.visitInsn(Opcodes.I2F);
+			} else if (type.equals(LONG)) {
+				visitor.visitInsn(Opcodes.L2F);
+			} else if (type.equals(DOUBLE)) {
+				visitor.visitInsn(Opcodes.D2F);
+			}
 		}
 	}
 	
 	public static void loadNumberAsDouble(@NotNull MethodVisitor visitor, @NotNull Type type, int index) {
 		visitor.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
-		if (type.equals(BYTE) || type.equals(SHORT) || type.equals(INT)) {
-			visitor.visitInsn(Opcodes.I2D);
-		} else if (type.equals(LONG)) {
-			visitor.visitInsn(Opcodes.L2D);
-		} else if (type.equals(FLOAT)) {
-			visitor.visitInsn(Opcodes.F2D);
+		if (isWrapper(type)) {
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, type.getInternalName(), "doubleValue", "()D", false);
+		} else {
+			if (type.equals(BYTE) || type.equals(SHORT) || type.equals(INT)) {
+				visitor.visitInsn(Opcodes.I2D);
+			} else if (type.equals(LONG)) {
+				visitor.visitInsn(Opcodes.L2D);
+			} else if (type.equals(FLOAT)) {
+				visitor.visitInsn(Opcodes.F2D);
+			}
 		}
 	}
 	//endregion
