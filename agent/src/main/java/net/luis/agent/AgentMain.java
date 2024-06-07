@@ -3,7 +3,6 @@ package net.luis.agent;
 import net.luis.agent.asm.generation.GenerationLoader;
 import net.luis.agent.asm.generation.generators.RuntimeUtilsGenerator;
 import net.luis.agent.asm.generation.generators.concurrent.*;
-import net.luis.agent.asm.scanner.ClassFileScanner;
 import net.luis.agent.asm.transformer.implementation.*;
 import net.luis.agent.asm.transformer.method.*;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +50,7 @@ public class AgentMain {
 		inst.addTransformer(new AccessorTransformer());
 		inst.addTransformer(new AssignorTransformer());
 		inst.addTransformer(new InvokerTransformer());
-		inst.addTransformer(new InjectorTransformer());
+		inst.addTransformer(new InjectTransformer());
 		inst.addTransformer(new RedirectorTransformer());
 		inst.addTransformer(new ScheduledTransformer());
 		inst.addTransformer(new CaughtTransformer());

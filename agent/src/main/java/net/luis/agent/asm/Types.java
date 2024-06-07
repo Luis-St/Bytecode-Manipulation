@@ -44,9 +44,9 @@ public class Types {
 	public static final Type ACCESSOR = Type.getType(Accessor.class);
 	public static final Type ASSIGNOR = Type.getType(Assignor.class);
 	public static final Type INVOKER = Type.getType(Invoker.class);
-	public static final Type INJECTOR = Type.getType(Injector.class);
+	public static final Type INJECT = Type.getType(Inject.class);
 	public static final Type REDIRECTOR = Type.getType(Redirector.class);
-	public static final Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER, INJECTOR, REDIRECTOR);
+	public static final Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER, INJECT, REDIRECTOR);
 	
 	public static final Type THIS = Type.getType(This.class);
 	public static final Type LOCAL = Type.getType(Local.class);

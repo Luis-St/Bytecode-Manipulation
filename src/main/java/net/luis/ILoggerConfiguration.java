@@ -38,12 +38,12 @@ public interface ILoggerConfiguration {
 	@Invoker(target = "getPattern(LoggingType, Level)") // Invokes private method (target required, because method name does not match)
 	@NotNull String getLoggingPattern(@NotNull LoggingType type, @NotNull Level level);
 	
-	@Injector(target = @Target(value = "Set#contains", type = TargetType.INVOKE))
+	@Inject(target = @Target(value = "Set#contains", type = TargetType.INVOKE))
 	default void injectBuild() {
 		System.out.println("Listener for Set#contains was injected!");
 	}
 	
-	@Injector(method = "build", target = @Target(value = "Set#contains", type = TargetType.INVOKE, ordinal = 1))
+	@Inject(method = "build", target = @Target(value = "Set#contains", type = TargetType.INVOKE, ordinal = 1))
 	default @NotNull Configuration resetBuild() {
 		ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
 		builder.setConfigurationName("RuntimeConfiguration");

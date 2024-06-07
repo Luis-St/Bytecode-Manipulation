@@ -28,7 +28,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		Class clazz = Agent.getClass(type);
-		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(INJECTOR));
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(INJECT));
 	}
 	//endregion
 	
@@ -41,7 +41,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 	private static class InterfaceClassVisitor extends MethodOnlyClassVisitor {
 		
 		private static final Map<Type, List<String>> ALIASES = Utils.make(new HashMap<>(), map -> {
-			map.put(INJECTOR, List.of("inject"));
+			map.put(INJECT, List.of("inject"));
 			map.put(REDIRECTOR, List.of("redirect"));
 		});
 		
@@ -54,14 +54,14 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		
 		@Override
 		protected boolean isMethodValid(@NotNull Method method) {
-			return this.target != null && (this.isMethodValid(method, INJECTOR) || this.isMethodValid(method, REDIRECTOR));
+			return this.target != null && (this.isMethodValid(method, INJECT) || this.isMethodValid(method, REDIRECTOR));
 		}
 		
 		@Override
 		protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter mv, @NotNull Method method) {
 			List<String> restrictedValues = new ArrayList<>();
-			if (this.isMethodValid(method, INJECTOR)) {
-				restrictedValues.add(this.getRestrictedValues(method, INJECTOR));
+			if (this.isMethodValid(method, INJECT)) {
+				restrictedValues.add(this.getRestrictedValues(method, INJECT));
 			}
 			if (this.isMethodValid(method, REDIRECTOR)) {
 				restrictedValues.add(this.getRestrictedValues(method, REDIRECTOR));

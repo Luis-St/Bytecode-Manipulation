@@ -33,7 +33,7 @@ public final class Main {
 	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
 	 *  - Store all method, fields in a map to allow direct access
 	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor -> LocalVariable#getActualType
-	 *  - Rename Injector -> Inject & Redirector -> Redirect
+	 *  - Rename Redirector -> Redirect
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
