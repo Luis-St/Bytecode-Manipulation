@@ -33,6 +33,7 @@ public final class Main {
 	 *  - Store all method, fields in a map to allow direct access
 	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor -> LocalVariable#getActualType
 	 *  - Update CrashReport -> global context where details can be pushed and popped
+	 *  - Add support for static redirect methods to copy the original parameters (only if caller object can be popped)
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

@@ -2,11 +2,12 @@ package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.ASMUtils;
-import net.luis.agent.asm.Types;
 import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
+import net.luis.agent.asm.scanner.ClassFileScanner;
+import net.luis.agent.asm.scanner.TargetClassScanner;
 import net.luis.agent.asm.type.TypeAccess;
 import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.TargetType;
@@ -133,10 +134,30 @@ public class RedirectTransformer extends BaseClassTransformer {
 			Annotation annotation = Objects.requireNonNull(ifaceMethod.getAnnotation(REDIRECT).get("target"));
 			TargetType target = TargetType.valueOf(annotation.get("type"));
 			if (target != TargetType.NEW && target != TargetType.INVOKE) {
-				throw CrashReport.create("Unsupported target type specified in redirect", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature).addDetail("Target Type", target).exception();
+				throw CrashReport.create("Unsupported target type specified in redirect, supported are New and Invoke", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature)
+					.addDetail("Target Type", target).exception();
 			}
 			
-			this.redirects.computeIfAbsent(method.getFullSignature(), m -> new ArrayList<>()).add(new RedirectData(ifaceMethod, annotation.getOrDefault("value"), target, annotation.getOrDefault("ordinal")));
+			TargetClassScanner scanner = new TargetClassScanner(method, annotation);
+			ClassFileScanner.scanClass(this.type, scanner);
+			if (!scanner.visitedTarget()) {
+				throw CrashReport.create("Could not find method specified in redirect during scan of its own class", REPORT_CATEGORY).addDetail("Scanner", scanner.getClass().getName()).addDetail("Interface", ifaceMethod.getOwner())
+					.addDetail("Redirect", signature).addDetail("Scanned Class", targetClass.getType()).addDetail("Method", method.getSourceSignature(true)).exception();
+			}
+			int line = scanner.getTargetLine();
+			Method lambdaMethod = scanner.getLambdaMethod();
+			if (lambdaMethod != null && !ifaceMethod.is(TypeModifier.STATIC)) {
+				throw CrashReport.create("Method annotated with @Redirect is declared none-static, but specified a lambda expression", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner())
+					.addDetail("Redirect", signature).addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda", lambdaMethod.getSourceSignature(true)).exception();
+			}
+			if (line == -1) {
+				throw CrashReport.create("Could not find target in method body of method specified in redirect", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature)
+					.addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda", lambdaMethod).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type"))
+					.addDetail("Target Mode", annotation.getOrDefault("mode")).addDetail("Target Ordinal", annotation.getOrDefault("ordinal")).removeNullValues(true).exception();
+			}
+			
+			String key = lambdaMethod != null ? lambdaMethod.getFullSignature() : method.getFullSignature();
+			this.redirects.computeIfAbsent(key, m -> new ArrayList<>()).add(new RedirectData(line, ifaceMethod, lambdaMethod != null, annotation.getOrDefault("value"), target, annotation.getOrDefault("ordinal")));
 		}
 		
 		@Override
@@ -177,55 +198,71 @@ public class RedirectTransformer extends BaseClassTransformer {
 	
 	private static class RedirectMethodVisitor extends LabelTrackingMethodVisitor {
 		
+		private final Map</*Line Number*/Integer, List<RedirectData>> redirects = new HashMap<>();
 		private final Method method;
-		private final List<RedirectData> redirects;
+		private int line = -1;
 		
 		private RedirectMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull List<RedirectData> redirects) {
 			super(visitor);
 			this.method = method;
-			this.redirects = redirects;
+			for (RedirectData data : redirects) {
+				this.redirects.computeIfAbsent(data.line(), l -> new ArrayList<>()).add(data);
+			}
+		}
+		
+		@Override
+		public void visitLineNumber(int line, @NotNull Label start) {
+			super.visitLineNumber(line, start);
+			if (this.redirects.containsKey(line)) {
+				this.line = line;
+			} else {
+				this.line = -1;
+			}
 		}
 		
 		@Override
 		public void visitMethodInsn(int opcode, @NotNull String o, @NotNull String name, @NotNull String descriptor, boolean isInterface) {
+			if (this.line == -1) {
+				this.mv.visitMethodInsn(opcode, o, name, descriptor, isInterface);
+				return;
+			}
 			Type owner = Type.getObjectType(o);
 			Type type = Type.getType(descriptor);
 			
-			int index = -1;
-			for (int i = 0; i < this.redirects.size(); i++) {
-				RedirectData redirect = this.redirects.get(i);
+			boolean instrumented = false;
+			for (int i = 0; i < this.redirects.get(this.line).size(); i++) {
+				RedirectData redirect = this.redirects.get(this.line).get(i);
 				if (redirect.target() == TargetType.NEW && !"<init>".equals(name)) {
 					continue;
 				} else if (redirect.target() == TargetType.INVOKE && "<init>".equals(name)) {
 					continue;
 				}
 				
-				Method ifaceMethod = redirect.ifaceMethod();
-				if (redirect.target() == TargetType.NEW && this.checkNew(ifaceMethod, redirect.value(), owner, name, type)) {
-					index = i;
-				} else if (redirect.target() == TargetType.INVOKE && this.checkInvoke(ifaceMethod, redirect.value(), owner, name, type)) {
-					index = i;
+				if (redirect.target() == TargetType.NEW && this.checkNew(redirect.ifaceMethod(), redirect.value(), owner, name, type)) {
+					instrumented = true;
+				} else if (redirect.target() == TargetType.INVOKE && this.checkInvoke(redirect.ifaceMethod(), redirect.value(), owner, name, type)) {
+					instrumented = true;
 				}
 				
-				if (index != -1) {
+				if (instrumented) {
 					Arrays.stream(Utils.reverse(type.getArgumentTypes())).forEach(t -> pop(this.mv, t));
 					if (opcode != Opcodes.INVOKESTATIC) {
 						this.mv.visitInsn(Opcodes.POP);
 					}
-					this.instrumentRedirect(ifaceMethod, owner, type);
+					this.instrumentRedirect(redirect.ifaceMethod());
+					if (redirect.lambda()) {
+						redirect.ifaceMethod().getAnnotation(REDIRECT).getValues().put("lambda", true);
+					}
 					break;
 				}
 			}
-			
-			if (index == -1) {
+			if (!instrumented) {
 				this.mv.visitMethodInsn(opcode, o, name, descriptor, isInterface);
-			} else {
-				this.redirects.remove(index);
 			}
 		}
 		
 		//region Instrumentation
-		private void instrumentRedirect(@NotNull Method ifaceMethod, @NotNull Type owner, @NotNull Type current) {
+		private void instrumentRedirect(@NotNull Method ifaceMethod) {
 			if (!ifaceMethod.is(TypeModifier.STATIC)) {
 				this.mv.visitVarInsn(Opcodes.ALOAD, 0);
 			}
@@ -238,7 +275,7 @@ public class RedirectTransformer extends BaseClassTransformer {
 		
 		//region Helper methods
 		private boolean checkNew(@NotNull Method ifaceMethod, @NotNull String value, @NotNull Type owner, @NotNull String name, @NotNull Type type) {
-			if (!ASMUtils.matchesTarget(value, owner, name, type) && !Types.isSameType(owner, value)) {
+			if (!ASMUtils.matchesTarget(value, owner, name, type) && !isSameType(owner, value)) {
 				return false;
 			}
 			if (!ifaceMethod.returns(owner)) {
@@ -261,5 +298,5 @@ public class RedirectTransformer extends BaseClassTransformer {
 		//endregion
 	}
 	
-	private static record RedirectData(@NotNull Method ifaceMethod, @NotNull String value, @NotNull TargetType target, int ordinal) {}
+	private record RedirectData(int line, @NotNull Method ifaceMethod, boolean lambda, @NotNull String value, @NotNull TargetType target, int ordinal) {}
 }

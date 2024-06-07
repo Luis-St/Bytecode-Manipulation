@@ -148,6 +148,7 @@ public class TargetClassScanner extends ClassVisitor {
 			}
 		}
 		
+		// NEW -> INVOKESPECIAL
 		// INVOKE -> INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL, INVOKEINTERFACE
 		@Override
 		public void visitMethodInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor, boolean isInterface) {
@@ -156,7 +157,9 @@ public class TargetClassScanner extends ClassVisitor {
 			}
 			this.lastOpcode = opcode;
 			if (opcode == Opcodes.INVOKESPECIAL && "<init>".equals(name)) {
-				return;
+				if (ASMUtils.matchesTarget(this.value, Type.getObjectType(owner), name, Type.getType(descriptor))) {
+					this.target();
+				}
 			}
 			if (this.type == TargetType.INVOKE && ASMUtils.matchesTarget(this.value, Type.getObjectType(owner), name, Type.getType(descriptor))) {
 				this.target();

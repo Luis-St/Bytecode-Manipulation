@@ -153,18 +153,18 @@ public class InjectTransformer extends BaseClassTransformer {
 			TargetClassScanner scanner = new TargetClassScanner(method, annotation);
 			ClassFileScanner.scanClass(this.type, scanner);
 			if (!scanner.visitedTarget()) {
-				throw CrashReport.create("Could not find method specified in inject during scan of its own class", IMPLEMENTATION_ERROR).addDetail("Scanner", scanner).addDetail("Interface", ifaceMethod.getOwner())
+				throw CrashReport.create("Could not find method specified in inject during scan of its own class", IMPLEMENTATION_ERROR).addDetail("Scanner", scanner.getClass().getName()).addDetail("Interface", ifaceMethod.getOwner())
 					.addDetail("Inject", signature).addDetail("Scanned Class", targetClass.getType()).addDetail("Method", method.getSourceSignature(true)).exception();
 			}
 			int line = scanner.getTargetLine();
 			Method lambdaMethod = scanner.getLambdaMethod();
 			if (lambdaMethod != null && !ifaceMethod.is(TypeModifier.STATIC)) {
-				throw CrashReport.create("Method annotated with @Inject is declared none-static, but specified a lambda method", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner())
-					.addDetail("Inject", signature).addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda Method", lambdaMethod.getSourceSignature(true)).exception();
+				throw CrashReport.create("Method annotated with @Inject is declared none-static, but specified a lambda expression", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner())
+					.addDetail("Inject", signature).addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda", lambdaMethod.getSourceSignature(true)).exception();
 			}
 			if (line == -1) {
 				throw CrashReport.create("Could not find target in method body of method specified in inject", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature)
-					.addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda Method", lambdaMethod).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type"))
+					.addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda", lambdaMethod).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type"))
 					.addDetail("Target Mode", annotation.getOrDefault("mode")).addDetail("Target Ordinal", annotation.getOrDefault("ordinal")).addDetail("Target Offset", annotation.getOrDefault("offset")).removeNullValues(true).exception();
 			}
 			

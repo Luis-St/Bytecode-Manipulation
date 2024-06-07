@@ -69,4 +69,9 @@ public interface ILoggerConfiguration {
 	default @NotNull IllegalArgumentException redirectSetRootDirectory() {
 		return new IllegalArgumentException("Test");
 	}
+	
+	@Redirect(method = "build", target = @Target(value = "String#contains(CharSequence)", type = TargetType.INVOKE))
+	static boolean redirectBuild() {
+		return true;
+	}
 }
