@@ -44,7 +44,6 @@ public class AgentMain {
 	}
 	
 	private static void initializeTransformers(@NotNull Instrumentation inst) {
-		inst.addTransformer(new InterfaceTransformer());
 		inst.addTransformer(new InterfaceInjectionTransformer());
 		inst.addTransformer(new ImplementedTransformer());
 		inst.addTransformer(new AccessorTransformer());
@@ -52,6 +51,7 @@ public class AgentMain {
 		inst.addTransformer(new InvokerTransformer());
 		inst.addTransformer(new InjectTransformer());
 		inst.addTransformer(new RedirectTransformer());
+		inst.addTransformer(new InterfaceTransformer());
 		inst.addTransformer(new ScheduledTransformer());
 		inst.addTransformer(new CaughtTransformer());
 		inst.addTransformer(new AsyncTransformer());

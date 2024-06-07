@@ -28,11 +28,11 @@ public final class Main {
 	/*
 	 * ToDo:
 	 *  - Add transformers for unused annotations
-	 *  - Support recursive scan of methods in MethodScanner -> to include lambda expressions
 	 *  - Overhaul DefaultStringFactory
 	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
 	 *  - Store all method, fields in a map to allow direct access
 	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor -> LocalVariable#getActualType
+	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

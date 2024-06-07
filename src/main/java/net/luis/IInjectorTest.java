@@ -280,4 +280,11 @@ public interface IInjectorTest {
 		System.out.println("Return");
 	}
 	//endregion
+	
+	//region LAMBDA
+	@Inject(method = "test(int, int[])", target = @Target(value = "System#getProperty", type = TargetType.INVOKE))
+	static void injectLambdaTest() {
+		System.out.println("Lambda");
+	}
+	//endregion
 }

@@ -23,6 +23,7 @@ public class CrashReport {
 	private final String message;
 	private final String category;
 	private final Throwable exception;
+	private boolean removeNullValues = false;
 	private boolean canContinue = false;
 	private int exitCode = 1;
 	
@@ -73,6 +74,11 @@ public class CrashReport {
 	//endregion
 	
 	//region Builder methods
+	public @NotNull CrashReport removeNullValues(boolean removeNullValues) {
+		this.removeNullValues = removeNullValues;
+		return this;
+	}
+	
 	public @NotNull CrashReport setExitCode(int exitCode) {
 		this.exitCode = exitCode;
 		return this;
@@ -105,6 +111,11 @@ public class CrashReport {
 	
 	public @NotNull CrashReport addDetailAfter(@NotNull String target, @NotNull String key, @Nullable Object value) {
 		this.details.putAfter(target, key, value);
+		return this;
+	}
+	
+	public @NotNull CrashReport replaceDetail(@NotNull String key, @Nullable Object value) {
+		this.details.replace(key, value);
 		return this;
 	}
 	//endregion
@@ -143,6 +154,9 @@ public class CrashReport {
 	}
 	
 	private @NotNull String getDetailString(@NotNull String key, @Nullable Object value) {
+		if (this.removeNullValues && value == null) {
+			return "";
+		}
 		return switch (value) {
 			case List<?> list -> key + ": " + this.getListString(list);
 			case Map<?, ?> map -> key + ": " + this.getMapString(map);

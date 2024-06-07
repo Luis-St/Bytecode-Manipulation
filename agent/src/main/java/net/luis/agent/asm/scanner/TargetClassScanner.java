@@ -1,9 +1,11 @@
 package net.luis.agent.asm.scanner;
 
+import net.luis.agent.Agent;
 import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.LabelTrackingMethodVisitor;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
+import net.luis.agent.asm.report.ReportedException;
 import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.TargetMode;
 import net.luis.agent.util.TargetType;
@@ -11,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static net.luis.agent.asm.Instrumentations.*;
@@ -28,25 +31,31 @@ public class TargetClassScanner extends ClassVisitor {
 	private final Annotation target;
 	private final TargetMode mode;
 	private final int offset;
+	private final int visited;
 	private TargetMethodScanner visitor;
 	
 	public TargetClassScanner(@NotNull Method method, @NotNull Annotation target) {
+		this(method, target, 0);
+	}
+	
+	private TargetClassScanner(@NotNull Method method, @NotNull Annotation target, int visited) {
 		super(Opcodes.ASM9);
 		this.method = method;
 		this.target = target;
 		this.mode = TargetMode.valueOf(target.getOrDefault("mode"));
 		this.offset = target.getOrDefault("offset");
+		this.visited = visited;
 	}
 	
 	public boolean visitedTarget() {
 		return this.visitor != null;
 	}
 	
-	public int getLine() {
+	public int getTargetLine() {
 		if (this.visitor == null) {
 			return -1;
 		}
-		int line = this.visitor.getLine();
+		int line = this.visitor.getTargetLine();
 		if (line == -1) {
 			return -1;
 		}
@@ -64,10 +73,14 @@ public class TargetClassScanner extends ClassVisitor {
 		return line;
 	}
 	
+	public @Nullable Method getLambdaMethod() {
+		return this.visitor == null ? null : this.visitor.getLambdaMethod();
+	}
+	
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 		if (this.method.getFullSignature().equals(name + descriptor)) {
-			this.visitor = new TargetMethodScanner(this.method, this.target);
+			this.visitor = new TargetMethodScanner(this.method, this.target, this.visited);
 			return this.visitor;
 		}
 		return super.visitMethod(access, name, descriptor, signature, exceptions);
@@ -78,21 +91,26 @@ public class TargetClassScanner extends ClassVisitor {
 		private static final String MISSING_INFORMATION = "Missing Debug Information";
 		private static final String NOT_FOUND = "Not Found";
 		
+		private final List<Method> recursive = new ArrayList<>();
 		private final Method method;
+		private final Annotation target;
 		private final String value;
 		private final TargetType type;
 		private final int ordinal;
-		private int lastOpcode = -1;
 		private int targetLine = -1;
+		private Method lambdaMethod;
+		private int lastOpcode = -1;
 		private int firstLine = -1;
 		private int currentLine;
 		private int visited;
 		
-		private TargetMethodScanner(@NotNull Method method, @NotNull Annotation target) {
+		private TargetMethodScanner(@NotNull Method method, @NotNull Annotation target, int visited) {
 			this.method = method;
+			this.target = target;
 			this.value = target.getOrDefault("value");
 			this.type = TargetType.valueOf(target.get("type"));
 			this.ordinal = target.getOrDefault("ordinal");
+			this.visited = visited;
 		}
 		
 		private void target() {
@@ -111,8 +129,12 @@ public class TargetClassScanner extends ClassVisitor {
 			return this.currentLine;
 		}
 		
-		public int getLine() {
+		public int getTargetLine() {
 			return this.targetLine;
+		}
+		
+		public @Nullable Method getLambdaMethod() {
+			return this.lambdaMethod;
 		}
 		
 		@Override
@@ -148,6 +170,19 @@ public class TargetClassScanner extends ClassVisitor {
 				return;
 			}
 			this.lastOpcode = Opcodes.INVOKEDYNAMIC;
+			if (METAFACTORY_HANDLE.equals(handle)) {
+				for (Object argument : arguments) {
+					if (argument instanceof Handle targetHandle) {
+						Type owner = Type.getObjectType(targetHandle.getOwner());
+						if (this.method.getOwner().equals(owner)) {
+							Method method = Agent.getClass(owner).getMethod(targetHandle.getName() + targetHandle.getDesc());
+							if (method != null) {
+								this.recursive.add(method);
+							}
+						}
+					}
+				}
+			}
 			if (this.type != TargetType.STRING) {
 				return;
 			}
@@ -302,6 +337,38 @@ public class TargetClassScanner extends ClassVisitor {
 			this.lastOpcode = opcode;
 		}
 		
+		@Override
+		public void visitEnd() {
+			super.visitEnd();
+			if (this.targetLine != -1) {
+				return;
+			}
+			for (Method method : this.recursive) {
+				TargetClassScanner scanner = new TargetClassScanner(method, this.target, this.visited);
+				try {
+					ClassFileScanner.scanClass(method.getOwner(), scanner);
+				} catch (ReportedException e) {
+					throw e.getReport().addDetailFirst("Root Method", this.method.getSourceSignature(true)).exception();
+				}
+				if (!scanner.visitedTarget()) {
+					throw CrashReport.create("Unable to find lambda target method in class during recursive search", NOT_FOUND).addDetail("Method", this.method.getSourceSignature(true))
+						.addDetail("Lambda Method", method.getSourceSignature(true)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal).exception();
+				}
+				int line = scanner.visitor == null ? -1 : scanner.visitor.getTargetLine();
+				if (line != -1) {
+					this.targetLine = line;
+					if (scanner.getLambdaMethod() == null) {
+						this.lambdaMethod = method;
+					} else {
+						this.lambdaMethod = scanner.getLambdaMethod();
+					}
+					this.firstLine = scanner.visitor.getFirstLine();
+					this.currentLine = scanner.visitor.getLastLine();
+					break;
+				}
+			}
+		}
+		
 		//region Helper methods
 		private void checkVariableIndex(int index) {
 			if (this.value.chars().allMatch(Character::isDigit)) {
@@ -311,11 +378,11 @@ public class TargetClassScanner extends ClassVisitor {
 			} else if (this.method.isLocal(index)) {
 				if (this.method.getLocals().isEmpty()) {
 					throw CrashReport.create("Unable to find local variable by name, because the local variable name was not included into the class file during compilation", MISSING_INFORMATION)
-						.addDetail("Method", this.method.getFullSignature()).exception();
+						.addDetail("Method", this.method.getSourceSignature(true)).exception();
 				}
 				List<LocalVariable> locals = this.method.getLocals(index);
 				if (locals.isEmpty()) {
-					throw CrashReport.create("Local variable not found", NOT_FOUND).addDetail("Method", this.method.getFullSignature()).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
+					throw CrashReport.create("Local variable not found", NOT_FOUND).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
 						.addDetail("Local Variable Index", index).addDetail("Local Variables", this.method.getLocals().stream().map(LocalVariable::toString).toList()).exception();
 				}
 				LocalVariable local = locals.stream().filter(l -> l.isInBounds(this.getCurrentLabelIndex())).findFirst().orElse(null);
@@ -328,11 +395,11 @@ public class TargetClassScanner extends ClassVisitor {
 			} else {
 				Parameter parameter = this.method.getParameters().get(this.method.is(TypeModifier.STATIC) ? index : index - 1);
 				if (parameter == null) {
-					throw CrashReport.create("Parameter not found", NOT_FOUND).addDetail("Method", this.method.getFullSignature()).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
+					throw CrashReport.create("Parameter not found", NOT_FOUND).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
 						.addDetail("Parameter Index", index).addDetail("Parameter Indexes", this.method.getParameters().values().stream().map(Parameter::getIndex).toList()).exception();
 				}
 				if (!parameter.isNamed()) {
-					throw CrashReport.create("Unable to find parameter by name, because the parameter names were not included into the class file during compilation", MISSING_INFORMATION).addDetail("Method", this.method.getFullSignature())
+					throw CrashReport.create("Unable to find parameter by name, because the parameter names were not included into the class file during compilation", MISSING_INFORMATION).addDetail("Method", this.method.getSourceSignature(true))
 						.addDetail("Target Parameter Name", this.value).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name (Generated)", parameter.getName()).exception();
 				}
 				if (parameter.getName().equals(this.value)) {

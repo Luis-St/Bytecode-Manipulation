@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -103,6 +104,12 @@ public class InjectorTest {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		
+		CompletableFuture.runAsync(() -> {
+			System.out.println("Im out of InjectorTest#test(int, int[])");
+			System.out.println(System.getProperty("java.version"));
+			System.out.println("Test");
+		}).join();
 		
 		System.out.println(true);
 	}

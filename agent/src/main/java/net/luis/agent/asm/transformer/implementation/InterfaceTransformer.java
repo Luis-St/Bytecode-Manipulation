@@ -80,9 +80,10 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		}
 		
 		//region Helper methods
-		private boolean isMethodValid(@NotNull Method method, @NotNull Type annotation) {
-			if (method.isAnnotatedWith(annotation)) {
-				if (method.getAnnotation(annotation).getOrDefault("restricted")) {
+		private boolean isMethodValid(@NotNull Method method, @NotNull Type type) {
+			if (method.isAnnotatedWith(type)) {
+				Annotation annotation = method.getAnnotation(type);
+				if ((boolean) annotation.getOrDefault("restricted") && !annotation.getValues().containsKey("lambda")) {
 					return super.isMethodValid(method);
 				}
 			}
