@@ -89,7 +89,7 @@ public class LocalVariable {
 		if (full) {
 			return this.owner.getOwner().getClassName() + "()#" + this.owner.getName() + "#" + this.name + "(#" + this.index + ") (Scope " + this.scope.start + " - " + this.scope.end + ") : " + this.type.getClassName();
 		}
-		return this.owner.getSourceSignature(false) + "()#" + this.name  + " (#" + this.index + ") (Scope " + this.scope.start + " - " + this.scope.end + ")";
+		return this.owner.getSourceSignature(false) + "()#" + this.name + " (#" + this.index + ") (Scope " + this.scope.start + " - " + this.scope.end + ")";
 	}
 	
 	public boolean is(@NotNull Type type) {

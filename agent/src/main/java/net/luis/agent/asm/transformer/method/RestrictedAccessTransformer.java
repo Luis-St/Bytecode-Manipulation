@@ -2,7 +2,8 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
-import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.data.Annotation;
+import net.luis.agent.asm.data.Method;
 import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

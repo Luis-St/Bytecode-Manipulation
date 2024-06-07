@@ -2,7 +2,8 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
-import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.data.Annotation;
+import net.luis.agent.asm.data.Method;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.util.CaughtAction;
 import net.luis.agent.util.DefaultStringFactory;

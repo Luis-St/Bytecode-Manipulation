@@ -58,7 +58,7 @@ public class ASMUtils {
 		Type type;
 		if (target.startsWith("L") && target.endsWith(";")) {
 			type = Type.getType(target);
-		} else  {
+		} else {
 			if (target.contains(".")) {
 				target = target.replace('.', '/');
 			}

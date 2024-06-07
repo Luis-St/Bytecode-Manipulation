@@ -23,8 +23,8 @@ public class CrashReport {
 	private final String message;
 	private final String category;
 	private final Throwable exception;
-	private boolean removeNullValues = false;
-	private boolean canContinue = false;
+	private boolean removeNullValues;
+	private boolean canContinue;
 	private int exitCode = 1;
 	
 	private CrashReport(@Nullable String message, @Nullable String category, @Nullable Throwable exception) {
@@ -74,13 +74,13 @@ public class CrashReport {
 	//endregion
 	
 	//region Builder methods
-	public @NotNull CrashReport removeNullValues(boolean removeNullValues) {
-		this.removeNullValues = removeNullValues;
+	public @NotNull CrashReport setExitCode(int exitCode) {
+		this.exitCode = exitCode;
 		return this;
 	}
 	
-	public @NotNull CrashReport setExitCode(int exitCode) {
-		this.exitCode = exitCode;
+	public @NotNull CrashReport removeNullValues(boolean removeNullValues) {
+		this.removeNullValues = removeNullValues;
 		return this;
 	}
 	
@@ -129,7 +129,7 @@ public class CrashReport {
 	}
 	
 	public void print(@NotNull PrintStream stream) {
-		stream.println(this.toString());
+		stream.println(this);
 	}
 	
 	@Override

@@ -1,7 +1,7 @@
 package net.luis;
 
-import net.luis.agent.annotation.implementation.InjectInterface;
 import net.luis.agent.annotation.implementation.Inject;
+import net.luis.agent.annotation.implementation.InjectInterface;
 import net.luis.agent.annotation.util.Target;
 import net.luis.agent.util.TargetType;
 import net.luis.utils.lang.StringUtils;

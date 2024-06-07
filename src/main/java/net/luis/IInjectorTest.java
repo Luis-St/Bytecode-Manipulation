@@ -24,6 +24,13 @@ public interface IInjectorTest {
 	}
 	//endregion
 	
+	//region LAMBDA
+	@Inject(method = "test(int, int[])", target = @Target(value = "System#getProperty", type = TargetType.INVOKE, mode = TargetMode.AFTER))
+	static void injectLambdaTest(@Local int k) {
+		System.out.println("Lambda - " + k);
+	}
+	//endregion
+	
 	//region NEW
 	@Inject(method = "test(int, int[])", target = @Target(value = "ArrayList", type = TargetType.NEW))
 	default void injectNewType(@This InjectorTest test) {
@@ -278,13 +285,6 @@ public interface IInjectorTest {
 	@Inject(method = "test(int, int[])", target = @Target(type = TargetType.RETURN))
 	default void injectReturn() {
 		System.out.println("Return");
-	}
-	//endregion
-	
-	//region LAMBDA
-	@Inject(method = "test(int, int[])", target = @Target(value = "System#getProperty", type = TargetType.INVOKE, mode = TargetMode.AFTER))
-	static void injectLambdaTest(@Local int k) {
-		System.out.println("Lambda - " + k);
 	}
 	//endregion
 }

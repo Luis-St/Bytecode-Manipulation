@@ -2,7 +2,6 @@ package net.luis;
 
 import net.luis.agent.annotation.Caught;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -17,6 +17,11 @@ import java.util.*;
 @InjectInterface(LoggerConfiguration.class)
 public interface ILoggerConfiguration {
 	
+	@Redirect(method = "build", target = @Target(value = "String#contains(CharSequence)", type = TargetType.INVOKE))
+	static boolean redirectBuild() {
+		return true;
+	}
+	
 	@Implemented // Ignored, because implemented in the target
 	@NotNull Configuration build();
 	
@@ -68,10 +73,5 @@ public interface ILoggerConfiguration {
 	@Redirect(method = "setRootDirectory(String)", target = @Target(value = "IllegalArgumentException", type = TargetType.NEW), restricted = false)
 	default @NotNull IllegalArgumentException redirectSetRootDirectory() {
 		return new IllegalArgumentException("Test");
-	}
-	
-	@Redirect(method = "build", target = @Target(value = "String#contains(CharSequence)", type = TargetType.INVOKE))
-	static boolean redirectBuild() {
-		return true;
 	}
 }
