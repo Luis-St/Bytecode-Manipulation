@@ -31,11 +31,11 @@ public final class Main {
 	 *  - Support recursive scan of methods in MethodScanner -> to include lambda expressions
 	 *  - Overhaul DefaultStringFactory
 	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
-	 *  - InterfaceTransformer -> Add Redirector restriction -> add boolean to annotation
 	 *  - Allow range on wrapper types
 	 *  - InjectInterface -> Only one target -> Class[] targets -> String value
 	 *  - Store all method, fields in a map to allow direct access
-	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor
+	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor -> LocalVariable#getActualType
+	 *  - Rename Injector -> Inject & Redirector -> Redirect
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

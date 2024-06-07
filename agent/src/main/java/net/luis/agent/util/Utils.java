@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.*;
 
@@ -14,6 +15,11 @@ import java.util.stream.*;
  */
 
 public class Utils {
+	
+	public static <T> @NotNull T make(@NotNull T object, @NotNull Consumer<T> consumer) {
+		consumer.accept(object);
+		return object;
+	}
 	
 	@SafeVarargs
 	public static <T> @NotNull List<T> newArrayList(T @NotNull ... elements) {

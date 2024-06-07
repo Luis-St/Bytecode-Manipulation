@@ -65,7 +65,7 @@ public interface ILoggerConfiguration {
 		return new ArrayList<Level>();
 	}
 	
-	@Redirector(method = "setRootDirectory(String)", target = @Target(value = "IllegalArgumentException", type = TargetType.NEW))
+	@Redirector(method = "setRootDirectory(String)", target = @Target(value = "IllegalArgumentException", type = TargetType.NEW), restricted = false)
 	default @NotNull IllegalArgumentException redirectSetRootDirectory() {
 		return new IllegalArgumentException("Test");
 	}

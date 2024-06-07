@@ -10,8 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static net.luis.agent.asm.Types.*;
 
@@ -39,6 +38,11 @@ public class InterfaceTransformer extends BaseClassTransformer {
 	
 	private static class InterfaceClassVisitor extends MethodOnlyClassVisitor {
 		
+		private static final Map<Type, List<String>> ALIASES = Utils.make(new HashMap<>(), map -> {
+			map.put(INJECTOR, List.of("inject"));
+			map.put(REDIRECTOR, List.of("redirect"));
+		});
+		
 		private final List<Type> targets;
 		
 		private InterfaceClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull List<Type> targets, @NotNull Runnable markModified) {
@@ -48,18 +52,17 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		
 		@Override
 		protected boolean isMethodValid(@NotNull Method method) {
-			if (method.isAnnotatedWith(INJECTOR)) {
-				Annotation annotation = method.getAnnotation(INJECTOR);
-				if (annotation.getOrDefault("restricted")) {
-					return super.isMethodValid(method);
-				}
-			}
-			return false;
+			return this.isMethodValid(method, INJECTOR) || this.isMethodValid(method, REDIRECTOR);
 		}
 		
 		@Override
 		protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter mv, @NotNull Method method) {
-			List<String> restrictedValues = this.getRestrictedValues(method);
+			List<String> restrictedValues = new ArrayList<>();
+			if (this.isMethodValid(method, INJECTOR)) {
+				restrictedValues = this.getRestrictedValues(method, INJECTOR);
+			} else if (this.isMethodValid(method, REDIRECTOR)) {
+				restrictedValues = this.getRestrictedValues(method, REDIRECTOR);
+			}
 			
 			AnnotationVisitor av = mv.visitAnnotation(RESTRICTED_ACCESS.getDescriptor(), true);
 			AnnotationVisitor array = av.visitArray("value");
@@ -74,27 +77,37 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		}
 		
 		//region Helper methods
-		private @NotNull List<String> getRestrictedValues(@NotNull Method method) {
-			String invokerTarget = this.getTarget(method);
-			if (invokerTarget.contains("(")) {
-				invokerTarget = invokerTarget.substring(0, invokerTarget.indexOf('('));
+		private boolean isMethodValid(@NotNull Method method, @NotNull Type annotation) {
+			if (method.isAnnotatedWith(annotation)) {
+				if (method.getAnnotation(annotation).getOrDefault("restricted")) {
+					return super.isMethodValid(method);
+				}
+			}
+			return false;
+		}
+		
+		private @NotNull List<String> getRestrictedValues(@NotNull Method method, @NotNull Type annotation) {
+			String value = this.getTarget(method, annotation);
+			if (value.contains("(")) {
+				value = value.substring(0, value.indexOf('('));
 			}
 			List<String> values = new ArrayList<>();
 			for (Type target : this.targets) {
-				values.add(target.getClassName() + "#" + invokerTarget);
+				values.add(target.getClassName() + "#" + value);
 			}
 			return values;
 		}
 		
-		private @NotNull String getTarget(@NotNull Method method) {
-			Annotation annotation = method.getAnnotation(INJECTOR);
-			String target = annotation.get("method");
+		private @NotNull String getTarget(@NotNull Method method, @NotNull Type annotation) {
+			String target = method.getAnnotation(annotation).get("method");
 			if (target != null) {
 				return target;
 			}
 			String methodName = method.getName();
-			if (methodName.startsWith("inject")) {
-				return Utils.uncapitalize(methodName.substring(6));
+			for (String alias : ALIASES.get(annotation)) {
+				if (methodName.startsWith(alias)) {
+					return Utils.uncapitalize(methodName.substring(alias.length()));
+				}
 			}
 			return methodName;
 		}
