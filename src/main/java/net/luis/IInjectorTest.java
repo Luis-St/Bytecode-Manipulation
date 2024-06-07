@@ -14,7 +14,7 @@ import java.util.List;
  *
  */
 
-@InjectInterface(targets = InjectorTest.class)
+@InjectInterface(target = "net.luis.InjectorTest")
 public interface IInjectorTest {
 	
 	//region HEAD

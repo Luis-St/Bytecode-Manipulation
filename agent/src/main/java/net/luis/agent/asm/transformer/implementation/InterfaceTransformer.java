@@ -1,12 +1,14 @@
 package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.Agent;
+import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.MethodOnlyClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
@@ -32,8 +34,8 @@ public class InterfaceTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
-		List<Type> targets = Agent.getClass(type).getAnnotation(INJECT_INTERFACE).get("targets");
-		return new InterfaceClassVisitor(writer, type, targets == null ? new ArrayList<>() : targets, () -> this.modified = true);
+		Type target = ASMUtils.getTarget(Agent.getClass(type), INJECT_INTERFACE);
+		return new InterfaceClassVisitor(writer, type, target, () -> this.modified = true);
 	}
 	
 	private static class InterfaceClassVisitor extends MethodOnlyClassVisitor {
@@ -43,25 +45,26 @@ public class InterfaceTransformer extends BaseClassTransformer {
 			map.put(REDIRECTOR, List.of("redirect"));
 		});
 		
-		private final List<Type> targets;
+		private final Type target;
 		
-		private InterfaceClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull List<Type> targets, @NotNull Runnable markModified) {
+		private InterfaceClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @Nullable Type target, @NotNull Runnable markModified) {
 			super(writer, type, markModified);
-			this.targets = targets;
+			this.target = target;
 		}
 		
 		@Override
 		protected boolean isMethodValid(@NotNull Method method) {
-			return this.isMethodValid(method, INJECTOR) || this.isMethodValid(method, REDIRECTOR);
+			return this.target != null && (this.isMethodValid(method, INJECTOR) || this.isMethodValid(method, REDIRECTOR));
 		}
 		
 		@Override
 		protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter mv, @NotNull Method method) {
 			List<String> restrictedValues = new ArrayList<>();
 			if (this.isMethodValid(method, INJECTOR)) {
-				restrictedValues = this.getRestrictedValues(method, INJECTOR);
-			} else if (this.isMethodValid(method, REDIRECTOR)) {
-				restrictedValues = this.getRestrictedValues(method, REDIRECTOR);
+				restrictedValues.add(this.getRestrictedValues(method, INJECTOR));
+			}
+			if (this.isMethodValid(method, REDIRECTOR)) {
+				restrictedValues.add(this.getRestrictedValues(method, REDIRECTOR));
 			}
 			
 			AnnotationVisitor av = mv.visitAnnotation(RESTRICTED_ACCESS.getDescriptor(), true);
@@ -86,16 +89,12 @@ public class InterfaceTransformer extends BaseClassTransformer {
 			return false;
 		}
 		
-		private @NotNull List<String> getRestrictedValues(@NotNull Method method, @NotNull Type annotation) {
+		private @NotNull String getRestrictedValues(@NotNull Method method, @NotNull Type annotation) {
 			String value = this.getTarget(method, annotation);
 			if (value.contains("(")) {
 				value = value.substring(0, value.indexOf('('));
 			}
-			List<String> values = new ArrayList<>();
-			for (Type target : this.targets) {
-				values.add(target.getClassName() + "#" + value);
-			}
-			return values;
+			return Objects.requireNonNull(this.target).getClassName() + "#" + value;
 		}
 		
 		private @NotNull String getTarget(@NotNull Method method, @NotNull Type annotation) {

@@ -14,5 +14,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.CLASS)
 public @interface InjectInterface {
 	
-	@NotNull Class<?>[] targets();
+	@NotNull Class<?> value() default void.class;
+	
+	@NotNull String target() default "";
 }

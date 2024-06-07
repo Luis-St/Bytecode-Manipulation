@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-@InjectInterface(targets = LoggerConfiguration.class)
+@InjectInterface(LoggerConfiguration.class)
 public interface ILoggerConfiguration {
 	
 	@Implemented // Ignored, because implemented in the target

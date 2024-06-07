@@ -6,7 +6,7 @@ import net.luis.agent.annotation.util.Target;
 import net.luis.agent.util.TargetType;
 import net.luis.utils.collection.WeightCollection;
 
-@InjectInterface(targets = WeightCollection.class)
+@InjectInterface(WeightCollection.class)
 public interface IWeightCollection {
 	
 	@Injector(method = "<init>(Random)", target = @Target(value = "Maps#newTreeMap()", type = TargetType.INVOKE))

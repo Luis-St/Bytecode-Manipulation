@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Random;
 
-@InjectInterface(targets = StringUtils.class)
+@InjectInterface(StringUtils.class)
 public interface IStringUtils {
 	
 	@Injector(target = @Target(value = "String#contains(CharSequence)", type = TargetType.INVOKE, ordinal = 1))

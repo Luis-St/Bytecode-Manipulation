@@ -14,6 +14,8 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static net.luis.agent.asm.Types.*;
+
 /**
  @author Luis-St */
 
@@ -35,16 +37,34 @@ public class ASMUtils {
 	
 	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull Type annotationType) {
 		Map<String, List<String>> lookup = new HashMap<>();
-		Agent.stream().filter(data -> data.isAnnotatedWith(annotationType)).forEach(data -> {
-			List<Type> types = data.getAnnotation(annotationType).get("targets");
-			if (types == null || types.isEmpty()) {
-				return;
-			}
-			for (Type target : types) {
-				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(data.getType().getInternalName());
+		Agent.stream().filter(clazz -> clazz.isAnnotatedWith(annotationType)).forEach(clazz -> {
+			Type target = getTarget(clazz, annotationType);
+			if (target != null) {
+				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(clazz.getType().getInternalName());
 			}
 		});
 		return lookup;
+	}
+	
+	public static @Nullable Type getTarget(@NotNull Class clazz, @NotNull Type annotationType) {
+		Type value = clazz.getAnnotation(annotationType).get("value");
+		if (value != null && !VOID.equals(value)) {
+			return value;
+		}
+		String target = clazz.getAnnotation(annotationType).get("target");
+		if (target == null || target.isEmpty()) {
+			return null;
+		}
+		Type type;
+		if (target.startsWith("L") && target.endsWith(";")) {
+			type = Type.getType(target);
+		} else  {
+			if (target.contains(".")) {
+				target = target.replace('.', '/');
+			}
+			type = Type.getObjectType(target);
+		}
+		return type;
 	}
 	
 	public static int getLine(@NotNull Label label) {

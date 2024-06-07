@@ -32,7 +32,6 @@ public final class Main {
 	 *  - Overhaul DefaultStringFactory
 	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
 	 *  - Allow range on wrapper types
-	 *  - InjectInterface -> Only one target -> Class[] targets -> String value
 	 *  - Store all method, fields in a map to allow direct access
 	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor -> LocalVariable#getActualType
 	 *  - Rename Injector -> Inject & Redirector -> Redirect
