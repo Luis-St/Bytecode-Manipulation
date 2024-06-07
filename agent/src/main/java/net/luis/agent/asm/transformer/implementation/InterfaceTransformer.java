@@ -42,7 +42,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		
 		private static final Map<Type, List<String>> ALIASES = Utils.make(new HashMap<>(), map -> {
 			map.put(INJECT, List.of("inject"));
-			map.put(REDIRECTOR, List.of("redirect"));
+			map.put(REDIRECT, List.of("redirect"));
 		});
 		
 		private final Type target;
@@ -54,7 +54,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		
 		@Override
 		protected boolean isMethodValid(@NotNull Method method) {
-			return this.target != null && (this.isMethodValid(method, INJECT) || this.isMethodValid(method, REDIRECTOR));
+			return this.target != null && (this.isMethodValid(method, INJECT) || this.isMethodValid(method, REDIRECT));
 		}
 		
 		@Override
@@ -63,8 +63,8 @@ public class InterfaceTransformer extends BaseClassTransformer {
 			if (this.isMethodValid(method, INJECT)) {
 				restrictedValues.add(this.getRestrictedValues(method, INJECT));
 			}
-			if (this.isMethodValid(method, REDIRECTOR)) {
-				restrictedValues.add(this.getRestrictedValues(method, REDIRECTOR));
+			if (this.isMethodValid(method, REDIRECT)) {
+				restrictedValues.add(this.getRestrictedValues(method, REDIRECT));
 			}
 			
 			AnnotationVisitor av = mv.visitAnnotation(RESTRICTED_ACCESS.getDescriptor(), true);

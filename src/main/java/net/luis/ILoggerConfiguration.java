@@ -50,22 +50,22 @@ public interface ILoggerConfiguration {
 		return builder.build();
 	}
 	
-	@Redirector(method = "<init>(List)", target = @Target(value = "Lists#newArrayList(Object[])", type = TargetType.INVOKE))
+	@Redirect(method = "<init>(List)", target = @Target(value = "Lists#newArrayList(Object[])", type = TargetType.INVOKE))
 	default ArrayList<String> redirectInit() {
 		return new ArrayList<>();
 	}
 	
-	@Redirector(method = "overridePattern(LoggingType, Level, String)", target = @Target(value = "StringUtils#containsAny(CharSequence, CharSequence[])", type = TargetType.INVOKE))
+	@Redirect(method = "overridePattern(LoggingType, Level, String)", target = @Target(value = "StringUtils#containsAny(CharSequence, CharSequence[])", type = TargetType.INVOKE))
 	default boolean redirectOverridePattern() {
 		return false;
 	}
 	
-	@Redirector(method = "addDefaultLogger(LoggingType, Level)", target = @Target(value = "Map#computeIfAbsent(Object, Function)", type = TargetType.INVOKE))
+	@Redirect(method = "addDefaultLogger(LoggingType, Level)", target = @Target(value = "Map#computeIfAbsent(Object, Function)", type = TargetType.INVOKE))
 	default Object redirectAddDefaultLogger() {
 		return new ArrayList<Level>();
 	}
 	
-	@Redirector(method = "setRootDirectory(String)", target = @Target(value = "IllegalArgumentException", type = TargetType.NEW), restricted = false)
+	@Redirect(method = "setRootDirectory(String)", target = @Target(value = "IllegalArgumentException", type = TargetType.NEW), restricted = false)
 	default @NotNull IllegalArgumentException redirectSetRootDirectory() {
 		return new IllegalArgumentException("Test");
 	}

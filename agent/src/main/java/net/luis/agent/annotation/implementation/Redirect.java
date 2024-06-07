@@ -12,7 +12,7 @@ import java.lang.annotation.*;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
-public @interface Redirector {
+public @interface Redirect {
 	
 	@NotNull String method() default "";
 	

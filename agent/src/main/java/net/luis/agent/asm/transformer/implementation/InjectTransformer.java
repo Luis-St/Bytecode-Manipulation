@@ -52,7 +52,7 @@ public class InjectTransformer extends BaseClassTransformer {
 	private static class InjectClassVisitor extends ContextBasedClassVisitor {
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
-		private final Map</*Method Signature*/String, List<InjectData>> injectors = new HashMap<>();
+		private final Map</*Method Signature*/String, List<InjectData>> injects = new HashMap<>();
 		
 		private InjectClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
 			super(writer, type, markModified);
@@ -108,7 +108,7 @@ public class InjectTransformer extends BaseClassTransformer {
 			List<Method> possibleMethod = ASMUtils.getBySignature(injectName, targetClass);
 			if (possibleMethod.isEmpty()) {
 				throw CrashReport.create("Could not find method specified in inject", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).addDetail("Method", injectName)
-					.addDetail("Possible Methods", targetClass.getMethods(this.getRawInjectorName(injectName)).stream().map(Method::toString).toList()).exception();
+					.addDetail("Possible Methods", targetClass.getMethods(this.getRawInjectName(injectName)).stream().map(Method::toString).toList()).exception();
 			}
 			if (possibleMethod.size() > 1) {
 				throw CrashReport.create("Found multiple possible methods for inject", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).addDetail("Method", injectName)
@@ -163,15 +163,15 @@ public class InjectTransformer extends BaseClassTransformer {
 					.addDetail("Target Ordinal", annotation.getOrDefault("ordinal")).addDetail("Target Offset", annotation.getOrDefault("offset")).exception();
 			}
 			
-			this.injectors.computeIfAbsent(method.getFullSignature(), m -> new ArrayList<>()).add(new InjectData(line, ifaceMethod, method));
+			this.injects.computeIfAbsent(method.getFullSignature(), m -> new ArrayList<>()).add(new InjectData(line, ifaceMethod, method));
 		}
 		
 		@Override
 		public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
-			if (this.injectors.containsKey(name + descriptor)) {
+			if (this.injects.containsKey(name + descriptor)) {
 				this.markModified();
-				return new InjectMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.injectors.get(name + descriptor));
+				return new InjectMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.injects.get(name + descriptor));
 			}
 			return visitor;
 		}
@@ -190,7 +190,7 @@ public class InjectTransformer extends BaseClassTransformer {
 			return methodName;
 		}
 		
-		private @NotNull String getRawInjectorName(@NotNull String target) {
+		private @NotNull String getRawInjectName(@NotNull String target) {
 			if (target.contains("(")) {
 				return target.substring(0, target.indexOf('('));
 			}
@@ -201,20 +201,20 @@ public class InjectTransformer extends BaseClassTransformer {
 	
 	private static class InjectMethodVisitor extends LabelTrackingMethodVisitor {
 		
-		private final Map</*Line Number*/Integer, List<InjectData>> injectors = new HashMap<>();
+		private final Map</*Line Number*/Integer, List<InjectData>> injects = new HashMap<>();
 		private int lastLine = -1;
 		
-		private InjectMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull List<InjectData> injectors) {
+		private InjectMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull List<InjectData> injects) {
 			super(visitor);
-			for (InjectData data : injectors) {
-				this.injectors.computeIfAbsent(data.line(), l -> new ArrayList<>()).add(data);
+			for (InjectData data : injects) {
+				this.injects.computeIfAbsent(data.line(), l -> new ArrayList<>()).add(data);
 			}
 		}
 		
 		private void instrumentInLine(int line) {
-			List<InjectData> injectors = this.injectors.remove(line);
-			if (injectors != null) {
-				injectors.forEach(this::instrumentInjector);
+			List<InjectData> injects = this.injects.remove(line);
+			if (injects != null) {
+				injects.forEach(this::instrumentInject);
 			}
 		}
 		
@@ -236,25 +236,25 @@ public class InjectTransformer extends BaseClassTransformer {
 			super.visitLineNumber(line, start);
 			if (this.lastLine != -1 && line - this.lastLine > 1) {
 				for (int i = this.lastLine + 1; i < line; i++) {
-					if (this.injectors.containsKey(i)) {
+					if (this.injects.containsKey(i)) {
 						//region Crash report
-						List<InjectData> injectors = this.injectors.get(i);
-						if (injectors.size() == 1) {
-							InjectData inject = injectors.getFirst();
+						List<InjectData> injects = this.injects.get(i);
+						if (injects.size() == 1) {
+							InjectData inject = injects.getFirst();
 							throw CrashReport.create("Inject was not instrumented correctly, because no label was found", IMPLEMENTATION_ERROR).addDetail("Line", i).addDetail("Interface", inject.ifaceMethod().getOwner())
 								.addDetail("Inject", inject.ifaceMethod().getSourceSignature(true)).addDetail("Method", inject.method().getSourceSignature(true)).exception();
 						} else {
-							CrashReport report = CrashReport.create("Injectors were not instrumented correctly, because no label was found", IMPLEMENTATION_ERROR);
+							CrashReport report = CrashReport.create("Injects were not instrumented correctly, because no label was found", IMPLEMENTATION_ERROR);
 							
 							List<Map<String, Object>> details = new ArrayList<>();
-							for (InjectData inject : injectors) {
+							for (InjectData inject : injects) {
 								Map<String, Object> detail = new HashMap<>();
 								detail.put("Interface", inject.ifaceMethod().getOwner());
 								detail.put("Inject", inject.ifaceMethod().getSourceSignature(true));
 								detail.put("Method", inject.method().getSourceSignature(true));
 								details.add(detail);
 							}
-							throw report.addDetail("Line", i).addDetail("Injectors", details).exception();
+							throw report.addDetail("Line", i).addDetail("Injects", details).exception();
 						}
 						//endregion
 					}
@@ -265,7 +265,7 @@ public class InjectTransformer extends BaseClassTransformer {
 		}
 		
 		//region Instrumentation
-		private void instrumentInjector(@NotNull InjectData inject) {
+		private void instrumentInject(@NotNull InjectData inject) {
 			if (inject.ifaceMethod().returns(VOID)) {
 				this.instrumentInjectAsListener(inject.ifaceMethod(), inject.method());
 			} else if (inject.method().returns(convertToPrimitive(inject.ifaceMethod().getReturnType()))) {

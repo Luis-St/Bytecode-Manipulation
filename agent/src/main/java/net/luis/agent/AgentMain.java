@@ -51,7 +51,7 @@ public class AgentMain {
 		inst.addTransformer(new AssignorTransformer());
 		inst.addTransformer(new InvokerTransformer());
 		inst.addTransformer(new InjectTransformer());
-		inst.addTransformer(new RedirectorTransformer());
+		inst.addTransformer(new RedirectTransformer());
 		inst.addTransformer(new ScheduledTransformer());
 		inst.addTransformer(new CaughtTransformer());
 		inst.addTransformer(new AsyncTransformer());
