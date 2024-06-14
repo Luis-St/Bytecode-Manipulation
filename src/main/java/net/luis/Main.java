@@ -40,7 +40,7 @@ public final class Main {
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
 		
-		new InjectorTest("ABC").test(1, new int[] { 1 });
+		new InjectTest("ABC").test(1, new int[] { 1 });
 		
 		execute("ls", null, null);
 		parseUUID("550e8400-e29b-41d4-a716-446655440000");

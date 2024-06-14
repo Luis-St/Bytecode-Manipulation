@@ -15,7 +15,7 @@ import java.util.List;
  */
 
 @InjectInterface(target = "net.luis.InjectorTest")
-public interface IInjectorTest {
+public interface IInjectTest {
 	
 	//region HEAD
 	@Inject(method = "test(int, int[])", target = @Target(type = TargetType.HEAD), restricted = false)
@@ -33,7 +33,7 @@ public interface IInjectorTest {
 	
 	//region NEW
 	@Inject(method = "test(int, int[])", target = @Target(value = "ArrayList", type = TargetType.NEW))
-	default void injectNewType(@This InjectorTest test) {
+	default void injectNewType(@This InjectTest test) {
 		System.out.println("New Type");
 	}
 	

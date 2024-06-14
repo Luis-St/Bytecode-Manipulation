@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
  *
  */
 
-public class InjectorTest {
+public class InjectTest {
 	
 	private static String string = "String";
 	
@@ -22,7 +22,7 @@ public class InjectorTest {
 	@NotNull
 	private String str;
 	
-	public InjectorTest(@NotNull String str) {
+	public InjectTest(@NotNull String str) {
 		this.str = str;
 	}
 	
