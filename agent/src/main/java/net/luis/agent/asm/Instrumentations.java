@@ -385,8 +385,12 @@ public class Instrumentations {
 		visitor.visitFieldInsn(Opcodes.GETSTATIC, factory.getInternalName(), "INSTANCE", factory.getDescriptor());
 		visitor.visitLdcInsn(target.getDescriptor());
 		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, TYPE.getInternalName(), "getType", "(Ljava/lang/String;)Lorg/objectweb/asm/Type;", false);
+		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME_UTILS.getInternalName(), "getTypeAsString", "(Lorg/objectweb/asm/Type;)Ljava/lang/String;", false);
+		visitor.visitTypeInsn(Opcodes.NEW, SCOPED_STRING_READER.getInternalName());
+		visitor.visitInsn(Opcodes.DUP);
 		visitor.visitLdcInsn(value);
-		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, factory.getInternalName(), "create", "(Lorg/objectweb/asm/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
+		visitor.visitMethodInsn(Opcodes.INVOKESPECIAL, SCOPED_STRING_READER.getInternalName(), "<init>", "(Ljava/lang/String;)V", false);
+		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, factory.getInternalName(), "create", "(Ljava/lang/String;Lnet/luis/utils/io/reader/ScopedStringReader;)Ljava/lang/Object;", false);
 		visitor.visitTypeInsn(Opcodes.CHECKCAST, target.getInternalName());
 	}
 	

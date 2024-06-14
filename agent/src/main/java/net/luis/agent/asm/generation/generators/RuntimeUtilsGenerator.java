@@ -25,9 +25,11 @@ public class RuntimeUtilsGenerator extends Generator {
 		cv.visit(CLASS_VERSION, Opcodes.ACC_PUBLIC, RUNTIME_UTILS.getInternalName(), null, "java/lang/Object", null);
 		generateDefaultConstructor(cv, RUNTIME_UTILS);
 		this.generateIsAccessAllowed(cv);
+		this.generateGetTypeAsString(cv);
 		cv.visitEnd();
 	}
 	
+	//region RuntimeUtils#isAccessAllowed
 	private void generateIsAccessAllowed(@NotNull ClassVisitor cv) {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "isAccessAllowed", "(Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Z", null, null);
 		Label start = new Label();
@@ -146,4 +148,34 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitMaxs(0, 0);
 		mv.visitEnd();
 	}
+	//endregion
+	
+	//region RuntimeUtils#getTypeAsString
+	private void generateGetTypeAsString(@NotNull ClassVisitor cv) {
+		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "getTypeAsString", "(Lorg/objectweb/asm/Type;)Ljava/lang/String;", null, null);
+		//region Labels
+		Label start = new Label();
+		Label jump = new Label();
+		Label end = new Label();
+		//endregion
+		mv.visitAnnotation(NOT_NULL.getDescriptor(), false).visitEnd();
+		mv.visitParameter("type", 0);
+		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
+		mv.visitCode();
+		mv.visitLabel(start);
+		mv.visitVarInsn(Opcodes.ALOAD, 0);
+		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "org/objectweb/asm/Type", "getSort", "()I", false);
+		mv.visitIntInsn(Opcodes.BIPUSH, 11);
+		mv.visitJumpInsn(Opcodes.IF_ICMPNE, jump);
+		instrumentThrownException(mv, ILLEGAL_ARGUMENT_EXCEPTION, "Type is a method type");
+		mv.visitLabel(jump);
+		mv.visitVarInsn(Opcodes.ALOAD, 0);
+		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "org/objectweb/asm/Type", "getClassName", "()Ljava/lang/String;", false);
+		mv.visitInsn(Opcodes.ARETURN);
+		mv.visitLabel(end);
+		mv.visitLocalVariable("type", "Lorg/objectweb/asm/Type;", null, start, end, 0);
+		mv.visitMaxs(0, 0);
+		mv.visitEnd();
+	}
+	//endregion
 }

@@ -28,12 +28,14 @@ public final class Main {
 	/*
 	 * ToDo:
 	 *  - Add transformers for unused annotations
-	 *  - Overhaul DefaultStringFactory
 	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
 	 *  - Store all method, fields in a map to allow direct access
 	 *  - Add tracking of frames to Method -> remove NotNullTransformer constructor -> LocalVariable#getActualType
+	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add support for static redirect methods to copy the original parameters (only if caller object can be popped)
+	 *  - Try to remove util package from agent
+	 *  - Fix Parameter#getMessageName -> (Scoped string reader$ string scope) for nested classes
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
@@ -66,7 +68,7 @@ public final class Main {
 	}
 	
 	@RestrictedAccess("Main#main")
-	public static void execute(@Pattern("^[a-z]*$") String command, @Default("[]") @NotNull String[] args, @Default List<String> values) {
+	public static void execute(@Pattern("^[a-z]*$") String command, @Default("[-t, -r]") @NotNull String[] args, /*@Default */List<String> values) {
 		System.out.println("Command: " + command);
 		System.out.println("Args: " + Arrays.toString(args));
 		System.out.println("Values: " + values);
