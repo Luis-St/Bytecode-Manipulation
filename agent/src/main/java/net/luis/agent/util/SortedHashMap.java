@@ -1,5 +1,8 @@
 package net.luis.agent.util;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -11,7 +14,7 @@ import java.util.Map;
 
 public class SortedHashMap<K, V> extends LinkedHashMap<K, V> {
 	
-	public void putBefore(K target, K key, V value) {
+	public void putBefore(@Nullable K target, @NotNull K key, @Nullable V value) {
 		Map<K, V> temp = new LinkedHashMap<>();
 		for (Map.Entry<K, V> entry : this.entrySet()) {
 			if (entry.getKey().equals(target)) {
@@ -23,7 +26,7 @@ public class SortedHashMap<K, V> extends LinkedHashMap<K, V> {
 		this.putAll(temp);
 	}
 	
-	public void putAfter(K targetKey, K key, V value) {
+	public void putAfter(@Nullable K targetKey, @NotNull K key, @Nullable V value) {
 		Map<K, V> temp = new LinkedHashMap<>();
 		for (Map.Entry<K, V> entry : this.entrySet()) {
 			temp.put(entry.getKey(), entry.getValue());

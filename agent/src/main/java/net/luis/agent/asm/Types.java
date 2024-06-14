@@ -26,6 +26,7 @@ public class Types {
 		Type.getType(Boolean.class), Type.getType(Character.class), Type.getType(Byte.class), Type.getType(Short.class), Type.getType(Integer.class), Type.getType(Long.class), Type.getType(Float.class), Type.getType(Double.class)
 	};
 	
+	//region Java built-in primitives
 	public static final Type VOID = Type.VOID_TYPE;
 	public static final Type BOOLEAN = Type.BOOLEAN_TYPE;
 	public static final Type CHAR = Type.CHAR_TYPE;
@@ -37,7 +38,23 @@ public class Types {
 	public static final Type DOUBLE = Type.DOUBLE_TYPE;
 	public static final Type STRING = Type.getType(String.class);
 	public static final Type TYPE = Type.getType(Type.class);
+	//endregion
 	
+	//region Java built-in types
+	public static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
+	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType("Ljava/lang/IllegalArgumentException;");
+	
+	public static final Type MAP = Type.getType("Ljava/util/Map;");
+	public static final Type CONCURRENT_HASH_MAP = Type.getType("Ljava/util/concurrent/ConcurrentHashMap;");
+	
+	public static final Type RUNNABLE = Type.getType("Ljava/lang/Runnable;");
+	public static final Type CONSUMER = Type.getType("Ljava/util/function/Consumer;");
+	public static final Type BI_CONSUMER = Type.getType("Ljava/util/function/BiConsumer;");
+	public static final Type THREAD_FACTORY = Type.getType("Ljava/util/concurrent/ThreadFactory;");
+	public static final Type SCHEDULED_FUTURE = Type.getType("Ljava/util/concurrent/ScheduledFuture;");
+	//endregion
+	
+	//region Implementation annotations
 	public static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
 	
 	public static final Type IMPLEMENTED = Type.getType(Implemented.class);
@@ -47,10 +64,14 @@ public class Types {
 	public static final Type INJECT = Type.getType(Inject.class);
 	public static final Type REDIRECT = Type.getType(Redirect.class);
 	public static final Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER, INJECT, REDIRECT);
+	//endregion
 	
+	//region Parameter annotations
 	public static final Type THIS = Type.getType(This.class);
 	public static final Type LOCAL = Type.getType(Local.class);
+	//endregion
 	
+	//region Method annotations
 	public static final Type ABOVE = Type.getType(Above.class);
 	public static final Type ABOVE_EQUAL = Type.getType(AboveEqual.class);
 	public static final Type BELOW = Type.getType(Below.class);
@@ -63,24 +84,19 @@ public class Types {
 	public static final Type NOT_NULL = Type.getType(NotNull.class);
 	public static final Type PATTERN = Type.getType(Pattern.class);
 	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
+	//endregion
 	
+	//region LUtils types
+	public static final Type SCOPED_STRING_READER = Type.getType("Lnet/luis/utils/io/reader/ScopedStringReader;");
+	//endregion
+	
+	//region Generated types
 	public static final Type RUNTIME_UTILS = Type.getType("Lnet/luis/agent/generated/RuntimeUtils;");
 	public static final Type DAEMON_THREAD_FACTORY = Type.getType("Lnet/luis/agent/generated/DaemonThreadFactory;");
 	public static final Type COUNTING_RUNNABLE = Type.getType("Lnet/luis/agent/generated/CountingRunnable;");
 	public static final Type CANCELABLE_RUNNABLE = Type.getType("Lnet/luis/agent/generated/CancelableRunnable;");
 	public static final Type CONTEXT_RUNNABLE = Type.getType("Lnet/luis/agent/generated/ContextRunnable;");
-	
-	public static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
-	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType("Ljava/lang/IllegalArgumentException;");
-	
-	public static final Type MAP = Type.getType("Ljava/util/Map;");
-	public static final Type CONCURRENT_HASH_MAP = Type.getType("Ljava/util/concurrent/ConcurrentHashMap;");
-	
-	public static final Type RUNNABLE = Type.getType("Ljava/lang/Runnable;");
-	public static final Type CONSUMER = Type.getType("Ljava/util/function/Consumer;");
-	public static final Type BI_CONSUMER = Type.getType("Ljava/util/function/BiConsumer;");
-	public static final Type THREAD_FACTORY = Type.getType("Ljava/util/concurrent/ThreadFactory;");
-	public static final Type SCHEDULED_FUTURE = Type.getType("Ljava/util/concurrent/ScheduledFuture;");
+	//endregion
 	
 	public static final Type VOID_METHOD = Type.getType("()V");
 	
