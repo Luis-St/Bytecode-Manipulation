@@ -111,7 +111,11 @@ public class Parameter implements ASMData {
 		if (this.isNamed()) {
 			return Utils.capitalize(Utils.getSeparated(this.name));
 		}
-		return Utils.capitalize(Utils.getSeparated(Types.getSimpleName(this.type))) + " (parameter #" + this.index + ")";
+		String simpleName = Types.getSimpleName(this.type);
+		if (simpleName.contains("$")) {
+			simpleName = simpleName.substring(simpleName.lastIndexOf("$") + 1);
+		}
+		return Utils.capitalize(Utils.getSeparated(simpleName)) + " (parameter #" + this.index + ")";
 	}
 	//endregion
 	

@@ -34,8 +34,6 @@ public final class Main {
 	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add support for static redirect methods to copy the original parameters (only if caller object can be popped)
-	 *  - Try to remove util package from agent
-	 *  - Fix Parameter#getMessageName -> (Scoped string reader$ string scope) for nested classes
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

@@ -113,7 +113,11 @@ public class LocalVariable {
 	}
 	
 	public @NotNull String getMessageName() {
-		return Utils.capitalize(Utils.getSeparated(Types.getSimpleName(this.type))) + " (local #" + this.index + ")";
+		String simpleName = Types.getSimpleName(this.type);
+		if (simpleName.contains("$")) {
+			simpleName = simpleName.substring(simpleName.lastIndexOf("$") + 1);
+		}
+		return Utils.capitalize(Utils.getSeparated(simpleName)) + " (local #" + this.index + ")";
 	}
 	
 	public boolean isInScope(int scope) {
