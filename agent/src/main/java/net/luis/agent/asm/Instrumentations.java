@@ -41,7 +41,7 @@ public class Instrumentations {
 		return Opcodes.SASTORE >= opcode && opcode >= Opcodes.IASTORE;
 	}
 	
-	public static boolean isConst(int opcode) {
+	public static boolean isConstant(int opcode) {
 		return Opcodes.DCONST_1 >= opcode && opcode >= Opcodes.ACONST_NULL;
 	}
 	

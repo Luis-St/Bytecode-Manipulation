@@ -90,7 +90,8 @@ public class MethodScanner extends MethodVisitor {
 			return null;
 		}
 		Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
-		this.localAnnotations.computeIfAbsent(new int[] { index[0], Math.max(0, this.labels.indexOf(start[0]) - 1), this.labels.indexOf(end[0]) }, p -> new HashMap<>()).put(annotation.getType(), annotation);
+		int[] key = new int[] { index[0], Math.max(0, this.labels.indexOf(start[0]) - 1), this.labels.indexOf(end[0]) };  // Revert the offset added above
+		this.localAnnotations.computeIfAbsent(key, p -> new HashMap<>()).put(annotation.getType(), annotation);
 		return new AnnotationScanner(annotation.getValues()::put);
 	}
 	
@@ -104,7 +105,7 @@ public class MethodScanner extends MethodVisitor {
 		}
 		for (Map.Entry<int[], Map<Type, Annotation>> entry : this.localAnnotations.entrySet()) {
 			int[] key = entry.getKey();
-			LocalVariable local = this.method.getLocal(key[0], key[1], key[2]); // Revert the offset added above
+			LocalVariable local = this.method.getLocal(key[0], key[1], key[2]);
 			if (local != null) {
 				local.getAnnotations().putAll(entry.getValue());
 			}

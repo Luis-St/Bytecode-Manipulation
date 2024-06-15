@@ -1,5 +1,7 @@
 package net.luis;
 
+import com.google.common.base.Converter;
+import com.google.common.collect.Lists;
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
@@ -34,11 +36,25 @@ public final class Main {
 	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add support for static redirect methods to copy the original parameters (only if caller object can be popped)
+	 *  - Fix local variable labels in transformers -> match java -> start label = next label after *STORE
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
+		
+		Converter<String, Integer> converter = new Converter<String, Integer>() {
+			@Override
+			protected @NotNull Integer doForward(@NotNull String s) {
+				return Integer.parseInt(s);
+			}
+			
+			@Override
+			protected @NotNull String doBackward(@NotNull Integer integer) {
+				return integer.toString();
+			}
+		};
+		Lists.newArrayList("10", "1").stream().map(converter::convert).forEach(System.out::println);
 		
 		new InjectTest("ABC").test(1, new int[] { 1 });
 		
@@ -107,22 +123,7 @@ public final class Main {
 		throw new RuntimeException("Caught Exception");
 	}
 	
-	@Scheduled(500)
-	public static void scheduled() {
-		System.out.println("Test Scheduled");
-	}
-	
-	@Scheduled(500)
-	public static void scheduled(int count) {
-		System.out.println(count);
-	}
-	
-	@Scheduled(500)
-	public static void scheduled(@NotNull ScheduledFuture<?> future) {
-		System.out.println(future);
-	}
-	
-	@Scheduled(500)
+	@Scheduled(5000)
 	public static void scheduled(int count, @NotNull ScheduledFuture<?> future) {
 		System.out.println(count + " " + future);
 	}
