@@ -17,7 +17,7 @@ import java.util.*;
  *
  */
 
-public class AgentMain {
+public class Main {
 	
 	public static void premain(@NotNull String agentArgs, @NotNull Instrumentation inst) {
 		System.out.println("Loading agent");
@@ -28,7 +28,7 @@ public class AgentMain {
 	
 	//region Initialization
 	private static void initialize(@NotNull Instrumentation inst) {
-		inst.redefineModule(ModuleLayer.boot().findModule("java.base").orElseThrow(), Set.of(), Map.of(), Map.of("java.lang", Set.of(AgentMain.class.getModule())), Set.of(), Map.of());
+		inst.redefineModule(ModuleLayer.boot().findModule("java.base").orElseThrow(), Set.of(), Map.of(), Map.of("java.lang", Set.of(Main.class.getModule())), Set.of(), Map.of());
 		Agent.initialize(generateRuntimeClasses());
 	}
 	
