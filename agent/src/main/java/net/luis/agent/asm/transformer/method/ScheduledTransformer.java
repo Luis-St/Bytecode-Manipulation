@@ -186,7 +186,6 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			Label start = new Label();
 			Label end = new Label();
 			
-			this.insertLabel(start);
 			if (this.lookup.stream().anyMatch(this::requiresLookup)) {
 				index = newLocal(this.mv, CONCURRENT_HASH_MAP);
 				this.mv.visitTypeInsn(Opcodes.NEW, CONCURRENT_HASH_MAP.getInternalName());
@@ -194,6 +193,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, CONCURRENT_HASH_MAP.getInternalName(), "<init>", "()V", false);
 				this.mv.visitVarInsn(Opcodes.ASTORE, index);
 			}
+			this.insertLabel(start);
 			for (Method method : this.lookup) {
 				if (method.getParameterCount() == 0) {
 					this.instrumentRunnable(method);

@@ -143,8 +143,8 @@ public class RangeTransformer extends BaseClassTransformer {
 				Type type = this.method.getReturnType();
 				
 				int local = newLocal(this.mv, type);
-				this.insertLabel(start);
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
+				this.insertLabel(start);
 				
 				String message = "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must be ";
 				if (this.method.isAnnotatedWith(ABOVE)) {

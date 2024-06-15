@@ -34,7 +34,7 @@ public class RuntimeUtilsGenerator extends Generator {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "isAccessAllowed", "(Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Z", null, null);
 		Label start = new Label();
 		Label[] labels = new Label[] {
-			new Label(), new Label(), new Label(), new Label(), new Label(), new Label(), new Label()
+			new Label(), new Label(), new Label(), new Label(), new Label(), new Label(), new Label(), new Label()
 		};
 		Label end = new Label();
 		
@@ -58,7 +58,6 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitInsn(Opcodes.POP);
 		instrumentNonNullCheck(mv, 3, "Method name must not be null");
 		mv.visitInsn(Opcodes.POP);
-		mv.visitLabel(labels[0]);
 		//endregion
 		
 		//region Create class and method concat
@@ -68,6 +67,7 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitVarInsn(Opcodes.ALOAD, 3);
 		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
 		mv.visitVarInsn(Opcodes.ASTORE, 4);
+		mv.visitLabel(labels[0]);
 		//endregion
 		
 		mv.visitVarInsn(Opcodes.ILOAD, 1);
@@ -114,11 +114,12 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitInsn(Opcodes.IADD);
 		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "substring", "(I)Ljava/lang/String;", false);
 		mv.visitVarInsn(Opcodes.ASTORE, 5);
+		mv.visitLabel(labels[4]);
 		
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
 		mv.visitVarInsn(Opcodes.ALOAD, 5);
 		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "equalsIgnoreCase", "(Ljava/lang/String;)Z", false);
-		mv.visitJumpInsn(Opcodes.IFNE, labels[4]);
+		mv.visitJumpInsn(Opcodes.IFNE, labels[5]);
 		
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
 		mv.visitVarInsn(Opcodes.ALOAD, 5);
@@ -127,14 +128,14 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitVarInsn(Opcodes.ALOAD, 3);
 		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;", false);
 		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "equalsIgnoreCase", "(Ljava/lang/String;)Z", false);
-		mv.visitJumpInsn(Opcodes.IFEQ, labels[5]);
+		mv.visitJumpInsn(Opcodes.IFEQ, labels[6]);
 		
-		mv.visitLabel(labels[4]);
-		mv.visitInsn(Opcodes.ICONST_1);
-		mv.visitJumpInsn(Opcodes.GOTO, labels[6]);
 		mv.visitLabel(labels[5]);
-		mv.visitInsn(Opcodes.ICONST_0);
+		mv.visitInsn(Opcodes.ICONST_1);
+		mv.visitJumpInsn(Opcodes.GOTO, labels[7]);
 		mv.visitLabel(labels[6]);
+		mv.visitInsn(Opcodes.ICONST_0);
+		mv.visitLabel(labels[7]);
 		mv.visitInsn(Opcodes.IRETURN);
 		//endregion
 		
@@ -144,7 +145,7 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitLocalVariable("className", STRING.getDescriptor(), null, start, end, 2);
 		mv.visitLocalVariable("methodName", STRING.getDescriptor(), null, start, end, 3);
 		mv.visitLocalVariable("concat", STRING.getDescriptor(), null, labels[0], end, 4);
-		mv.visitLocalVariable("simple", STRING.getDescriptor(), null, labels[3], end, 5);
+		mv.visitLocalVariable("simple", STRING.getDescriptor(), null, labels[4], end, 5);
 		mv.visitMaxs(0, 0);
 		mv.visitEnd();
 	}

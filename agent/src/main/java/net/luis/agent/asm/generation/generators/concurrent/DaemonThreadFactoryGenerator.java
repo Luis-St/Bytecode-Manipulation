@@ -54,7 +54,6 @@ public class DaemonThreadFactoryGenerator extends Generator {
 		mv.visitParameter("runnable", 0);
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitCode();
-		mv.visitLabel(start);
 		instrumentNonNullCheck(mv, 1, "Runnable must not be null");
 		mv.visitInsn(Opcodes.POP);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -62,6 +61,7 @@ public class DaemonThreadFactoryGenerator extends Generator {
 		mv.visitVarInsn(Opcodes.ALOAD, 1);
 		mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, "java/util/concurrent/ThreadFactory", "newThread", "(Ljava/lang/Runnable;)Ljava/lang/Thread;", true);
 		mv.visitVarInsn(Opcodes.ASTORE, 2);
+		mv.visitLabel(start);
 		mv.visitVarInsn(Opcodes.ALOAD, 2);
 		mv.visitInsn(Opcodes.ICONST_1);
 		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Thread", "setDaemon", "(Z)V", false);

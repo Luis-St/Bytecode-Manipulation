@@ -303,8 +303,8 @@ public class InjectTransformer extends BaseClassTransformer {
 			Label end = new Label();
 			this.instrumentMethodCall(ifaceMethod, method);
 			int local = newLocal(this.mv, method.getReturnType());
-			this.insertLabel(start);
 			this.mv.visitVarInsn(Opcodes.ASTORE, local);
+			this.insertLabel(start);
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
 			this.mv.visitJumpInsn(Opcodes.IFNULL, end);
 			this.mv.visitVarInsn(Opcodes.ALOAD, local);
@@ -323,8 +323,8 @@ public class InjectTransformer extends BaseClassTransformer {
 			Label end = new Label();
 			this.instrumentMethodCall(ifaceMethod, method);
 			int local = newLocal(this.mv, BOOLEAN);
-			this.insertLabel(start);
 			this.mv.visitVarInsn(Opcodes.ISTORE, local);
+			this.insertLabel(start);
 			this.mv.visitVarInsn(Opcodes.ILOAD, local);
 			this.mv.visitJumpInsn(Opcodes.IFNE, end);
 			this.mv.visitInsn(Opcodes.RETURN);

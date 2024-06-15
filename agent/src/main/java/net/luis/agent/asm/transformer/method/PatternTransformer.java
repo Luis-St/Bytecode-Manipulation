@@ -116,8 +116,8 @@ public class PatternTransformer extends BaseClassTransformer {
 				Label start = new Label();
 				Label end = new Label();
 				int local = newLocal(this.mv, this.method.getReturnType());
-				this.insertLabel(start);
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
+				this.insertLabel(start);
 				
 				instrumentPatternCheck(this.mv, value, local, end);
 				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must match pattern '" + value + "'");

@@ -95,8 +95,8 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			int array = newLocal(this.mv, STACK_TRACE_ARRAY);
 			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Thread", "getStackTrace", "()[Ljava/lang/StackTraceElement;", false);
-			this.insertLabel(start);
 			this.mv.visitVarInsn(Opcodes.ASTORE, array);
+			this.insertLabel(start);
 			
 			this.mv.visitVarInsn(Opcodes.ALOAD, array);
 			this.mv.visitInsn(Opcodes.ARRAYLENGTH);
@@ -114,16 +114,16 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			this.mv.visitInsn(Opcodes.ICONST_2);
 			this.mv.visitInsn(Opcodes.AALOAD);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StackTraceElement", "getClassName", "()Ljava/lang/String;", false);
-			this.insertLabel(clazzVariable);
 			this.mv.visitVarInsn(Opcodes.ASTORE, clazz);
+			this.insertLabel(clazzVariable);
 			
 			int method = newLocal(this.mv, STRING);
 			this.mv.visitVarInsn(Opcodes.ALOAD, array);
 			this.mv.visitInsn(Opcodes.ICONST_2);
 			this.mv.visitInsn(Opcodes.AALOAD);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StackTraceElement", "getMethodName", "()Ljava/lang/String;", false);
-			this.insertLabel(methodVariable);
 			this.mv.visitVarInsn(Opcodes.ASTORE, method);
+			this.insertLabel(methodVariable);
 			
 			for (String value : this.values) {
 				this.mv.visitLdcInsn(value);
