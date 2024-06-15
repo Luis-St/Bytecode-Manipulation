@@ -1,8 +1,7 @@
 package net.luis.agent.asm.data;
 
 import net.luis.agent.asm.Types;
-import net.luis.agent.asm.type.TypeAccess;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Mutable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +31,7 @@ public class Field implements ASMData {
 		this.owner = Objects.requireNonNull(owner);
 		this.name = Objects.requireNonNull(name);
 		this.type = Objects.requireNonNull(type);
-		this.genericSignature = genericSignature;
+		this.genericSignature = genericSignature == null ? "" : genericSignature;
 		this.access = Objects.requireNonNull(access);
 		this.modifiers = Objects.requireNonNull(modifiers);
 		this.annotations = Objects.requireNonNull(annotations);
@@ -72,8 +71,15 @@ public class Field implements ASMData {
 		return this.type;
 	}
 	
-	public @Nullable String getGenericSignature() {
-		return this.genericSignature;
+	@Override
+	public @NotNull String getSignature(@NotNull SignatureType type) {
+		return switch (type) {
+			case GENERIC -> this.genericSignature;
+			case FULL -> this.name;
+			case DEBUG -> this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
+			case SOURCE -> Types.getSimpleName(this.owner) + "#" + this.name;
+			default -> "";
+		};
 	}
 	
 	public @NotNull TypeAccess getAccess() {
@@ -95,14 +101,6 @@ public class Field implements ASMData {
 	//endregion
 	
 	//region Functional getters
-	@Override
-	public @NotNull String getSourceSignature(boolean full) {
-		if (full) {
-			return this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
-		}
-		return Types.getSimpleName(this.owner) + "#" + this.name;
-	}
-	
 	public boolean is(@NotNull String owner, @NotNull String name, @NotNull String descriptor) {
 		return this.is(Type.getObjectType(owner), name, Type.getType(descriptor));
 	}
@@ -135,7 +133,7 @@ public class Field implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature(true);
+		return this.getSignature(SignatureType.DEBUG);
 	}
 	//endregion
 	

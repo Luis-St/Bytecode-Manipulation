@@ -5,6 +5,7 @@ import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.Annotation;
 import net.luis.agent.asm.data.Method;
 import net.luis.agent.asm.report.CrashReport;
+import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.util.CaughtAction;
 import net.luis.agent.util.factory.StringFactoryRegistry;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +69,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 			this.exceptionType = annotation.getOrDefault("exceptionType");
 			this.returnType = method.getReturnType();
 			if (this.action == CaughtAction.NOTHING && !method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @Caught(NOTHING) must return void", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).exception();
+				throw CrashReport.create("Method annotated with @Caught(NOTHING) must return void", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}
 		}
 		

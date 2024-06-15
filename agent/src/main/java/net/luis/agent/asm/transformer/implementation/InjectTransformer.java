@@ -8,8 +8,7 @@ import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.scanner.ClassFileScanner;
 import net.luis.agent.asm.scanner.TargetClassScanner;
-import net.luis.agent.asm.type.TypeAccess;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -75,9 +74,9 @@ public class InjectTransformer extends BaseClassTransformer {
 							this.validateMethod(method, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSignature(SignatureType.DEBUG)).exception();
 							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSignature(SignatureType.DEBUG)).exception();
 							}
 						}
 					}
@@ -86,7 +85,7 @@ public class InjectTransformer extends BaseClassTransformer {
 		}
 		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
-			String signature = ifaceMethod.getSourceSignature(true);
+			String signature = ifaceMethod.getSignature(SignatureType.DEBUG);
 			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Inject must be public", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).exception();
@@ -99,10 +98,10 @@ public class InjectTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Inject must not throw exceptions", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature)
 					.addDetail("Exceptions", ifaceMethod.getExceptions()).exception();
 			}
-			Method existingMethod = targetClass.getMethod(ifaceMethod.getFullSignature());
+			Method existingMethod = targetClass.getMethod(ifaceMethod.getSignature(SignatureType.FULL));
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of inject already has method with same signature", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature)
-					.addDetail("Existing Method", existingMethod.getSourceSignature(true)).exception();
+					.addDetail("Existing Method", existingMethod.getSignature(SignatureType.DEBUG)).exception();
 			}
 			String injectName = this.getInjectName(ifaceMethod);
 			List<Method> possibleMethod = ASMUtils.getBySignature(injectName, targetClass);
@@ -117,7 +116,7 @@ public class InjectTransformer extends BaseClassTransformer {
 			Method method = possibleMethod.getFirst();
 			if (!ifaceMethod.is(TypeModifier.STATIC) && method.is(TypeModifier.STATIC)) {
 				throw CrashReport.create("Method annotated with @Inject is declared none-static, but specified a static method", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature)
-					.addDetail("Method", method.getSourceSignature(true)).exception();
+					.addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			if (ifaceMethod.getParameterCount() > 0) {
 				for (Parameter parameter : ifaceMethod.getParameters().values()) {
@@ -128,25 +127,25 @@ public class InjectTransformer extends BaseClassTransformer {
 					if (method.is(TypeModifier.STATIC) && parameter.isAnnotatedWith(THIS)) {
 						throw CrashReport.create("Parameter of inject cannot be annotated with @This, because the specified method is static", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner())
 							.addDetail("Inject", signature).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-							.addDetail("Method", method.getSourceSignature(true)).exception();
+							.addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 					}
 				}
 			}
 			if (method.returns(VOID)) {
 				if (!ifaceMethod.returns(VOID) && !ifaceMethod.returns(BOOLEAN)) {
 					throw CrashReport.create("Method annotated with @Inject specified a method which returns void, but inject method does not return void or boolean (cancellation)", IMPLEMENTATION_ERROR)
-						.addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).addDetail("Inject Return Type", method.getReturnType()).addDetail("Method", method.getSourceSignature(true)).exception();
+						.addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).addDetail("Inject Return Type", method.getReturnType()).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 				}
 			} else if (method.returnsAny(PRIMITIVES)) {
 				Type methodWrapper = convertToWrapper(method.getReturnType());
 				if (!ifaceMethod.returns(methodWrapper)) {
 					throw CrashReport.create("Method annotated with @Inject specified a method which returns a primitive type, but inject method does not return the corresponding wrapper type", IMPLEMENTATION_ERROR)
-						.addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).addDetail("Inject Return Type", methodWrapper).addDetail("Method", method.getSourceSignature(true))
+						.addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).addDetail("Inject Return Type", methodWrapper).addDetail("Method", method.getSignature(SignatureType.DEBUG))
 						.addDetail("Method Return Type", method.getReturnType()).exception();
 				}
 			} else if (!ifaceMethod.returns(VOID) && !ifaceMethod.returns(method.getReturnType())) {
 				throw CrashReport.create("Method annotated with @Inject must either return void or the same type as the specified method", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature)
-					.addDetail("Inject Return Type", ifaceMethod.getReturnType()).addDetail("Method", method.getSourceSignature(true)).addDetail("Method Return Type", method.getReturnType()).exception();
+					.addDetail("Inject Return Type", ifaceMethod.getReturnType()).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Method Return Type", method.getReturnType()).exception();
 			}
 			
 			Annotation annotation = Objects.requireNonNull(ifaceMethod.getAnnotation(INJECT).get("target"));
@@ -154,21 +153,21 @@ public class InjectTransformer extends BaseClassTransformer {
 			ClassFileScanner.scanClass(this.type, scanner);
 			if (!scanner.visitedTarget()) {
 				throw CrashReport.create("Could not find method specified in inject during scan of its own class", IMPLEMENTATION_ERROR).addDetail("Scanner", scanner.getClass().getName()).addDetail("Interface", ifaceMethod.getOwner())
-					.addDetail("Inject", signature).addDetail("Scanned Class", targetClass.getType()).addDetail("Method", method.getSourceSignature(true)).exception();
+					.addDetail("Inject", signature).addDetail("Scanned Class", targetClass.getType()).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			int line = scanner.getTargetLine();
 			Method lambdaMethod = scanner.getLambdaMethod();
 			if (lambdaMethod != null && !ifaceMethod.is(TypeModifier.STATIC)) {
 				throw CrashReport.create("Method annotated with @Inject is declared none-static, but specified a lambda expression", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner())
-					.addDetail("Inject", signature).addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda", lambdaMethod.getSourceSignature(true)).exception();
+					.addDetail("Inject", signature).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Lambda", lambdaMethod.getSignature(SignatureType.DEBUG)).exception();
 			}
 			if (line == -1) {
 				throw CrashReport.create("Could not find target in method body of method specified in inject", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature)
-					.addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda", lambdaMethod).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type"))
+					.addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Lambda", lambdaMethod).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type"))
 					.addDetail("Target Mode", annotation.getOrDefault("mode")).addDetail("Target Ordinal", annotation.getOrDefault("ordinal")).addDetail("Target Offset", annotation.getOrDefault("offset")).removeNullValues(true).exception();
 			}
 			
-			String key = lambdaMethod != null ? lambdaMethod.getFullSignature() : method.getFullSignature();
+			String key = (lambdaMethod != null ? lambdaMethod : method).getSignature(SignatureType.FULL);
 			this.injects.computeIfAbsent(key, m -> new ArrayList<>()).add(new InjectData(line, ifaceMethod, method, lambdaMethod));
 		}
 		
@@ -248,7 +247,7 @@ public class InjectTransformer extends BaseClassTransformer {
 						if (injects.size() == 1) {
 							InjectData inject = injects.getFirst();
 							throw CrashReport.create("Inject was not instrumented correctly, because no label was found", IMPLEMENTATION_ERROR).addDetail("Line", i).addDetail("Interface", inject.ifaceMethod().getOwner())
-								.addDetail("Inject", inject.ifaceMethod().getSourceSignature(true)).addDetail("Method", inject.method().getSourceSignature(true)).addDetail("Lambda Method", inject.lambdaMethod()).removeNullValues(true).exception();
+								.addDetail("Inject", inject.ifaceMethod().getSignature(SignatureType.DEBUG)).addDetail("Method", inject.method().getSignature(SignatureType.DEBUG)).addDetail("Lambda Method", inject.lambdaMethod()).removeNullValues(true).exception();
 						} else {
 							CrashReport report = CrashReport.create("Injects were not instrumented correctly, because no label was found", IMPLEMENTATION_ERROR);
 							
@@ -256,10 +255,10 @@ public class InjectTransformer extends BaseClassTransformer {
 							for (InjectData inject : injects) {
 								Map<String, Object> detail = new HashMap<>();
 								detail.put("Interface", inject.ifaceMethod().getOwner());
-								detail.put("Inject", inject.ifaceMethod().getSourceSignature(true));
-								detail.put("Method", inject.method().getSourceSignature(true));
+								detail.put("Inject", inject.ifaceMethod().getSignature(SignatureType.DEBUG));
+								detail.put("Method", inject.method().getSignature(SignatureType.DEBUG));
 								if (inject.lambdaMethod() != null) {
-									detail.put("Lambda Method", inject.lambdaMethod().getSourceSignature(true));
+									detail.put("Lambda Method", inject.lambdaMethod().getSignature(SignatureType.DEBUG));
 								}
 								details.add(detail);
 							}
@@ -277,8 +276,8 @@ public class InjectTransformer extends BaseClassTransformer {
 		private void instrumentInject(@NotNull InjectData inject) {
 			if (inject.lambdaMethod() != null) {
 				if (!inject.lambdaMethod().returns(VOID)) {
-					throw CrashReport.create("Inject into a lambda expression must return void", IMPLEMENTATION_ERROR).addDetail("Inject", inject.ifaceMethod().getSourceSignature(true))
-						.addDetail("Method", inject.method().getSourceSignature(true)).addDetail("Lambda Method", inject.lambdaMethod().getSourceSignature(true)).exception();
+					throw CrashReport.create("Inject into a lambda expression must return void", IMPLEMENTATION_ERROR).addDetail("Inject", inject.ifaceMethod().getSignature(SignatureType.DEBUG))
+						.addDetail("Method", inject.method().getSignature(SignatureType.DEBUG)).addDetail("Lambda Method", inject.lambdaMethod().getSignature(SignatureType.DEBUG)).exception();
 				}
 				this.instrumentInjectAsListener(inject.ifaceMethod(), inject.lambdaMethod());
 				inject.ifaceMethod().getAnnotation(INJECT).getValues().put("lambda", true);
@@ -289,8 +288,8 @@ public class InjectTransformer extends BaseClassTransformer {
 			} else if (inject.ifaceMethod().returns(BOOLEAN)) {
 				this.instrumentInjectAsCancellation(inject.ifaceMethod(), inject.method());
 			} else {
-				throw CrashReport.create("Unknown how to implement inject, tried as listener, callback and cancellation but failed", IMPLEMENTATION_ERROR).addDetail("Inject", inject.ifaceMethod().getSourceSignature(true))
-					.addDetail("Method", inject.method().getSourceSignature(true)).addDetail("Line", inject.line()).exception();
+				throw CrashReport.create("Unknown how to implement inject, tried as listener, callback and cancellation but failed", IMPLEMENTATION_ERROR).addDetail("Inject", inject.ifaceMethod().getSignature(SignatureType.DEBUG))
+					.addDetail("Method", inject.method().getSignature(SignatureType.DEBUG)).addDetail("Line", inject.line()).exception();
 			}
 		}
 		

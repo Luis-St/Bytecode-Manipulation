@@ -3,6 +3,7 @@ package net.luis.agent.asm;
 import net.luis.agent.Agent;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -90,7 +91,7 @@ public class ASMUtils {
 			return possibleMethods;
 		}
 		for (Method method : possibleMethods) {
-			if (method.getFullSignature().equals(signature)) {
+			if (method.getSignature(SignatureType.FULL).equals(signature)) {
 				methods.add(method);
 				break;
 			}

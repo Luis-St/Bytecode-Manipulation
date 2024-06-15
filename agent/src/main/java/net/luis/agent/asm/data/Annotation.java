@@ -1,6 +1,8 @@
 package net.luis.agent.asm.data;
 
 import net.luis.agent.Agent;
+import net.luis.agent.asm.Types;
+import net.luis.agent.asm.type.SignatureType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -58,12 +60,13 @@ public class Annotation {
 	//endregion
 	
 	//region Functional getters
-	public @NotNull String getSourceSignature(boolean full) {
+	public @NotNull String getSignature(@NotNull SignatureType type) {
 		String base = "@" + this.type.getClassName();
-		if (full) {
-			return base + this.values.entrySet().stream().map(entry -> entry.getKey() + " = " + String.valueOf(entry.getValue())).collect(Collectors.joining(", ", "(", ")"));
-		}
-		return base;
+		return switch (type) {
+			case DEBUG -> base + this.values.entrySet().stream().map(entry -> entry.getKey() + " = " + String.valueOf(entry.getValue())).collect(Collectors.joining(", ", "(", ")"));
+			case SOURCE -> base;
+			default -> "";
+		};
 	}
 	
 	public <X> @Nullable X get(@Nullable String key) {
@@ -113,7 +116,7 @@ public class Annotation {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature(false);
+		return this.getSignature(SignatureType.SOURCE);
 	}
 	//endregion
 	

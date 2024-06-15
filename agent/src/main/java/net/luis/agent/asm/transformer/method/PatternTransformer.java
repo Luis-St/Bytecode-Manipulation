@@ -6,8 +6,7 @@ import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.report.ReportedException;
-import net.luis.agent.asm.type.ClassType;
-import net.luis.agent.asm.type.MethodType;
+import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -178,9 +177,9 @@ public class PatternTransformer extends BaseClassTransformer {
 				annotations.addFirst(PATTERN);
 			}
 			if (data instanceof Method) {
-				return CrashReport.create(message.apply("method"), REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Pattern Annotations", annotations).exception();
+				return CrashReport.create(message.apply("method"), REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Pattern Annotations", annotations).exception();
 			} else if (data instanceof Parameter parameter) {
-				return CrashReport.create(message.apply("parameter"), REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+				return CrashReport.create(message.apply("parameter"), REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
 					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).addDetail("Pattern Annotations", annotations).exception();
 			}
 			throw new IllegalArgumentException("Invalid data type, expected Method or Parameter but got " + data.getClass().getSimpleName());

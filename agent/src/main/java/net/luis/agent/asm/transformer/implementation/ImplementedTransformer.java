@@ -7,8 +7,7 @@ import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.asm.type.TypeAccess;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -61,9 +60,9 @@ public class ImplementedTransformer extends BaseClassTransformer {
 							this.validateMethod(method, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSignature(SignatureType.DEBUG)).exception();
 							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSignature(SignatureType.DEBUG)).exception();
 							}
 						}
 					}
@@ -72,7 +71,7 @@ public class ImplementedTransformer extends BaseClassTransformer {
 		}
 		
 		protected void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
-			String signature = ifaceMethod.getSourceSignature(true);
+			String signature = ifaceMethod.getSignature(SignatureType.DEBUG);
 			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw createReport("Method annotated with @Implemented must be public", ifaceMethod.getOwner(), signature).exception();
@@ -84,7 +83,7 @@ public class ImplementedTransformer extends BaseClassTransformer {
 				throw createReport("Method annotated with @Implemented must not be default implemented", ifaceMethod.getOwner(), signature).exception();
 			}
 			//endregion
-			Method targetMethod = targetClass.getMethod(ifaceMethod.getFullSignature());
+			Method targetMethod = targetClass.getMethod(ifaceMethod.getSignature(SignatureType.FULL));
 			if (targetMethod == null) {
 				throw createReport("Method annotated with @Implemented must be implemented in target class", ifaceMethod.getOwner(), signature)
 					.addDetailBefore("Interface", "Target Class", targetClass.getType()).exception();
@@ -92,7 +91,7 @@ public class ImplementedTransformer extends BaseClassTransformer {
 			if (!targetMethod.is(TypeAccess.PUBLIC)) {
 				throw createReport("Method annotated with @Implemented must be public in target class", ifaceMethod.getOwner(), signature)
 					.addDetailBefore("Interface", "Target Class", targetClass.getType())
-					.addDetailBefore("Interface", "Target Method", targetMethod.getSourceSignature(true)).exception();
+					.addDetailBefore("Interface", "Target Method", targetMethod.getSignature(SignatureType.DEBUG)).exception();
 			}
 		}
 	}

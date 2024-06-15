@@ -26,7 +26,7 @@ public class ClassFileScanner {
 	}
 	
 	@RestrictedAccess("net.luis.agent.AgentContext#initialize")
-	public static @NotNull Class scanGeneratedClass(@NotNull Type type, byte[] bytes) {
+	public static @NotNull Class scanGeneratedClass(byte @NotNull [] bytes) {
 		return scanClass(bytes, new ClassScanner(), ClassScanner::get);
 	}
 	

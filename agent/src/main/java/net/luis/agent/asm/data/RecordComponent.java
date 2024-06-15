@@ -1,8 +1,7 @@
 package net.luis.agent.asm.data;
 
 import net.luis.agent.asm.Types;
-import net.luis.agent.asm.type.TypeAccess;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -27,7 +26,7 @@ public class RecordComponent implements ASMData {
 		this.owner = Objects.requireNonNull(owner);
 		this.name = Objects.requireNonNull(name);
 		this.type = Objects.requireNonNull(type);
-		this.genericSignature = genericSignature;
+		this.genericSignature = genericSignature == null ? "" : genericSignature;
 		this.annotations = Objects.requireNonNull(annotations);
 	}
 	
@@ -59,8 +58,14 @@ public class RecordComponent implements ASMData {
 	}
 	
 	@Override
-	public @Nullable String getGenericSignature() {
-		return this.genericSignature;
+	public @NotNull String getSignature(@NotNull SignatureType type) {
+		return switch (type) {
+			case GENERIC -> this.genericSignature;
+			case FULL -> this.name;
+			case DEBUG -> this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
+			case SOURCE -> Types.getSimpleName(this.owner) + "#" + this.name;
+			default -> "";
+		};
 	}
 	
 	@Override
@@ -76,16 +81,6 @@ public class RecordComponent implements ASMData {
 	@Override
 	public @NotNull Map<Type, Annotation> getAnnotations() {
 		return this.annotations;
-	}
-	//endregion
-	
-	//region Functional getters
-	@Override
-	public @NotNull String getSourceSignature(boolean full) {
-		if (full) {
-			return this.owner.getClassName() + "#" + this.name + " : " + this.type.getClassName();
-		}
-		return Types.getSimpleName(this.owner) + "#" + this.name;
 	}
 	//endregion
 	
@@ -109,7 +104,7 @@ public class RecordComponent implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature(true);
+		return this.getSignature(SignatureType.DEBUG);
 	}
 	//endregion
 	

@@ -1,11 +1,9 @@
 package net.luis.agent.asm.data;
 
 import net.luis.agent.asm.Types;
-import net.luis.agent.asm.type.TypeAccess;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.util.*;
@@ -66,8 +64,13 @@ public class Parameter implements ASMData {
 	}
 	
 	@Override
-	public @Nullable String getGenericSignature() {
-		return null;
+	public @NotNull String getSignature(@NotNull SignatureType type) {
+		return switch (type) {
+			case FULL -> this.isNamed() ? this.name : String.valueOf(this.index);
+			case DEBUG -> this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " (" + this.index + ") : " + this.type.getClassName();
+			case SOURCE -> this.owner.getSignature(SignatureType.SOURCE) + "#" + this.name + " (" + this.index + ")";
+			default -> "";
+		};
 	}
 	
 	public int getIndex() {
@@ -99,14 +102,6 @@ public class Parameter implements ASMData {
 		return this.index + (this.owner.is(TypeModifier.STATIC) ? 0 : 1);
 	}
 	
-	@Override
-	public @NotNull String getSourceSignature(boolean full) {
-		if (full) {
-			return this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " (" + this.index + ") : " + this.type.getClassName();
-		}
-		return this.owner.getSourceSignature(false) + "#" + this.name + " (" + this.index + ")";
-	}
-	
 	public @NotNull String getMessageName() {
 		if (this.isNamed()) {
 			return Utils.capitalize(Utils.getSeparated(this.name));
@@ -126,7 +121,7 @@ public class Parameter implements ASMData {
 		if (!(o instanceof Parameter that)) return false;
 		
 		if (this.index != that.index) return false;
-		if (!this.owner.getFullSignature().equals(that.owner.getFullSignature())) return false;
+		if (!this.owner.getSignature(SignatureType.FULL).equals(that.owner.getSignature(SignatureType.FULL))) return false;
 		if (!this.name.equals(that.name)) return false;
 		if (!this.type.equals(that.type)) return false;
 		if (!this.modifiers.equals(that.modifiers)) return false;
@@ -135,12 +130,12 @@ public class Parameter implements ASMData {
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.owner.getFullSignature(), this.name, this.type, this.index, this.modifiers, this.annotations);
+		return Objects.hash(this.owner.getSignature(SignatureType.FULL), this.name, this.type, this.index, this.modifiers, this.annotations);
 	}
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature(false);
+		return this.getSignature(SignatureType.SOURCE);
 	}
 	//endregion
 	

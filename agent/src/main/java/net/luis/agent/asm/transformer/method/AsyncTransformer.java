@@ -6,8 +6,7 @@ import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.asm.type.MethodType;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -63,16 +62,16 @@ public class AsyncTransformer extends BaseClassTransformer {
 			}
 			//region Validation
 			if (!method.is(MethodType.METHOD)) {
-				throw CrashReport.create("Annotation @Async can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).exception();
+				throw CrashReport.create("Annotation @Async can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			if (!method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).addDetail("Return Type", method.getType().getReturnType()).exception();
+				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Return Type", method.getType().getReturnType()).exception();
 			}
 			if (method.getExceptionCount() > 0) {
-				throw CrashReport.create("Method annotated with @Async must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).addDetail("Exceptions", method.getExceptions()).exception();
+				throw CrashReport.create("Method annotated with @Async must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Exceptions", method.getExceptions()).exception();
 			}
 			if (method.isAnnotatedWith(SCHEDULED)) {
-				throw CrashReport.create("Method annotated with @Async must not be annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", method.getSourceSignature(true)).exception();
+				throw CrashReport.create("Method annotated with @Async must not be annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			//endregion
 			access = access & ~method.getAccess().getOpcode();
@@ -103,7 +102,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 		public void visitEnd() {
 			for (Map.Entry<Method, String> entry : this.methods.entrySet()) {
 				Method method = entry.getKey();
-				MethodVisitor visitor = super.visitMethod(method.getOpcodes(), method.getName(), method.getType().getDescriptor(), method.getGenericSignature(), null);
+				MethodVisitor visitor = super.visitMethod(method.getOpcodes(), method.getName(), method.getType().getDescriptor(), method.getSignature(SignatureType.GENERIC), null);
 				visitor.visitCode();
 				instrumentMethodAnnotations(visitor, method);
 				instrumentParameterAnnotations(visitor, method);

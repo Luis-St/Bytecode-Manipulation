@@ -56,7 +56,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			for (Method method : data.getMethods().values()) {
 				if (method.isAnnotatedWith(SCHEDULED)) {
 					//region Validation
-					String signature = method.getSourceSignature(true);
+					String signature = method.getSignature(SignatureType.DEBUG);
 					if (!method.is(MethodType.METHOD)) {
 						throw CrashReport.create("Annotation @Scheduled can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", signature).exception();
 					}
@@ -117,7 +117,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			Method method = Agent.getClass(this.type).getMethod(name + descriptor);
-			if ("<clinit>".equals(name)) {
+			if ("<clinit>".equals(name) && method != null) {
 				this.initialized = true;
 				return new ScheduledMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.type, method, this.lookup, this.executor, this.generated);
 			}
@@ -128,7 +128,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		public void visitEnd() {
 			if (!this.initialized) {
 				Method method = Method.builder(this.type, "<clinit>", VOID_METHOD).addModifier(TypeModifier.STATIC).build();
-				Agent.getClass(this.type).getMethods().put(method.getFullSignature(), method);
+				Agent.getClass(this.type).getMethods().put(method.getSignature(SignatureType.FULL), method);
 				MethodVisitor visitor = this.visitMethod(Opcodes.ACC_STATIC, "<clinit>", VOID_METHOD.getDescriptor(), null, null);
 				visitor.visitCode();
 				visitor.visitInsn(Opcodes.RETURN);
@@ -232,11 +232,11 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		
 		private void instrumentCancelableRunnable(@NotNull Method method, int index) {
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
-			this.mv.visitLdcInsn(method.getFullSignature());
+			this.mv.visitLdcInsn(method.getSignature(SignatureType.FULL));
 			this.mv.visitFieldInsn(Opcodes.GETSTATIC, this.type.getInternalName(), this.executor.getName(), this.executor.getType().getDescriptor());
 			this.mv.visitTypeInsn(Opcodes.NEW, CANCELABLE_RUNNABLE.getInternalName());
 			this.mv.visitInsn(Opcodes.DUP);
-			this.mv.visitLdcInsn(method.getFullSignature());
+			this.mv.visitLdcInsn(method.getSignature(SignatureType.FULL));
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitInvokeDynamicInsn("accept", "()Ljava/util/function/Consumer;", METAFACTORY_HANDLE, Type.getType("(Ljava/lang/Object;)V"), this.createHandle(method), Type.getType("(Ljava/util/concurrent/ScheduledFuture;)V"));
 			this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, CANCELABLE_RUNNABLE.getInternalName(), "<init>", "(Ljava/lang/String;Ljava/util/Map;Ljava/util/function/Consumer;)V", false);
@@ -247,11 +247,11 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		
 		private void instrumentContextRunnable(@NotNull Method method, int index) {
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
-			this.mv.visitLdcInsn(method.getFullSignature());
+			this.mv.visitLdcInsn(method.getSignature(SignatureType.FULL));
 			this.mv.visitFieldInsn(Opcodes.GETSTATIC, this.type.getInternalName(), this.executor.getName(), this.executor.getType().getDescriptor());
 			this.mv.visitTypeInsn(Opcodes.NEW, CONTEXT_RUNNABLE.getInternalName());
 			this.mv.visitInsn(Opcodes.DUP);
-			this.mv.visitLdcInsn(method.getFullSignature());
+			this.mv.visitLdcInsn(method.getSignature(SignatureType.FULL));
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitInvokeDynamicInsn("accept", "()Ljava/util/function/BiConsumer;", METAFACTORY_HANDLE, Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V"), this.createHandle(method), Type.getType("(Ljava/lang/Integer;Ljava/util/concurrent/ScheduledFuture;)V"));
 			this.mv.visitMethodInsn(Opcodes.INVOKESPECIAL, CONTEXT_RUNNABLE.getInternalName(), "<init>", "(Ljava/lang/String;Ljava/util/Map;Ljava/util/function/BiConsumer;)V", false);

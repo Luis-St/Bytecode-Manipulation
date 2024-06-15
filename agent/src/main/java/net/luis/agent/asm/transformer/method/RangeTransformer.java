@@ -6,6 +6,7 @@ import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.MethodType;
+import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
@@ -71,7 +72,7 @@ public class RangeTransformer extends BaseClassTransformer {
 			this.setMethod(method);
 			this.method = method;
 			//region Parameter validation
-			String signature = method.getSourceSignature(true);
+			String signature = method.getSignature(SignatureType.DEBUG);
 			for (Parameter parameter : method.getParameters().values()) {
 				if (parameter.isAnnotatedWithAny(ANNOS)) {
 					if (this.isNoNumber(parameter.getType())) {

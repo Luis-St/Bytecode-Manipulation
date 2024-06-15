@@ -14,7 +14,7 @@ import java.util.*;
  *
  */
 
-public class InnerClass {
+public class InnerClass implements ASMData {
 	
 	private final Type owner;
 	private final String name;
@@ -25,7 +25,7 @@ public class InnerClass {
 	
 	private InnerClass(@NotNull Type owner, @Nullable String name, @NotNull Type type, @NotNull TypeAccess access, @NotNull InnerClassType classType, @NotNull Set<TypeModifier> modifiers) {
 		this.owner = Objects.requireNonNull(owner);
-		this.name = name;
+		this.name = name == null ? "" : name;
 		this.type = Objects.requireNonNull(type);
 		this.access = classType == InnerClassType.INNER ? Objects.requireNonNull(access) : TypeAccess.PRIVATE;
 		this.classType = Objects.requireNonNull(classType);
@@ -53,14 +53,27 @@ public class InnerClass {
 		return this.owner;
 	}
 	
-	public @Nullable String getName() {
+	@Override
+	public @NotNull String getName() {
 		return this.name;
 	}
 	
+	@Override
 	public @NotNull Type getType() {
 		return this.type;
 	}
 	
+	@Override
+	public @NotNull String getSignature(@NotNull SignatureType type) {
+		return switch (type) {
+			case FULL -> this.type.getDescriptor();
+			case DEBUG -> this.type.getClassName();
+			case SOURCE -> Types.getSimpleName(this.type);
+			default -> "";
+		};
+	}
+	
+	@Override
 	public @NotNull TypeAccess getAccess() {
 		return this.access;
 	}
@@ -69,14 +82,14 @@ public class InnerClass {
 		return this.classType;
 	}
 	
+	@Override
 	public @NotNull Set<TypeModifier> getModifiers() {
 		return this.modifiers;
 	}
-	//endregion
 	
-	//region Functional getters
-	public @NotNull String getSourceSignature(boolean full) {
-		return full ? this.type.getClassName() : Types.getSimpleName(this.type);
+	@Override
+	public @NotNull Map<Type, Annotation> getAnnotations() {
+		return new HashMap<>();
 	}
 	//endregion
 	
@@ -101,7 +114,7 @@ public class InnerClass {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature(true);
+		return this.getSignature(SignatureType.DEBUG);
 	}
 	//endregion
 	

@@ -8,8 +8,7 @@ import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.scanner.ClassFileScanner;
 import net.luis.agent.asm.scanner.TargetClassScanner;
-import net.luis.agent.asm.type.TypeAccess;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import net.luis.agent.util.TargetType;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -73,9 +72,9 @@ public class RedirectTransformer extends BaseClassTransformer {
 							this.validateMethod(method, targetClass);
 						} else if (method.is(TypeAccess.PUBLIC)) {
 							if (method.getAnnotations().isEmpty()) {
-								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
+								throw createReport("Found method without annotation, does not know how to implement", iface, method.getSignature(SignatureType.DEBUG)).exception();
 							} else if (method.getAnnotations().values().stream().map(Annotation::getType).noneMatch(IMPLEMENTATION_ANNOTATIONS::contains)) {
-								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSourceSignature(true)).exception();
+								throw createReport("Found method without valid annotation, does not know how to implement", iface, method.getSignature(SignatureType.DEBUG)).exception();
 							}
 						}
 					}
@@ -84,7 +83,7 @@ public class RedirectTransformer extends BaseClassTransformer {
 		}
 		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
-			String signature = ifaceMethod.getSourceSignature(true);
+			String signature = ifaceMethod.getSignature(SignatureType.DEBUG);
 			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Redirect must be public", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature).exception();
@@ -97,10 +96,10 @@ public class RedirectTransformer extends BaseClassTransformer {
 				throw CrashReport.create("Method annotated with @Redirect must not throw exceptions", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature)
 					.addDetail("Exceptions", ifaceMethod.getExceptions()).exception();
 			}
-			Method existingMethod = targetClass.getMethod(ifaceMethod.getFullSignature());
+			Method existingMethod = targetClass.getMethod(ifaceMethod.getSignature(SignatureType.FULL));
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of redirect already has method with same signature", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature)
-					.addDetail("Existing Method", existingMethod.getSourceSignature(true)).exception();
+					.addDetail("Existing Method", existingMethod.getSignature(SignatureType.DEBUG)).exception();
 			}
 			String redirectName = this.getRedirectName(ifaceMethod);
 			List<Method> possibleMethod = ASMUtils.getBySignature(redirectName, targetClass);
@@ -115,7 +114,7 @@ public class RedirectTransformer extends BaseClassTransformer {
 			Method method = possibleMethod.getFirst();
 			if (!ifaceMethod.is(TypeModifier.STATIC) && method.is(TypeModifier.STATIC)) {
 				throw CrashReport.create("Method annotated with @Redirect is declared none-static, but specified a static method", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature)
-					.addDetail("Method", method.getSourceSignature(true)).exception();
+					.addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			if (ifaceMethod.getParameterCount() > 0) {
 				for (Parameter parameter : ifaceMethod.getParameters().values()) {
@@ -126,7 +125,7 @@ public class RedirectTransformer extends BaseClassTransformer {
 					if (method.is(TypeModifier.STATIC) && parameter.isAnnotatedWith(THIS)) {
 						throw CrashReport.create("Parameter of redirect cannot be annotated with @This, because the specified method is static", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner())
 							.addDetail("Redirect", signature).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-							.addDetail("Method", method.getSourceSignature(true)).exception();
+							.addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 					}
 				}
 			}
@@ -142,21 +141,21 @@ public class RedirectTransformer extends BaseClassTransformer {
 			ClassFileScanner.scanClass(this.type, scanner);
 			if (!scanner.visitedTarget()) {
 				throw CrashReport.create("Could not find method specified in redirect during scan of its own class", REPORT_CATEGORY).addDetail("Scanner", scanner.getClass().getName()).addDetail("Interface", ifaceMethod.getOwner())
-					.addDetail("Redirect", signature).addDetail("Scanned Class", targetClass.getType()).addDetail("Method", method.getSourceSignature(true)).exception();
+					.addDetail("Redirect", signature).addDetail("Scanned Class", targetClass.getType()).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			int line = scanner.getTargetLine();
 			Method lambdaMethod = scanner.getLambdaMethod();
 			if (lambdaMethod != null && !ifaceMethod.is(TypeModifier.STATIC)) {
 				throw CrashReport.create("Method annotated with @Redirect is declared none-static, but specified a lambda expression", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner())
-					.addDetail("Redirect", signature).addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda", lambdaMethod.getSourceSignature(true)).exception();
+					.addDetail("Redirect", signature).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Lambda", lambdaMethod.getSignature(SignatureType.DEBUG)).exception();
 			}
 			if (line == -1) {
 				throw CrashReport.create("Could not find target in method body of method specified in redirect", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature)
-					.addDetail("Method", method.getSourceSignature(true)).addDetail("Lambda", lambdaMethod).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type"))
+					.addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Lambda", lambdaMethod).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type"))
 					.addDetail("Target Mode", annotation.getOrDefault("mode")).addDetail("Target Ordinal", annotation.getOrDefault("ordinal")).removeNullValues(true).exception();
 			}
 			
-			String key = lambdaMethod != null ? lambdaMethod.getFullSignature() : method.getFullSignature();
+			String key = (lambdaMethod != null ? lambdaMethod : method).getSignature(SignatureType.FULL);
 			this.redirects.computeIfAbsent(key, m -> new ArrayList<>()).add(new RedirectData(line, ifaceMethod, lambdaMethod != null, annotation.getOrDefault("value"), target, annotation.getOrDefault("ordinal")));
 		}
 		
@@ -280,7 +279,7 @@ public class RedirectTransformer extends BaseClassTransformer {
 			}
 			if (!ifaceMethod.returns(owner)) {
 				throw CrashReport.create("Redirect must return the type which is created by the specified constructor", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner())
-					.addDetail("Redirect", ifaceMethod.getSourceSignature(true)).addDetail("Redirect Return Type", ifaceMethod.getReturnType()).addDetail("Created Type", owner).exception();
+					.addDetail("Redirect", ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Redirect Return Type", ifaceMethod.getReturnType()).addDetail("Created Type", owner).exception();
 			}
 			return true;
 		}
@@ -291,7 +290,7 @@ public class RedirectTransformer extends BaseClassTransformer {
 			}
 			if (!ifaceMethod.returns(type.getReturnType())) {
 				throw CrashReport.create("Redirect must return the same type as the specified method", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner())
-					.addDetail("Redirect", ifaceMethod.getSourceSignature(true)).addDetail("Redirect Return Type", ifaceMethod.getReturnType()).addDetail("Method Return Type", type.getReturnType()).exception();
+					.addDetail("Redirect", ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Redirect Return Type", ifaceMethod.getReturnType()).addDetail("Method Return Type", type.getReturnType()).exception();
 			}
 			return true;
 		}

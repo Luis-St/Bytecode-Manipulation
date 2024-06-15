@@ -2,6 +2,7 @@ package net.luis.agent.asm;
 
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
+import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -273,7 +274,7 @@ public class Instrumentations {
 		if (value.isEmpty()) {
 			if (!parameter.isNamed()) {
 				throw CrashReport.create("Unable to map " + type + " parameter to target by name, because the parameter name was not included into the class file during compilation", "Missing Debug Information")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
 					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 			}
 			String name = parameter.getName();
@@ -299,13 +300,13 @@ public class Instrumentations {
 			List<LocalVariable> locals = method.getLocals(index);
 			if (locals.isEmpty()) {
 				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the local variables were not included into the class file during compilation", "Missing Debug Information")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
 					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 			}
 			LocalVariable local = locals.stream().filter(l -> l.isInScope(scopeIndex)).findFirst().orElse(null);
 			if (local == null) {
 				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the index is not available in the current scope", Utils.capitalize(type) + " Implementation Error")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
 					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).addDetail("Scope Index", scopeIndex)
 					.addDetail("Possible Local Variables", locals).exception();
 			}
@@ -320,8 +321,8 @@ public class Instrumentations {
 				return index;
 			}
 		}
-		throw CrashReport.create("Unable to find target for " + type + " parameter", Utils.capitalize(type) + " Implementation Error").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true))
-			.addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
+		throw CrashReport.create("Unable to find target for " + type + " parameter", Utils.capitalize(type) + " Implementation Error").addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG))
+			.addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
 			.addDetail("Local Annotation Value", value).exception();
 	}
 	//endregion
@@ -450,8 +451,8 @@ public class Instrumentations {
 	
 	private static void checkStatic(@NotNull String type, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
 		if (method.is(TypeModifier.STATIC)) {
-			throw CrashReport.create("Unable to map " + type + " parameter to 'this', because the method is static", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true))
-				.addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
+			throw CrashReport.create("Unable to map " + type + " parameter to 'this', because the method is static", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG))
+				.addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 		}
 	}
 	
@@ -459,7 +460,7 @@ public class Instrumentations {
 		for (Parameter param : method.getParameters().values()) {
 			if (!param.isNamed()) {
 				throw CrashReport.create("Unable to find target by name for " + type + " parameter, because the name was not included into the class file during compilation", "Missing Debug Information")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+					.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
 					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 			}
 			if (param.getName().equals(value)) {
@@ -468,7 +469,7 @@ public class Instrumentations {
 		}
 		if (method.getLocals().isEmpty()) {
 			throw CrashReport.create("Unable to find target by name for " + type + " parameter, because the local variables were not included into the class file during compilation", "Missing Debug Information")
-				.addDetail(Utils.capitalize(type), ifaceMethod.getSourceSignature(true)).addDetail("Method", method.getSourceSignature(true)).addDetail("Parameter Index", parameter.getIndex())
+				.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
 				.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 		}
 		for (LocalVariable local : method.getLocals()) {

@@ -37,7 +37,7 @@ public class Method implements ASMData {
 		this.owner = Objects.requireNonNull(owner);
 		this.name = Objects.requireNonNull(name);
 		this.type = Objects.requireNonNull(type);
-		this.genericSignature = genericSignature;
+		this.genericSignature = genericSignature == null ? "" : genericSignature;
 		this.access = methodType == MethodType.STATIC_INITIALIZER ? TypeAccess.PACKAGE : Objects.requireNonNull(access);
 		this.methodType = Objects.requireNonNull(methodType);
 		this.modifiers = Objects.requireNonNull(modifiers);
@@ -84,8 +84,14 @@ public class Method implements ASMData {
 	}
 	
 	@Override
-	public @Nullable String getGenericSignature() {
-		return this.genericSignature;
+	public @NotNull String getSignature(@NotNull SignatureType type) {
+		return switch (type) {
+			case GENERIC -> this.genericSignature;
+			case FULL -> this.name + this.type;
+			case DEBUG -> this.owner.getClassName() + "#" + this.name + Arrays.stream(this.type.getArgumentTypes()).map(Types::getSimpleName).collect(Collectors.joining(", ", "(", ")"));
+			case SOURCE -> Types.getSimpleName(this.owner) + "#" + this.name;
+			default -> "";
+		};
 	}
 	
 	@Override
@@ -139,14 +145,6 @@ public class Method implements ASMData {
 	
 	public @Nullable LocalVariable getLocal(int localIndex, int start, int end) {
 		return this.locals.stream().filter(local -> local.getIndex() == localIndex && local.isScope(start, end)).findFirst().orElse(null);
-	}
-	
-	@Override
-	public @NotNull String getSourceSignature(boolean full) {
-		if (full) {
-			return this.owner.getClassName() + "#" + this.name + Arrays.stream(this.type.getArgumentTypes()).map(Types::getSimpleName).collect(Collectors.joining(", ", "(", ")"));
-		}
-		return Types.getSimpleName(this.owner) + "#" + this.name;
 	}
 	
 	public @NotNull Type getReturnType() {
@@ -225,7 +223,7 @@ public class Method implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature(true);
+		return this.getSignature(SignatureType.DEBUG);
 	}
 	//endregion
 	

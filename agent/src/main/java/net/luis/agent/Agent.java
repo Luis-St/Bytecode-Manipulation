@@ -26,7 +26,7 @@ public class Agent {
 		classes.forEach(type -> cache.put(type, ClassFileScanner.scanClass(type)));
 		System.out.println("Loaded " + classes.size() + " classes");
 		generated.addAll(generatedLookup.keySet());
-		generated.forEach(type -> cache.put(type, ClassFileScanner.scanGeneratedClass(type, generatedLookup.get(type))));
+		generated.forEach(type -> cache.put(type, ClassFileScanner.scanGeneratedClass(generatedLookup.get(type))));
 		System.out.println("Loaded " + generated.size() + " generated classes");
 		System.out.println("Initialized agent in " + (System.currentTimeMillis() - start) + "ms");
 	}

@@ -1,7 +1,6 @@
 package net.luis.agent.asm.data;
 
-import net.luis.agent.asm.type.TypeAccess;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
@@ -21,7 +20,7 @@ public interface ASMData {
 	
 	@NotNull Type getType();
 	
-	@Nullable String getGenericSignature();
+	@NotNull String getSignature(@NotNull SignatureType type);
 	
 	@NotNull TypeAccess getAccess();
 	
@@ -34,12 +33,6 @@ public interface ASMData {
 	default @NotNull Annotation getAnnotation(@NotNull Type type) {
 		return this.getAnnotations().get(type);
 	}
-	
-	default @NotNull String getFullSignature() {
-		return this.getName() + this.getType();
-	}
-	
-	@NotNull String getSourceSignature(boolean full);
 	
 	default int getOpcodes() {
 		return this.getAccess().getOpcode() | TypeModifier.toOpcodes(this.getModifiers());

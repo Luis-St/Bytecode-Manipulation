@@ -6,6 +6,7 @@ import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.MethodType;
+import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
@@ -127,27 +128,27 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		private void validateParameter(@NotNull Parameter parameter) {
 			if (parameter.isAny(PRIMITIVES)) {
-				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true))
+				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
 					.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
 			}
 		}
 		
 		private void validateLocal(@NotNull LocalVariable local) {
 			if (local.isAny(PRIMITIVES)) {
-				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true))
+				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
 					.addDetail("Local Variable Index", local.getIndex()).addDetail("Local Variable  Type", local.getType()).addDetail("Local Variable Name", local.getName()).exception();
 			}
 		}
 		
 		private void validateMethod() {
 			if (!this.method.is(MethodType.METHOD)) {
-				throw CrashReport.create("Annotation @NotNull can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).exception();
+				throw CrashReport.create("Annotation @NotNull can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			if (this.method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @NotNull must not return void", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true)).exception();
+				throw CrashReport.create("Method annotated with @NotNull must not return void", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			if (this.method.returnsAny(PRIMITIVES)) {
-				throw CrashReport.create("Method annotated with @NotNull must not return a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSourceSignature(true))
+				throw CrashReport.create("Method annotated with @NotNull must not return a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
 					.addDetail("Return Type", this.method.getReturnType()).exception();
 			}
 		}

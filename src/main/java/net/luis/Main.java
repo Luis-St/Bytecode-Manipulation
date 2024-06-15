@@ -30,11 +30,10 @@ public final class Main {
 	/*
 	 * ToDo:
 	 *  - Add transformers for unused annotations
-	 *  - Combined ASMData#get*Signature methods into on -> getSignature(SignatureType)
-	 *  - Store all method, fields in a map to allow direct access
 	 *  - (Not possible?) Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add support for static redirect methods to copy the original parameters (only if caller object can be popped)
+	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory (if possible, else argument for annotation)
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

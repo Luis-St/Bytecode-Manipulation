@@ -6,6 +6,7 @@ import net.luis.agent.asm.base.LabelTrackingMethodVisitor;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.report.ReportedException;
+import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.TargetMode;
 import net.luis.agent.util.TargetType;
@@ -79,7 +80,7 @@ public class TargetClassScanner extends ClassVisitor {
 	
 	@Override
 	public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-		if (this.method.getFullSignature().equals(name + descriptor)) {
+		if (this.method.getSignature(SignatureType.FULL).equals(name + descriptor)) {
 			this.visitor = new TargetMethodScanner(this.method, this.target, this.visited);
 			return this.visitor;
 		}
@@ -351,11 +352,11 @@ public class TargetClassScanner extends ClassVisitor {
 				try {
 					ClassFileScanner.scanClass(method.getOwner(), scanner);
 				} catch (ReportedException e) {
-					throw e.getReport().addDetailFirst("Root Method", this.method.getSourceSignature(true)).exception();
+					throw e.getReport().addDetailFirst("Root Method", this.method.getSignature(SignatureType.DEBUG)).exception();
 				}
 				if (!scanner.visitedTarget()) {
-					throw CrashReport.create("Unable to find lambda target method in class during recursive search", NOT_FOUND).addDetail("Method", this.method.getSourceSignature(true))
-						.addDetail("Lambda Method", method.getSourceSignature(true)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal).exception();
+					throw CrashReport.create("Unable to find lambda target method in class during recursive search", NOT_FOUND).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+						.addDetail("Lambda Method", method.getSignature(SignatureType.DEBUG)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal).exception();
 				}
 				int line = scanner.visitor == null ? -1 : scanner.visitor.getTargetLine();
 				if (line != -1) {
@@ -381,11 +382,11 @@ public class TargetClassScanner extends ClassVisitor {
 			} else if (this.method.isLocal(index)) {
 				if (this.method.getLocals().isEmpty()) {
 					throw CrashReport.create("Unable to find local variable by name, because the local variable name was not included into the class file during compilation", MISSING_INFORMATION)
-						.addDetail("Method", this.method.getSourceSignature(true)).exception();
+						.addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).exception();
 				}
 				List<LocalVariable> locals = this.method.getLocals(index);
 				if (locals.isEmpty()) {
-					throw CrashReport.create("Local variable not found", NOT_FOUND).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
+					throw CrashReport.create("Local variable not found", NOT_FOUND).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
 						.addDetail("Local Variable Index", index).addDetail("Local Variables", this.method.getLocals().stream().map(LocalVariable::toString).toList()).exception();
 				}
 				LocalVariable local = locals.stream().filter(l -> l.isInScope(this.getScopeIndex())).findFirst().orElse(null);
@@ -398,12 +399,13 @@ public class TargetClassScanner extends ClassVisitor {
 			} else {
 				Parameter parameter = this.method.getParameters().get(this.method.is(TypeModifier.STATIC) ? index : index - 1);
 				if (parameter == null) {
-					throw CrashReport.create("Parameter not found", NOT_FOUND).addDetail("Method", this.method.getSourceSignature(true)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
+					throw CrashReport.create("Parameter not found", NOT_FOUND).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Target Value", this.value).addDetail("Ordinal", this.ordinal)
 						.addDetail("Parameter Index", index).addDetail("Parameter Indexes", this.method.getParameters().values().stream().map(Parameter::getIndex).toList()).exception();
 				}
 				if (!parameter.isNamed()) {
-					throw CrashReport.create("Unable to find parameter by name, because the parameter names were not included into the class file during compilation", MISSING_INFORMATION).addDetail("Method", this.method.getSourceSignature(true))
-						.addDetail("Target Parameter Name", this.value).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name (Generated)", parameter.getName()).exception();
+					throw CrashReport.create("Unable to find parameter by name, because the parameter names were not included into the class file during compilation", MISSING_INFORMATION)
+						.addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Target Parameter Name", this.value).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType())
+						.addDetail("Parameter Name (Generated)", parameter.getName()).exception();
 				}
 				if (parameter.getName().equals(this.value)) {
 					this.target();

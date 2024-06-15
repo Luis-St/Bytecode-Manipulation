@@ -36,7 +36,7 @@ public class Class implements ASMData {
 				  @NotNull Map<String, RecordComponent> recordComponents, @NotNull Map<String, Field> fields, @NotNull Map<String, Method> methods, @NotNull List<InnerClass> innerClasses) {
 		this.name = Objects.requireNonNull(name);
 		this.type = Objects.requireNonNull(type);
-		this.genericSignature = genericSignature;
+		this.genericSignature = genericSignature == null ? "" : genericSignature;
 		this.access = Objects.requireNonNull(access);
 		this.classType = Objects.requireNonNull(classType);
 		this.modifiers = Objects.requireNonNull(modifiers);
@@ -77,10 +77,15 @@ public class Class implements ASMData {
 		return this.type;
 	}
 	
-	@Nullable
 	@Override
-	public String getGenericSignature() {
-		return this.genericSignature;
+	public @NotNull String getSignature(@NotNull SignatureType type) {
+		return switch (type) {
+			case GENERIC -> this.genericSignature;
+			case FULL -> this.type.getDescriptor();
+			case DEBUG -> this.type.getClassName();
+			case SOURCE -> Types.getSimpleName(this.type);
+			default -> "";
+		};
 	}
 	
 	@Override
@@ -152,11 +157,6 @@ public class Class implements ASMData {
 		return this.methods.values().stream().flatMap(method -> method.getParameters().values().stream()).toList();
 	}
 	
-	@Override
-	public @NotNull String getSourceSignature(boolean full) {
-		return full ? this.type.getClassName() : Types.getSimpleName(this.type);
-	}
-	
 	public boolean is(@NotNull ClassType type) {
 		return this.classType == type;
 	}
@@ -192,7 +192,7 @@ public class Class implements ASMData {
 	
 	@Override
 	public String toString() {
-		return this.getSourceSignature(true);
+		return this.getSignature(SignatureType.DEBUG);
 	}
 	//endregion
 	
