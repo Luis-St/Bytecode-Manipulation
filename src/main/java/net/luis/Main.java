@@ -48,7 +48,7 @@ public final class Main {
 			
 			@Override
 			protected @NotNull String doBackward(@NotNull Integer integer) {
-				return integer.toString();
+				return String.valueOf(integer).replace("0", "X");
 			}
 		};
 		Lists.newArrayList("10", "1").stream().map(converter::convert).forEach(System.out::println);
