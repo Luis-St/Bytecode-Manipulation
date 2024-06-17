@@ -1,4 +1,4 @@
-package net.luis.agent.annotation.string.condition;
+package net.luis.agent.annotation.string.modification;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -14,5 +14,5 @@ import java.lang.annotation.*;
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 public @interface Substring {
 
-	@NotNull String value() default "0:*";
+	@NotNull String value() default "0:";
 }
