@@ -164,7 +164,7 @@ public class Method implements ASMData {
 		return this.locals.size();
 	}
 	
-	public boolean is(MethodType type) {
+	public boolean is(@NotNull MethodType type) {
 		if (type == MethodType.CONSTRUCTOR && this.methodType == MethodType.PRIMARY_CONSTRUCTOR) {
 			return true;
 		}
@@ -187,7 +187,7 @@ public class Method implements ASMData {
 		return this.getReturnType().equals(type);
 	}
 	
-	public boolean returnsAny(@NotNull Type... types) {
+	public boolean returnsAny(Type @NotNull ... types) {
 		return Arrays.stream(types).anyMatch(this::returns);
 	}
 	

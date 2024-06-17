@@ -42,7 +42,7 @@ public interface ASMData {
 		return this.getType().equals(type);
 	}
 	
-	default boolean isAny(@NotNull Type... type) {
+	default boolean isAny(Type @NotNull ... type) {
 		return Arrays.stream(type).anyMatch(this::is);
 	}
 	
@@ -62,7 +62,7 @@ public interface ASMData {
 		return this.getAnnotations().containsKey(type);
 	}
 	
-	default boolean isAnnotatedWithAny(@NotNull Type... type) {
+	default boolean isAnnotatedWithAny(Type @NotNull ... type) {
 		return Arrays.stream(type).anyMatch(this::isAnnotatedWith);
 	}
 	//endregion

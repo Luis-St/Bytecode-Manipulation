@@ -102,26 +102,6 @@ public class LocalVariable implements ASMData {
 	//endregion
 	
 	//region Functional getters
-	public boolean is(@NotNull Type type) {
-		return this.type.equals(type);
-	}
-	
-	public boolean isAny(@NotNull Type... type) {
-		return Arrays.stream(type).anyMatch(this::is);
-	}
-	
-	public @NotNull Annotation getAnnotation(@NotNull Type type) {
-		return this.getAnnotations().get(type);
-	}
-	
-	public boolean isAnnotatedWith(@NotNull Type type) {
-		return this.getAnnotations().containsKey(type);
-	}
-	
-	public boolean isAnnotatedWithAny(@NotNull Type... type) {
-		return Arrays.stream(type).anyMatch(this::isAnnotatedWith);
-	}
-	
 	public @NotNull String getMessageName() {
 		String simpleName = Types.getSimpleName(this.type);
 		if (simpleName.contains("$")) {

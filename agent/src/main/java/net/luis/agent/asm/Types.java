@@ -3,6 +3,8 @@ package net.luis.agent.asm;
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.implementation.*;
 import net.luis.agent.annotation.range.*;
+import net.luis.agent.annotation.string.condition.*;
+import net.luis.agent.annotation.string.modification.*;
 import net.luis.agent.annotation.util.Local;
 import net.luis.agent.annotation.util.This;
 import net.luis.agent.util.Utils;
@@ -76,6 +78,19 @@ public class Types {
 	public static final Type ABOVE_EQUAL = Type.getType(AboveEqual.class);
 	public static final Type BELOW = Type.getType(Below.class);
 	public static final Type BELOW_EQUAL = Type.getType(BelowEqual.class);
+	
+	public static final Type CONTAINS = Type.getType(Contains.class);
+	public static final Type ENDS_WITH = Type.getType(EndsWith.class);
+	public static final Type NOT_BLANK = Type.getType(NotBlank.class);
+	public static final Type NOT_EMPTY = Type.getType(NotEmpty.class);
+	public static final Type STARTS_WITH = Type.getType(StartsWith.class);
+	
+	public static final Type LOWER_CASE = Type.getType(LowerCase.class);
+	public static final Type REPLACE = Type.getType(Replace.class);
+	public static final Type STRIP = Type.getType(Strip.class);
+	public static final Type SUBSTRING = Type.getType(Substring.class);
+	public static final Type TRIM = Type.getType(Trim.class);
+	public static final Type UPPER_CASE = Type.getType(UpperCase.class);
 	
 	public static final Type ASYNC = Type.getType(Async.class);
 	public static final Type SCHEDULED = Type.getType(Scheduled.class);
