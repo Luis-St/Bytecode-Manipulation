@@ -27,6 +27,9 @@ import static net.luis.agent.asm.Types.*;
 
 public class PatternTransformer extends BaseClassTransformer {
 	
+	private final Map<Type, String> lookup = Agent.stream().filter(clazz -> clazz.is(ClassType.ANNOTATION) && clazz.isAnnotatedWith(PATTERN))
+		.collect(Collectors.toMap(Class::getType, clazz -> Objects.requireNonNull(clazz.getAnnotation(PATTERN).get("value"))));
+	
 	public PatternTransformer() {
 		super(true);
 	}
@@ -35,23 +38,24 @@ public class PatternTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		Class clazz = Agent.getClass(type);
-		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN)) && clazz.getMethods().values().stream().noneMatch(method -> method.returns(STRING) && method.isAnnotatedWith(PATTERN));
+		Type[] annotations = this.lookup.keySet().toArray(Type[]::new);
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(PATTERN) || method.isAnnotatedWithAny(annotations)) &&
+			clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN) || parameter.isAnnotatedWithAny(annotations));
 	}
 	//endregion
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
-		return new PatternClassVisitor(writer, type, () -> this.modified = true);
+		return new PatternClassVisitor(writer, type, this.lookup, () -> this.modified = true);
 	}
 	
 	private static class PatternClassVisitor extends MethodOnlyClassVisitor {
 		
 		private final Map<Type, String> lookup;
 		
-		private PatternClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
+		private PatternClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Map<Type, String> lookup, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
-			this.lookup = Agent.stream().filter(clazz -> clazz.is(ClassType.ANNOTATION) && clazz.isAnnotatedWith(PATTERN))
-				.collect(Collectors.toMap(Class::getType, clazz -> Objects.requireNonNull(clazz.getAnnotation(PATTERN).get("value"))));
+			this.lookup = lookup;
 		}
 		
 		@Override
@@ -143,14 +147,14 @@ public class PatternTransformer extends BaseClassTransformer {
 			}
 			if (data instanceof Parameter parameter) {
 				if (!parameter.getType().equals(STRING)) {
-					throw this.createReport(parameter, type -> "Parameter annotated with pattern annotation must be of type String");
+					throw this.createReport(parameter, type -> "Parameter annotated with pattern annotation must be of type string");
 				}
 			} else if (data instanceof Method method) {
 				if (!method.is(MethodType.METHOD)) {
 					throw CrashReport.create("Pattern annotation can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getName()).exception();
 				}
 				if (!method.returns(STRING)) {
-					throw this.createReport(method, type -> "Method annotated with pattern annotation must return a String");
+					throw this.createReport(method, type -> "Method annotated with pattern annotation must return a string");
 				}
 			}
 		}
