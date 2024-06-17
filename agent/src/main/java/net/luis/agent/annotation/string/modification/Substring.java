@@ -14,5 +14,5 @@ import java.lang.annotation.*;
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 public @interface Substring {
 
-	@NotNull String value() default "0:";
+	@NotNull String value() default "0:*"; // Format: start:end, start:* (start:<length>), *:end (0:end)
 }

@@ -15,4 +15,6 @@ import java.lang.annotation.*;
 public @interface StartsWith {
 	
 	@NotNull String value();
+	
+	int offset() default 0;
 }

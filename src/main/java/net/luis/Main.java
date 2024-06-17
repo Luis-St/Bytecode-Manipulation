@@ -5,6 +5,8 @@ import com.google.common.collect.Lists;
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
+import net.luis.agent.annotation.string.condition.*;
+import net.luis.agent.annotation.string.modification.*;
 import net.luis.utils.collection.WeightCollection;
 import net.luis.utils.lang.StringUtils;
 import net.luis.utils.logging.LoggerConfiguration;
@@ -43,6 +45,8 @@ public final class Main {
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
 		
+		System.out.println(test("C:\\Users\\Luis\\Desktop\\test.txt"));
+		
 		Converter<String, Integer> converter = new Converter<String, Integer>() {
 			@Override
 			protected @NotNull Integer doForward(@NotNull String s) {
@@ -79,6 +83,15 @@ public final class Main {
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of ILoggerConfiguration!");
 		}
+	}
+	
+	@NotEmpty
+	@UpperCase
+	@Strip
+	@Contains(".txt")
+	public static String test(@NotNull @NotBlank @Substring("2:*") @Replace("\\ -> /") @LowerCase("de:DE") String s) {
+		System.out.println(s);
+		return "\tABC " + s + " XYZ\n";
 	}
 	
 	@RestrictedAccess("Main#main")
