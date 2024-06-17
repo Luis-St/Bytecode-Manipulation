@@ -54,13 +54,18 @@ public class Main {
 		inst.addTransformer(new InjectTransformer());
 		inst.addTransformer(new RedirectTransformer());
 		inst.addTransformer(new InterfaceTransformer());
-		inst.addTransformer(new ScheduledTransformer());
-		inst.addTransformer(new CaughtTransformer());
-		inst.addTransformer(new AsyncTransformer());
-		inst.addTransformer(new PatternTransformer());
-		inst.addTransformer(new NotNullTransformer());
-		inst.addTransformer(new DefaultTransformer());
+		
+		inst.addTransformer(new ScheduledTransformer()); // 3: Schedule
+		inst.addTransformer(new AsyncTransformer()); // 2: Wrap in async
+		inst.addTransformer(new CaughtTransformer()); // 1: Wrap in try-catch
+		
+		inst.addTransformer(new PatternTransformer()); // 4: Check pattern
+		inst.addTransformer(new StringTransformer()); // 3: Modify/check string
+		inst.addTransformer(new NotNullTransformer()); // 2: Throw if null
+		inst.addTransformer(new DefaultTransformer()); // 1: Ensure not null
+		
 		inst.addTransformer(new RangeTransformer());
+		
 		inst.addTransformer(new RestrictedAccessTransformer());
 	}
 	//endregion
