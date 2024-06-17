@@ -92,6 +92,8 @@ public class Types {
 	
 	//region Generated types
 	public static final Type RUNTIME_UTILS = Type.getType("Lnet/luis/agent/generated/RuntimeUtils;");
+	public static final Type MEMORIZED_SUPPLIER = Type.getType("Lnet/luis/agent/generated/MemorizedSupplier;");
+	
 	public static final Type DAEMON_THREAD_FACTORY = Type.getType("Lnet/luis/agent/generated/DaemonThreadFactory;");
 	public static final Type COUNTING_RUNNABLE = Type.getType("Lnet/luis/agent/generated/CountingRunnable;");
 	public static final Type CANCELABLE_RUNNABLE = Type.getType("Lnet/luis/agent/generated/CancelableRunnable;");

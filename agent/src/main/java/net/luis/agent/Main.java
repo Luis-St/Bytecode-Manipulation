@@ -1,6 +1,7 @@
 package net.luis.agent;
 
 import net.luis.agent.asm.generation.GenerationLoader;
+import net.luis.agent.asm.generation.generators.MemorizedSupplierGenerator;
 import net.luis.agent.asm.generation.generators.RuntimeUtilsGenerator;
 import net.luis.agent.asm.generation.generators.concurrent.*;
 import net.luis.agent.asm.transformer.implementation.*;
@@ -40,6 +41,7 @@ public class Main {
 		loader.loadClass(generated, new CountingRunnableGenerator());
 		loader.loadClass(generated, new CancelableRunnableGenerator());
 		loader.loadClass(generated, new ContextRunnableGenerator());
+		loader.loadClass(generated, new MemorizedSupplierGenerator());
 		return generated;
 	}
 	
