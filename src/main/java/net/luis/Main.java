@@ -34,6 +34,7 @@ public final class Main {
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add support for static redirect methods to copy the original parameters (only if caller object can be popped)
 	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory (if possible, else argument for annotation)
+	 *  - Allow @NotNull#value to be the name (not only one word) -> single quotes
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

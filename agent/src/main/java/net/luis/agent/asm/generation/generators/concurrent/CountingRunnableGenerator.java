@@ -15,6 +15,10 @@ import static net.luis.agent.asm.Types.*;
 
 public class CountingRunnableGenerator extends Generator {
 	
+	private static final String ACTION_SIGNATURE = "Ljava/util/function/Consumer<Ljava/lang/Integer;>;";
+	
+	private static final String CONSTRUCTOR_SIGNATURE = "(Ljava/util/function/Consumer<Ljava/lang/Integer;>;)V";
+	
 	public CountingRunnableGenerator() {
 		super(COUNTING_RUNNABLE.getClassName());
 	}
@@ -22,7 +26,7 @@ public class CountingRunnableGenerator extends Generator {
 	@Override
 	public void generate(@NotNull ClassVisitor cv) {
 		cv.visit(CLASS_VERSION, Opcodes.ACC_PUBLIC, COUNTING_RUNNABLE.getInternalName(), null, "java/lang/Object", new String[] { RUNNABLE.getInternalName() });
-		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "action", CONSUMER.getDescriptor(), "Ljava/util/function/Consumer<Ljava/lang/Integer;>;", null).visitEnd();
+		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "action", CONSUMER.getDescriptor(), ACTION_SIGNATURE, null).visitEnd();
 		cv.visitField(Opcodes.ACC_PRIVATE, "count", "I", null, 0).visitEnd();
 		this.generateConstructor(cv);
 		this.generateRun(cv);
@@ -30,7 +34,7 @@ public class CountingRunnableGenerator extends Generator {
 	}
 	
 	private void generateConstructor(@NotNull ClassVisitor cv) {
-		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/util/function/Consumer;)V", "(Ljava/util/function/Consumer<Ljava/lang/Integer;>;)V", null);
+		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/util/function/Consumer;)V", CONSTRUCTOR_SIGNATURE, null);
 		Label start = new Label();
 		Label end = new Label();
 		mv.visitParameter("action", 0);

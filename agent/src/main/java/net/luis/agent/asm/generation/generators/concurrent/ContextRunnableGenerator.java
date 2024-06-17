@@ -15,6 +15,12 @@ import static net.luis.agent.asm.Types.*;
 
 public class ContextRunnableGenerator extends Generator {
 	
+	private static final String LOOKUP_SIGNATURE = "Ljava/util/Map<Ljava/lang/String;Ljava/util/concurrent/ScheduledFuture<*>;>;";
+	private static final String ACTION_SIGNATURE = "Ljava/util/function/BiConsumer<Ljava/lang/Integer;Ljava/util/concurrent/ScheduledFuture<*>;>;";
+	private static final String FUTURE_SIGNATURE = "Ljava/util/concurrent/ScheduledFuture<*>;";
+	
+	private static final String CONSTRUCTOR_SIGNATURE = "(Ljava/lang/String;Ljava/util/Map<Ljava/lang/String;Ljava/util/concurrent/ScheduledFuture<*>;>;Ljava/util/function/BiConsumer<Ljava/lang/Integer;Ljava/util/concurrent/ScheduledFuture<*>;>;)V";
+	
 	public ContextRunnableGenerator() {
 		super(CONTEXT_RUNNABLE.getClassName());
 	}
@@ -23,9 +29,9 @@ public class ContextRunnableGenerator extends Generator {
 	public void generate(@NotNull ClassVisitor cv) {
 		cv.visit(CLASS_VERSION, Opcodes.ACC_PUBLIC, CONTEXT_RUNNABLE.getInternalName(), null, "java/lang/Object", new String[] { RUNNABLE.getInternalName() });
 		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "method", STRING.getDescriptor(), null, null).visitEnd();
-		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "lookup", MAP.getDescriptor(), "Ljava/util/Map<Ljava/lang/String;Ljava/util/concurrent/ScheduledFuture<*>;>;", null).visitEnd();
-		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "action", BI_CONSUMER.getDescriptor(), "Ljava/util/function/BiConsumer<Ljava/lang/Integer;Ljava/util/concurrent/ScheduledFuture<*>;>;", null).visitEnd();
-		cv.visitField(Opcodes.ACC_PRIVATE, "future", SCHEDULED_FUTURE.getDescriptor(), "Ljava/util/concurrent/ScheduledFuture<*>;", null).visitEnd();
+		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "lookup", MAP.getDescriptor(), LOOKUP_SIGNATURE, null).visitEnd();
+		cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "action", BI_CONSUMER.getDescriptor(), ACTION_SIGNATURE, null).visitEnd();
+		cv.visitField(Opcodes.ACC_PRIVATE, "future", SCHEDULED_FUTURE.getDescriptor(), FUTURE_SIGNATURE, null).visitEnd();
 		cv.visitField(Opcodes.ACC_PRIVATE, "count", "I", null, 0).visitEnd();
 		this.generateConstructor(cv);
 		this.generateRun(cv);
@@ -33,7 +39,7 @@ public class ContextRunnableGenerator extends Generator {
 	}
 	
 	private void generateConstructor(@NotNull ClassVisitor cv) {
-		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/lang/String;Ljava/util/Map;Ljava/util/function/BiConsumer;)V", "(Ljava/lang/String;Ljava/util/Map<Ljava/lang/String;Ljava/util/concurrent/ScheduledFuture<*>;>;Ljava/util/function/BiConsumer<Ljava/lang/Integer;Ljava/util/concurrent/ScheduledFuture<*>;>;)V", null);
+		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/lang/String;Ljava/util/Map;Ljava/util/function/BiConsumer;)V", CONSTRUCTOR_SIGNATURE, null);
 		Label start = new Label();
 		Label end = new Label();
 		mv.visitParameter("method", 0);
@@ -65,8 +71,8 @@ public class ContextRunnableGenerator extends Generator {
 		mv.visitLabel(end);
 		mv.visitLocalVariable("this", CONTEXT_RUNNABLE.getDescriptor(), null, start, end, 0);
 		mv.visitLocalVariable("method", STRING.getDescriptor(), null, start, end, 1);
-		mv.visitLocalVariable("lookup", MAP.getDescriptor(), "Ljava/util/Map<Ljava/lang/String;Ljava/util/concurrent/ScheduledFuture<*>;>;", start, end, 2);
-		mv.visitLocalVariable("action", BI_CONSUMER.getDescriptor(), "Ljava/util/function/BiConsumer<Ljava/lang/Integer;Ljava/util/concurrent/ScheduledFuture<*>;>;", start, end, 3);
+		mv.visitLocalVariable("lookup", MAP.getDescriptor(), LOOKUP_SIGNATURE, start, end, 2);
+		mv.visitLocalVariable("action", BI_CONSUMER.getDescriptor(), ACTION_SIGNATURE, start, end, 3);
 		mv.visitMaxs(0, 0);
 		mv.visitEnd();
 	}
