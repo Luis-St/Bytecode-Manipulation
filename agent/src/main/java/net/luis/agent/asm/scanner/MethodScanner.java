@@ -1,7 +1,7 @@
 package net.luis.agent.asm.scanner;
 
 import net.luis.agent.asm.data.*;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -16,15 +16,18 @@ import java.util.*;
 
 public class MethodScanner extends MethodVisitor {
 	
+	private final Type superType;
 	private final Method method;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
 	private final Map<Integer, Map<Type, Annotation>> parameterAnnotations = new HashMap<>();
 	private final Map</*Size: 3*/int[], Map<Type, Annotation>> localAnnotations = new HashMap<>();
 	private final List<Label> labels = new LinkedList<>();
 	private int parameterIndex;
+	private boolean primary;
 	
-	public MethodScanner(@NotNull Method method) {
+	public MethodScanner(@NotNull Type superType, @NotNull Method method) {
 		super(Opcodes.ASM9);
+		this.superType = superType;
 		this.method = method;
 	}
 	
@@ -71,6 +74,13 @@ public class MethodScanner extends MethodVisitor {
 			}
 		}
 		return super.visitTypeAnnotation(typeRef, typePath, descriptor, visible);
+	}
+	
+	@Override
+	public void visitMethodInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor, boolean isInterface) {
+		if (this.method.is(MethodType.CONSTRUCTOR) && opcode == Opcodes.INVOKESPECIAL && this.superType.getInternalName().equals(owner) && "<init>".equals(name)) {
+			this.method.makeConstructorPrimary();
+		}
 	}
 	
 	@Override

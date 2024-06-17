@@ -1,5 +1,6 @@
 package net.luis.agent.asm.data;
 
+import net.luis.agent.annotation.RestrictedAccess;
 import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Mutable;
@@ -23,13 +24,13 @@ public class Method implements ASMData {
 	private final Type type;
 	private final String genericSignature;
 	private final TypeAccess access;
-	private final MethodType methodType;
 	private final Set<TypeModifier> modifiers;
 	private final Map<Type, Annotation> annotations;
 	private final Map<Integer, Parameter> parameters;
 	private final List<Type> exceptions;
 	private final List<LocalVariable> locals;
 	private final Mutable<Object> annotationDefault;
+	private MethodType methodType;
 	
 	private Method(@NotNull Type owner, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull TypeAccess access, @NotNull Set<TypeModifier> modifiers,
 				   @NotNull Map<Type, Annotation> annotations, @NotNull Map<Integer, Parameter> parameters, @NotNull List<Type> exceptions, @NotNull List<LocalVariable> locals, @NotNull Mutable<Object> annotationDefault) {
@@ -164,6 +165,9 @@ public class Method implements ASMData {
 	}
 	
 	public boolean is(MethodType type) {
+		if (type == MethodType.CONSTRUCTOR && this.methodType == MethodType.PRIMARY_CONSTRUCTOR) {
+			return true;
+		}
 		return this.methodType == type;
 	}
 	
@@ -189,6 +193,11 @@ public class Method implements ASMData {
 	
 	public boolean isLocal(int index) {
 		return this.is(TypeModifier.STATIC) ? index >= this.parameters.size() : index > this.parameters.size();
+	}
+	
+	@RestrictedAccess("net.luis.agent.asm.scanner.MethodScanner#visitMethodInsn")
+	public void makeConstructorPrimary() {
+		this.methodType = MethodType.PRIMARY_CONSTRUCTOR;
 	}
 	
 	public void updateLocalScopes(@NotNull Set</*Insert After Index*/Integer> inserts) {
@@ -217,6 +226,7 @@ public class Method implements ASMData {
 	}
 	
 	@Override
+	@SuppressWarnings("NonFinalFieldReferencedInHashCode")
 	public int hashCode() {
 		return Objects.hash(this.owner, this.name, this.type, this.genericSignature, this.access, this.methodType, this.modifiers, this.annotations, this.parameters, this.exceptions, this.locals, this.annotationDefault);
 	}

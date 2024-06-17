@@ -22,6 +22,14 @@ public class InjectTest {
 	@NotNull
 	private String str;
 	
+	public InjectTest() {
+		this.str = "Default";
+	}
+	
+	public InjectTest(int i) {
+		this(String.valueOf(i));
+	}
+	
 	public InjectTest(@NotNull String str) {
 		this.str = str;
 	}

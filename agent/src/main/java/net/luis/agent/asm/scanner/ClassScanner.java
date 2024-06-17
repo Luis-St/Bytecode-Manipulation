@@ -107,7 +107,7 @@ public class ClassScanner extends ClassVisitor {
 		Method method = Method.of(this.type, name, Type.getType(descriptor), genericSignature, access);
 		method.getExceptions().addAll(Optional.ofNullable(exception).stream().flatMap(Arrays::stream).map(Type::getObjectType).toList());
 		this.methods.put(method.getSignature(SignatureType.FULL), method);
-		return new MethodScanner(method);
+		return new MethodScanner(this.superType, method);
 	}
 	
 	@Override

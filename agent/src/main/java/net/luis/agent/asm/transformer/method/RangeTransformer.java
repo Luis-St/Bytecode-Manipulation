@@ -36,7 +36,7 @@ public class RangeTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		Class clazz = Agent.getClass(type);
-		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS)) && clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS));
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS)) && clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS));
 	}
 	//endregion
 	

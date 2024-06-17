@@ -8,7 +8,7 @@ package net.luis.agent.asm.type;
 
 public enum MethodType {
 	
-	CONSTRUCTOR, STATIC_INITIALIZER, METHOD;
+	CONSTRUCTOR, PRIMARY_CONSTRUCTOR, STATIC_INITIALIZER, METHOD;
 	
 	public static MethodType fromName(String name) {
 		if ("<init>".equalsIgnoreCase(name)) {
