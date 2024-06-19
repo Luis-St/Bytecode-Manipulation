@@ -39,6 +39,7 @@ public final class Main {
 	 *  - Add support for return values from @Async methods -> handler for return values (FunctionalInterface)
 	 *  - Allow @NotNull#value to be the name (not only one word) -> single quotes
 	 *  - Add support for parameter annotations in record classes
+	 *  - String annotations -> add support for local variables
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
@@ -85,12 +86,12 @@ public final class Main {
 		}
 	}
 	
+	@Strip
+	@NotNull
 	@NotEmpty
 	@UpperCase
-	@Strip
 	@Contains(".txt")
-	public static String test(@NotNull @NotBlank @Substring("2:*") @Replace("\\ -> /") @LowerCase("de:DE") String s) {
-		System.out.println(s);
+	public static String test(@NotNull @NotBlank @EndsWith(".txt") @Substring("2:*") @Replace("\\ -> /") @LowerCase("de:DE") String s) {
 		return "\tABC " + s + " XYZ\n";
 	}
 	

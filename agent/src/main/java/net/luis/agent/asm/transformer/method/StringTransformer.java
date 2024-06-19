@@ -4,6 +4,8 @@ import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.report.CrashReport;
+import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.util.StripMode;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
@@ -66,6 +68,8 @@ public class StringTransformer extends BaseClassTransformer {
 	}
 	
 	private static class StringMethodVisitor extends LabelTrackingMethodVisitor {
+		
+		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final Method method;
 		private final List<Parameter> parameters;
@@ -175,13 +179,16 @@ public class StringTransformer extends BaseClassTransformer {
 			boolean all = annotation.getOrDefault("all");
 			
 			if (value.isEmpty() && regex.isEmpty()) {
-				throw new IllegalArgumentException("Invalid @Replace annotation found, expected at least one of 'value' or 'regex' to be set");
+				throw CrashReport.create("Invalid @Replace annotation found, expected at least one of 'value' or 'regex' to be set", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).exception();
 			}
 			if (!value.isEmpty() && !regex.isEmpty()) {
-				throw new IllegalArgumentException("Invalid @Replace annotation found, expected only one of 'value' or 'regex' to be set");
+				throw CrashReport.create("Invalid @Replace annotation found, expected only one of 'value' or 'regex' to be set", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).exception();
 			}
 			if (!value.contains(" -> ") && replacement.isEmpty()) {
-				throw new IllegalArgumentException("Invalid @Replace annotation found, expected 'value' to be formated as 'target -> replacement' or 'replacement' to be set");
+				throw CrashReport.create("Invalid @Replace annotation found, expected 'replacement' to be set", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).exception();
 			}
 			if (regex.isEmpty()) {
 				if (value.contains(" -> ")) {
@@ -216,7 +223,8 @@ public class StringTransformer extends BaseClassTransformer {
 		private void instrumentSubstring(@NotNull Annotation annotation) {
 			String value = annotation.getOrDefault("value");
 			if (value.isBlank()) {
-				throw new IllegalArgumentException("Invalid @Substring annotation found, expected 'start:end' but found '" + value + "'");
+				throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
 			}
 			
 			int start = 0;
@@ -224,10 +232,12 @@ public class StringTransformer extends BaseClassTransformer {
 			if (value.contains(":")) {
 				String[] parts = value.split(":");
 				if (parts.length != 2) {
-					throw new IllegalArgumentException("Invalid @Substring annotation found, expected 'start:end' but found '" + value + "'");
+					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
 				}
 				if ("*".equals(parts[0]) && "*".equals(parts[1])) {
-					throw new IllegalArgumentException("Invalid @Substring annotation found, expected 'start:end' but found '" + value + "'");
+					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
 				}
 				if (!parts[0].isBlank() && !"*".equals(parts[0])) {
 					start = Integer.parseInt(parts[0]);
@@ -266,29 +276,24 @@ public class StringTransformer extends BaseClassTransformer {
 		//region Conditions
 		private void instrumentContains(int index, @NotNull Annotation annotation) {
 			String value = annotation.getOrDefault("value");
-			if (value.isEmpty()) {
-				throw new IllegalArgumentException("Invalid @Contains annotation found, expected 'value' to be set");
-			}
+			Label label = new Label();
 			
-			/*Label label = new Label();
+			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitLdcInsn(value);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "contains", "(Ljava/lang/CharSequence;)Z", false);
-			this.mv.visitJumpInsn(Opcodes.IFEQ, label);
+			this.mv.visitJumpInsn(Opcodes.IFNE, label);
 			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "String must contain '" + value + "'");
-			this.insertLabel(label);*/
+			this.insertLabel(label);
 		}
 		
 		private void instrumentEndsWith(int index, @NotNull Annotation annotation) {
 			String value = annotation.getOrDefault("value");
-			if (value.isEmpty()) {
-				throw new IllegalArgumentException("Invalid @EndsWith annotation found, expected 'value' to be set");
-			}
-			
 			Label label = new Label();
+			
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitLdcInsn(value);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "endsWith", "(Ljava/lang/String;)Z", false);
-			this.mv.visitJumpInsn(Opcodes.IFEQ, label);
+			this.mv.visitJumpInsn(Opcodes.IFNE, label);
 			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "String must end with '" + value + "'");
 			this.insertLabel(label);
 		}
@@ -314,9 +319,6 @@ public class StringTransformer extends BaseClassTransformer {
 		private void instrumentStartsWith(int index, @NotNull Annotation annotation) {
 			String value = annotation.getOrDefault("value");
 			int offset = annotation.getOrDefault("offset");
-			if (value.isEmpty()) {
-				throw new IllegalArgumentException("Invalid @StartsWith annotation found, expected 'value' to be set");
-			}
 			
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitLdcInsn(value);
@@ -327,7 +329,7 @@ public class StringTransformer extends BaseClassTransformer {
 				this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "startsWith", "(Ljava/lang/String;)Z", false);
 			}
 			Label label = new Label();
-			this.mv.visitJumpInsn(Opcodes.IFEQ, label);
+			this.mv.visitJumpInsn(Opcodes.IFNE, label);
 			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "String must start with '" + value + "'");
 			this.insertLabel(label);
 		}
