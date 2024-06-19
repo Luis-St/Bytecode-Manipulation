@@ -20,7 +20,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class InvokerTransformer extends BaseClassTransformer {
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override

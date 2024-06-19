@@ -36,38 +36,6 @@ public class ASMUtils {
 		}
 	}
 	
-	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createTargetsLookup(@NotNull Type annotationType) {
-		Map<String, List<String>> lookup = new HashMap<>();
-		Agent.stream().filter(clazz -> clazz.isAnnotatedWith(annotationType)).forEach(clazz -> {
-			Type target = getTarget(clazz, annotationType);
-			if (target != null) {
-				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(clazz.getType().getInternalName());
-			}
-		});
-		return lookup;
-	}
-	
-	public static @Nullable Type getTarget(@NotNull Class clazz, @NotNull Type annotationType) {
-		Type value = clazz.getAnnotation(annotationType).get("value");
-		if (value != null && !VOID.equals(value)) {
-			return value;
-		}
-		String target = clazz.getAnnotation(annotationType).get("target");
-		if (target == null || target.isEmpty()) {
-			return null;
-		}
-		Type type;
-		if (target.startsWith("L") && target.endsWith(";")) {
-			type = Type.getType(target);
-		} else {
-			if (target.contains(".")) {
-				target = target.replace('.', '/');
-			}
-			type = Type.getObjectType(target);
-		}
-		return type;
-	}
-	
 	public static int getLine(@NotNull Label label) {
 		int line = -1;
 		try {

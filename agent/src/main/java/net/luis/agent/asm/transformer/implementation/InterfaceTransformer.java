@@ -1,7 +1,6 @@
 package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.MethodOnlyClassVisitor;
 import net.luis.agent.asm.data.Class;
@@ -24,6 +23,40 @@ import static net.luis.agent.asm.Types.*;
 
 public class InterfaceTransformer extends BaseClassTransformer {
 	
+	//region Lookup creation
+	public static @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> createLookup(@NotNull Type annotationType) {
+		Map<String, List<String>> lookup = new HashMap<>();
+		Agent.stream().filter(clazz -> clazz.isAnnotatedWith(annotationType)).forEach(clazz -> {
+			Type target = getTarget(clazz, annotationType);
+			if (target != null) {
+				lookup.computeIfAbsent(target.getInternalName(), k -> new ArrayList<>()).add(clazz.getType().getInternalName());
+			}
+		});
+		return lookup;
+	}
+	
+	private static @Nullable Type getTarget(@NotNull Class clazz, @NotNull Type annotationType) {
+		Type value = clazz.getAnnotation(annotationType).get("value");
+		if (value != null && !VOID.equals(value)) {
+			return value;
+		}
+		String target = clazz.getAnnotation(annotationType).get("target");
+		if (target == null || target.isEmpty()) {
+			return null;
+		}
+		Type type;
+		if (target.startsWith("L") && target.endsWith(";")) {
+			type = Type.getType(target);
+		} else {
+			if (target.contains(".")) {
+				target = target.replace('.', '/');
+			}
+			type = Type.getObjectType(target);
+		}
+		return type;
+	}
+	//endregion
+	
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
@@ -34,7 +67,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
-		Type target = ASMUtils.getTarget(Agent.getClass(type), INJECT_INTERFACE);
+		Type target = getTarget(Agent.getClass(type), INJECT_INTERFACE);
 		return new InterfaceClassVisitor(writer, type, target, () -> this.modified = true);
 	}
 	

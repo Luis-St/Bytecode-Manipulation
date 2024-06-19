@@ -1,7 +1,6 @@
 package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.ASMUtils;
 import net.luis.agent.asm.Instrumentations;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.ContextBasedClassVisitor;
@@ -20,7 +19,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class AccessorTransformer extends BaseClassTransformer {
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override

@@ -30,7 +30,7 @@ public class InjectTransformer extends BaseClassTransformer {
 	
 	private static final String IMPLEMENTATION_ERROR = "Inject Implementation Error";
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = ASMUtils.createTargetsLookup(INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
 	
 	public InjectTransformer() {
 		super(true);
