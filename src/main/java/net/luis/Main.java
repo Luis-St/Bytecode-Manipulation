@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Level;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
@@ -32,15 +33,11 @@ public final class Main {
 	/*
 	 * ToDo:
 	 *  - Add transformers for unused annotations
-	 *  - (Not possible?) Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory
 	 *  - Update CrashReport -> global context where details can be pushed and popped
-	 *  - Add support for static redirect methods to copy the original parameters (only if caller object can be popped)
+	 *  - Add support for static redirect methods to copy the original parameters -> requires a local variable -> pop caller -> load local variable
 	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory (if possible, else argument for annotation)
-	 *  - Add support for return values from @Async methods -> handler for return values (FunctionalInterface)
-	 *  - Allow @NotNull#value to be the name (not only one word) -> single quotes
 	 *  - Add support for parameter annotations in record classes
 	 *  - String annotations -> add support for local variables
-	 *  - Annotation Record to Class
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

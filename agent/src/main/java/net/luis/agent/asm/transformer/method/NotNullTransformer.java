@@ -118,8 +118,11 @@ public class NotNullTransformer extends BaseClassTransformer {
 		private @NotNull String getMessage(@NotNull Annotation annotation, @NotNull String messageName) {
 			String value = annotation.getOrDefault("value");
 			if (!value.isBlank()) {
-				if (Utils.isSingleWord(value.strip())) {
-					return Utils.capitalize(value.strip()) + " must not be null";
+				value = value.strip();
+				if (Utils.isSingleWord(value)) {
+					return Utils.capitalize(value) + " must not be null";
+				} else if (value.charAt(0) == '\'' && value.charAt(value.length() - 1) == '\'') {
+					return value.substring(1, value.length() - 1) + " must not be null";
 				}
 				return value;
 			}
