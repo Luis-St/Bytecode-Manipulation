@@ -5,6 +5,7 @@ import net.luis.agent.annotation.implementation.*;
 import net.luis.agent.annotation.range.*;
 import net.luis.agent.annotation.string.condition.*;
 import net.luis.agent.annotation.string.modification.*;
+import net.luis.agent.annotation.Lazy;
 import net.luis.agent.annotation.util.Local;
 import net.luis.agent.annotation.util.This;
 import net.luis.agent.util.Utils;
@@ -99,6 +100,7 @@ public class Types {
 	public static final Type NOT_NULL = Type.getType(NotNull.class);
 	public static final Type PATTERN = Type.getType(Pattern.class);
 	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
+	public static final Type LAZY = Type.getType(Lazy.class);
 	//endregion
 	
 	//region LUtils types

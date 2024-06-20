@@ -40,6 +40,7 @@ public final class Main {
 	 *  - Allow @NotNull#value to be the name (not only one word) -> single quotes
 	 *  - Add support for parameter annotations in record classes
 	 *  - String annotations -> add support for local variables
+	 *  - Annotation Record to Class
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
@@ -62,6 +63,7 @@ public final class Main {
 		Lists.newArrayList("10", "1").stream().map(converter::convert).forEach(System.out::println);
 		
 		new InjectTest("ABC").test(1, new int[] { 1 });
+		System.out.println(new LazyTest("Hello World", 10));
 		
 		execute("ls", null, null);
 		parseUUID("550e8400-e29b-41d4-a716-446655440000");

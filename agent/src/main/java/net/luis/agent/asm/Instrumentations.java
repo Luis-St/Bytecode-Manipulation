@@ -26,6 +26,10 @@ public class Instrumentations {
 	public static final Handle METAFACTORY_HANDLE = new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", METAFACTORY_DESCRIPTOR, false);
 	
 	//region Opcodes
+	public static boolean is(int access, int opcode) {
+		return (access & opcode) != 0;
+	}
+	
 	public static boolean isLoad(int opcode) {
 		return Opcodes.ALOAD >= opcode && opcode >= Opcodes.ILOAD;
 	}
