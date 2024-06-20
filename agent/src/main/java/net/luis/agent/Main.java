@@ -55,7 +55,6 @@ public class Main {
 		inst.addTransformer(new RedirectTransformer());
 		inst.addTransformer(new InterfaceTransformer());
 		
-		inst.addTransformer(new LazyTransformer()); // 4: Lazy
 		inst.addTransformer(new ScheduledTransformer()); // 3: Schedule
 		inst.addTransformer(new AsyncTransformer()); // 2: Wrap in async
 		inst.addTransformer(new CaughtTransformer()); // 1: Wrap in try-catch
