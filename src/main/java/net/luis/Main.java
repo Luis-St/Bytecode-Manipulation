@@ -37,7 +37,6 @@ public final class Main {
 	 *  - Add support for static redirect methods to copy the original parameters -> requires a local variable -> pop caller -> load local variable
 	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory (if possible, else argument for annotation)
 	 *  - Add support for parameter annotations in record classes
-	 *  - String annotations -> add support for local variables
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
@@ -46,7 +45,7 @@ public final class Main {
 		
 		System.out.println(test("C:\\Users\\Luis\\Desktop\\test.txt"));
 		
-		Converter<String, Integer> converter = new Converter<String, Integer>() {
+		Converter<String, Integer> converter = new Converter<>() {
 			@Override
 			protected @NotNull Integer doForward(@NotNull String s) {
 				return Integer.parseInt(s);
@@ -89,14 +88,18 @@ public final class Main {
 	@NotEmpty
 	@UpperCase
 	@Contains(".txt")
+	@Substring("2:*-1")
 	public static String test(@NotNull @NotBlank @EndsWith(".txt") @Substring("2:*") @Replace("\\ -> /") @LowerCase("de:DE") String s) {
 		return "\tABC " + s + " XYZ\n";
 	}
 	
 	@RestrictedAccess("Main#main")
-	public static void execute(@Pattern("^[a-z]*$") String command, @Default("[-t, -r]") @NotNull String[] args, /*@Default */List<String> values) {
+	public static void execute(@Pattern("^[a-z]*$") @NotEmpty String command, @Default("[-t, -r]") @NotNull String[] args, /*@Default*/ List<String> values) {
+		@Substring("1:*-1")
+		@NotEmpty
+		String arguments = Arrays.toString(args);
 		System.out.println("Command: " + command);
-		System.out.println("Args: " + Arrays.toString(args));
+		System.out.println("Args: " + arguments);
 		System.out.println("Values: " + values);
 	}
 	

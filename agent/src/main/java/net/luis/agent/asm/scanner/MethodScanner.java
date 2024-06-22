@@ -95,8 +95,11 @@ public class MethodScanner extends MethodVisitor {
 	}
 	
 	@Override
-	public @Nullable AnnotationVisitor visitLocalVariableAnnotation(int typeRef, @Nullable TypePath typePath, @NotNull Label[] start, @NotNull Label[] end, int @NotNull [] index, @NotNull String descriptor, boolean visible) {
-		if (index.length != 1) {
+	public @Nullable AnnotationVisitor visitLocalVariableAnnotation(int typeRef, @Nullable TypePath typePath, Label @NotNull [] start, Label @NotNull [] end, int @NotNull [] index, @NotNull String descriptor, boolean visible) {
+		if (0 == index.length) {
+			return null;
+		}
+		if (!this.allSame(index)) {
 			return null;
 		}
 		Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
@@ -121,4 +124,16 @@ public class MethodScanner extends MethodVisitor {
 			}
 		}
 	}
+	
+	//region Helper methods
+	private boolean allSame(int @NotNull [] index) {
+		int first = index[0];
+		for (int i = 1; i < index.length; i++) {
+			if (first != index[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+	//endregion
 }

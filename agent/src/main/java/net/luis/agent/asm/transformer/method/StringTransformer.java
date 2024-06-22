@@ -12,6 +12,7 @@ import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static net.luis.agent.asm.Instrumentations.*;
@@ -57,7 +58,10 @@ public class StringTransformer extends BaseClassTransformer {
 				if (method.isAnnotatedWithAny(ALL) && method.returns(STRING)) {
 					return true;
 				}
-				return method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(ALL) && parameter.is(STRING));
+				if (method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(ALL) && parameter.is(STRING))) {
+					return true;
+				}
+				return method.getLocals().stream().anyMatch(local -> local.isAnnotatedWithAny(ALL) && local.is(STRING));
 			}
 			
 			@Override
@@ -71,14 +75,17 @@ public class StringTransformer extends BaseClassTransformer {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
+		private final Set<Integer> handledLocals = new HashSet<>();
 		private final Method method;
 		private final List<Parameter> parameters;
+		private final boolean includeLocals;
 		
 		private StringMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
 			this.setMethod(method);
 			this.method = method;
 			this.parameters = method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWithAny(ALL) && parameter.is(STRING)).toList();
+			this.includeLocals = method.getLocals().stream().anyMatch(local -> local.isAnnotatedWithAny(ALL));
 		}
 		
 		@Override
@@ -86,42 +93,54 @@ public class StringTransformer extends BaseClassTransformer {
 			super.visitCode();
 			for (Parameter parameter : this.parameters) {
 				this.mv.visitVarInsn(Opcodes.ALOAD, parameter.getLoadIndex());
-				this.instrumentModifications(parameter.getAnnotations());
+				this.instrumentModifications(parameter.getLoadIndex(), parameter.getAnnotations());
 				this.mv.visitVarInsn(Opcodes.ASTORE, parameter.getLoadIndex());
-				
 				this.instrumentConditions(parameter.getLoadIndex(), parameter.getAnnotations());
+			}
+		}
+		
+		@Override
+		public void visitVarInsn(int opcode, int index) {
+			super.visitVarInsn(opcode, index);
+			if (this.includeLocals && isStore(opcode) && this.method.isLocal(index) && this.handledLocals.add(index)) {
+				LocalVariable local = this.method.getLocals(index).stream().filter(l -> l.isAnnotatedWithAny(ALL)).filter(l -> l.isInScope(this.getScopeIndex())).findFirst().orElse(null);
+				if (local != null && local.is(STRING)) {
+					this.mv.visitVarInsn(Opcodes.ALOAD, index);
+					if (local.isAnnotatedWithAny(MODIFICATIONS)) {
+						this.instrumentModifications(index, local.getAnnotations());
+					}
+					this.mv.visitVarInsn(Opcodes.ASTORE, index);
+					this.instrumentConditions(index, local.getAnnotations());
+					return;
+				}
 			}
 		}
 		
 		@Override
 		public void visitInsn(int opcode) {
 			if (isReturn(opcode) && this.method.returns(STRING)) {
-				int local = -1;
-				if (this.method.isAnnotatedWithAny(CONDITIONS)) {
-					local = newLocal(this.mv, STRING);
-				}
+				int local = newLocal(this.mv, STRING);
+				Label start = new Label();
+				Label end = new Label();
 				
-				if (local == -1) {
-					this.instrumentModifications(this.method.getAnnotations());
-				} else {
-					Label start = new Label();
-					Label end = new Label();
-					
-					this.mv.visitVarInsn(Opcodes.ASTORE, local);
-					this.insertLabel(start);
+				this.mv.visitVarInsn(Opcodes.ASTORE, local);
+				this.insertLabel(start);
+				if (this.method.isAnnotatedWithAny(CONDITIONS)) {
 					this.instrumentConditions(local, this.method.getAnnotations());
-					
-					this.mv.visitVarInsn(Opcodes.ALOAD, local);
-					this.instrumentModifications(this.method.getAnnotations());
-					this.insertLabel(end);
-					this.visitLocalVariable(local, "generated$StringTransformer$Temp" + local, STRING, null, start, end);
 				}
+				this.mv.visitVarInsn(Opcodes.ALOAD, local);
+				this.instrumentModifications(local, this.method.getAnnotations());
+				this.insertLabel(end);
+				this.visitLocalVariable(local, "generated$StringTransformer$Temp" + local, STRING, null, start, end);
 			}
 			super.visitInsn(opcode);
 		}
 		
 		//region Instrumentation
-		private void instrumentModifications(@NotNull Map<Type, Annotation> annotations) {
+		private void instrumentModifications(int index, @NotNull Map<Type, Annotation> annotations) {
+			if (annotations.containsKey(SUBSTRING)) { // Depends on length (no modifications)
+				this.instrumentSubstring(index, annotations.get(SUBSTRING));
+			}
 			if (annotations.containsKey(LOWER_CASE)) {
 				this.instrumentLowerCase(annotations.get(LOWER_CASE));
 			}
@@ -131,11 +150,8 @@ public class StringTransformer extends BaseClassTransformer {
 			if (annotations.containsKey(STRIP)) {
 				this.instrumentStrip(annotations.get(STRIP));
 			}
-			if (annotations.containsKey(SUBSTRING)) {
-				this.instrumentSubstring(annotations.get(SUBSTRING));
-			}
 			if (annotations.containsKey(TRIM)) {
-				this.instrumentTrim(annotations.get(TRIM));
+				this.instrumentTrim();
 			}
 			if (annotations.containsKey(UPPER_CASE)) {
 				this.instrumentUpperCase(annotations.get(UPPER_CASE));
@@ -150,10 +166,10 @@ public class StringTransformer extends BaseClassTransformer {
 				this.instrumentEndsWith(index, annotations.get(ENDS_WITH));
 			}
 			if (annotations.containsKey(NOT_BLANK)) {
-				this.instrumentNotBlank(index, annotations.get(NOT_BLANK));
+				this.instrumentNotBlank(index);
 			}
 			if (annotations.containsKey(NOT_EMPTY)) {
-				this.instrumentNotEmpty(index, annotations.get(NOT_EMPTY));
+				this.instrumentNotEmpty(index);
 			}
 			if (annotations.containsKey(STARTS_WITH)) {
 				this.instrumentStartsWith(index, annotations.get(STARTS_WITH));
@@ -220,7 +236,7 @@ public class StringTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private void instrumentSubstring(@NotNull Annotation annotation) {
+		private void instrumentSubstring(int index, @NotNull Annotation annotation) {
 			String value = annotation.getOrDefault("value");
 			if (value.isBlank()) {
 				throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
@@ -229,6 +245,7 @@ public class StringTransformer extends BaseClassTransformer {
 			
 			int start = 0;
 			int end = -1;
+			boolean dynamic = false;
 			if (value.contains(":")) {
 				String[] parts = value.split(":");
 				if (parts.length != 2) {
@@ -239,11 +256,21 @@ public class StringTransformer extends BaseClassTransformer {
 					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
 						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
 				}
-				if (!parts[0].isBlank() && !"*".equals(parts[0])) {
+				if (parts[0].isBlank() || parts[1].isBlank()) {
+					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
+				}
+				if (!"*".equals(parts[0])) {
 					start = Integer.parseInt(parts[0]);
 				}
-				if (!parts[1].isBlank() && !"*".equals(parts[1])) {
-					end = Integer.parseInt(parts[1]);
+				
+				if (!"*".equals(parts[1])) {
+					if (Pattern.matches("^\\*\\s*-\\s*\\d+$", parts[1])) {
+						dynamic = true;
+						end = Integer.parseInt(parts[1].replace("*", "").replace("-", "").trim());
+					} else {
+						end = Integer.parseInt(parts[1]);
+					}
 				}
 			} else {
 				start = Integer.parseInt(value);
@@ -252,13 +279,19 @@ public class StringTransformer extends BaseClassTransformer {
 			loadNumber(this.mv, start);
 			if (0 > end) {
 				this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "substring", "(I)Ljava/lang/String;", false);
+			} else if (dynamic) {
+				this.mv.visitVarInsn(Opcodes.ALOAD, index);
+				this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "length", "()I", false);
+				loadNumber(this.mv, end);
+				this.mv.visitInsn(Opcodes.ISUB);
+				this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "substring", "(II)Ljava/lang/String;", false);
 			} else {
 				loadNumber(this.mv, end);
 				this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "substring", "(II)Ljava/lang/String;", false);
 			}
 		}
 		
-		private void instrumentTrim(@NotNull Annotation annotation) {
+		private void instrumentTrim() {
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "trim", "()Ljava/lang/String;", false);
 		}
 		
@@ -298,7 +331,7 @@ public class StringTransformer extends BaseClassTransformer {
 			this.insertLabel(label);
 		}
 		
-		private void instrumentNotBlank(int index, @NotNull Annotation annotation) {
+		private void instrumentNotBlank(int index) {
 			Label label = new Label();
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "isBlank", "()Z", false);
@@ -307,7 +340,7 @@ public class StringTransformer extends BaseClassTransformer {
 			this.insertLabel(label);
 		}
 		
-		private void instrumentNotEmpty(int index, @NotNull Annotation annotation) {
+		private void instrumentNotEmpty(int index) {
 			Label label = new Label();
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "isEmpty", "()Z", false);

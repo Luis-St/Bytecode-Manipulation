@@ -11,7 +11,7 @@ import java.lang.annotation.*;
  */
 
 @Retention(RetentionPolicy.CLASS)
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE, ElementType.TYPE_USE /*Local Variable Only*/ })
 public @interface Substring {
 
 	@NotNull String value() default "0:*"; // Format: start:end, start:* (start:<length>), *:end (0:end)
