@@ -35,6 +35,12 @@ tasks.register("run", JavaExec) {
 	jvmArgs("-javaagent:${projectDir}/agent/build/libs/agent.jar")
 }
 
+tasks.register("testing", JavaExec) {
+	group = "run"
+	classpath = sourceSets.main.runtimeClasspath
+	getMainClass().set("net.luis.Testing")
+}
+
 compileJava {
 	options.compilerArgs << "-parameters"
 }

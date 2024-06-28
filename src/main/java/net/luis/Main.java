@@ -5,8 +5,8 @@ import com.google.common.collect.Lists;
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
-import net.luis.agent.annotation.string.condition.*;
-import net.luis.agent.annotation.string.modification.*;
+import net.luis.agent.annotation.string.condition.NotEmpty;
+import net.luis.agent.annotation.string.modification.Substring;
 import net.luis.utils.collection.WeightCollection;
 import net.luis.utils.lang.StringUtils;
 import net.luis.utils.logging.LoggerConfiguration;
@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Level;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Opcodes;
 
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
@@ -36,14 +35,13 @@ public final class Main {
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add support for static redirect methods to copy the original parameters -> requires a local variable -> pop caller -> load local variable
 	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory (if possible, else argument for annotation)
-	 *  - Add support for parameter annotations in record classes
+	 *  - Readonly and Writeonly annotations for collections
+	 *  - Ref annotation for references -> wraps the object into an array with a length of 1
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
-		
-		System.out.println(test("C:\\Users\\Luis\\Desktop\\test.txt"));
 		
 		Converter<String, Integer> converter = new Converter<>() {
 			@Override
@@ -81,16 +79,6 @@ public final class Main {
 		} else {
 			System.out.println("LoggerConfiguration is not an instance of ILoggerConfiguration!");
 		}
-	}
-	
-	@Strip
-	@NotNull
-	@NotEmpty
-	@UpperCase
-	@Contains(".txt")
-	@Substring("2:*-1")
-	public static String test(@NotNull @NotBlank @EndsWith(".txt") @Substring("2:*") @Replace("\\ -> /") @LowerCase("de:DE") String s) {
-		return "\tABC " + s + " XYZ\n";
 	}
 	
 	@RestrictedAccess("Main#main")
