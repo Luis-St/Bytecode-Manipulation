@@ -48,6 +48,7 @@ public class Testing {
 		List<ActualType> types0 = parseSignatureParameters(generics0, methodSignature0);
 		List<ActualType> types1 = parseSignatureParameters(generics1, methodSignature1);
 		List<ActualType> types2 = parseSignatureParameters(generics2, methodSignature2);
+		List<ActualType> types3 = parseSignatureParameters(parseGenericDeclarations(""), "(Ljava/lang/String;[Ljava/lang/String;Ljava/util/List<Ljava/lang/String;>;)V");
 		
 		System.out.println(types0);
 		System.out.println(types1);

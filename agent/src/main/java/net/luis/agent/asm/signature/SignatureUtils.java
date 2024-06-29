@@ -19,13 +19,13 @@ public class SignatureUtils {
 		Map<String, GenericDeclaration> generics = new HashMap<>(classGenerics);
 		generics.putAll(parseGenericDeclarations(signature));
 		List<ActualType> types = new LinkedList<>();
-		for (String parameter : readSignatureParameters(signature)) {
+		for (String parameter : parseSignatureParameters(signature)) {
 			types.add(parseSignatureParameter(generics, parameter));
 		}
 		return types;
 	}
 	
-	public static @NotNull List<String> readSignatureParameters(@NotNull String signature) {
+	public static @NotNull List<String> parseSignatureParameters(@NotNull String signature) {
 		List<String> parameters = new ArrayList<>();
 		if (signature.isBlank()) {
 			return parameters;
@@ -34,7 +34,7 @@ public class SignatureUtils {
 		while (reader.canRead() && reader.peek() != '(') {
 			reader.skip();
 		}
-		ScopedStringReader inner = new ScopedStringReader(reader.readScope(ScopedStringReader.PARENTHESES));
+		ScopedStringReader inner = new ScopedStringReader(reader.readScope(ScopedStringReader.PARENTHESES).replace("[", "\\["));
 		inner.skip();
 		while (inner.canRead() && inner.peek() != ')') {
 			parameters.add(inner.readUntil(';') + ";");

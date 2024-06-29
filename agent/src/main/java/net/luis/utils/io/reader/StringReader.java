@@ -416,7 +416,7 @@ public class StringReader {
 	 * @return The number as a string which was read
 	 * @throws IllegalArgumentException If the read value is not a number
 	 */
-	private @NotNull String readNumber() {
+	public @NotNull String readNumberString() {
 		StringBuilder builder = new StringBuilder();
 		if (this.peek() == '-' || this.peek() == '+') {
 			builder.append(this.read());
@@ -457,7 +457,7 @@ public class StringReader {
 		if (!this.canRead()) {
 			throw new IllegalArgumentException("Expected a byte value but found nothing");
 		}
-		String value = this.readNumber();
+		String value = this.readNumberString();
 		if (value.isEmpty()) {
 			throw new IllegalArgumentException("Expected a byte value but found nothing");
 		}
@@ -485,7 +485,7 @@ public class StringReader {
 		if (!this.canRead()) {
 			throw new IllegalArgumentException("Expected a short value but found nothing");
 		}
-		String value = this.readNumber();
+		String value = this.readNumberString();
 		if (value.isEmpty()) {
 			throw new IllegalArgumentException("Expected a short value but found nothing");
 		}
@@ -513,7 +513,7 @@ public class StringReader {
 		if (!this.canRead()) {
 			throw new IllegalArgumentException("Expected an integer value but found nothing");
 		}
-		String value = this.readNumber();
+		String value = this.readNumberString();
 		if (value.isEmpty()) {
 			throw new IllegalArgumentException("Expected a integer value but found nothing");
 		}
@@ -541,7 +541,7 @@ public class StringReader {
 		if (!this.canRead()) {
 			throw new IllegalArgumentException("Expected a long value but found nothing");
 		}
-		String value = this.readNumber();
+		String value = this.readNumberString();
 		if (value.isEmpty()) {
 			throw new IllegalArgumentException("Expected a long value but found nothing");
 		}
@@ -569,7 +569,7 @@ public class StringReader {
 		if (!this.canRead()) {
 			throw new IllegalArgumentException("Expected a float value but found nothing");
 		}
-		String value = this.readNumber();
+		String value = this.readNumberString();
 		if (value.isEmpty()) {
 			throw new IllegalArgumentException("Expected a float value but found nothing");
 		}
@@ -597,7 +597,7 @@ public class StringReader {
 		if (!this.canRead()) {
 			throw new IllegalArgumentException("Expected a double value but found nothing");
 		}
-		String value = this.readNumber();
+		String value = this.readNumberString();
 		if (value.isEmpty()) {
 			throw new IllegalArgumentException("Expected a double value but found nothing");
 		}

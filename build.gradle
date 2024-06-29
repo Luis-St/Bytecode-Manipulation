@@ -36,8 +36,10 @@ tasks.register("run", JavaExec) {
 }
 
 tasks.register("testing", JavaExec) {
+	dependsOn project(":agent").build
 	group = "run"
-	classpath = sourceSets.main.runtimeClasspath
+	classpath += sourceSets.main.runtimeClasspath
+	classpath += project(":agent").sourceSets.main.runtimeClasspath
 	getMainClass().set("net.luis.Testing")
 }
 
