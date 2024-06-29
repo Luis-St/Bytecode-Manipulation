@@ -7,7 +7,6 @@ import net.luis.agent.asm.data.Method;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.util.CaughtAction;
-import net.luis.agent.util.factory.StringFactoryRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
@@ -95,9 +94,6 @@ public class CaughtTransformer extends BaseClassTransformer {
 				this.mv.visitInsn(Opcodes.RETURN);
 			} else if (this.action == CaughtAction.THROW) {
 				instrumentThrownException(this.mv, RUNTIME_EXCEPTION, local);
-			} else if (this.action == CaughtAction.DEFAULT) {
-				instrumentFactoryCall(this.mv, Type.getType(StringFactoryRegistry.class), this.returnType, "");
-				this.mv.visitInsn(this.returnType.getOpcode(Opcodes.IRETURN));
 			} else {
 				loadDefaultConst(this.mv, this.returnType);
 				this.mv.visitInsn(this.returnType.getOpcode(Opcodes.IRETURN));
