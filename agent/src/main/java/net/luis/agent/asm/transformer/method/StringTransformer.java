@@ -76,13 +76,11 @@ public class StringTransformer extends BaseClassTransformer {
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final Set<Integer> handledLocals = new HashSet<>();
-		private final Method method;
 		private final List<Parameter> parameters;
 		private final boolean includeLocals;
 		
 		private StringMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
-			this.setMethod(method);
 			this.method = method;
 			this.parameters = method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWithAny(ALL) && parameter.is(STRING)).toList();
 			this.includeLocals = method.getLocals().stream().anyMatch(local -> local.isAnnotatedWithAny(ALL));
@@ -111,7 +109,6 @@ public class StringTransformer extends BaseClassTransformer {
 					}
 					this.mv.visitVarInsn(Opcodes.ASTORE, index);
 					this.instrumentConditions(index, local.getAnnotations());
-					return;
 				}
 			}
 		}

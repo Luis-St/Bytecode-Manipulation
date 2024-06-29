@@ -65,11 +65,9 @@ public class RangeTransformer extends BaseClassTransformer {
 		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
-		private final Method method;
 		
 		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
-			this.setMethod(method);
 			this.method = method;
 			//region Parameter validation
 			String signature = method.getSignature(SignatureType.DEBUG);

@@ -149,7 +149,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		
 		private ScheduledMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull Method method, @NotNull List<Method> lookup, @NotNull Field executor, boolean generated) {
 			super(visitor);
-			this.setMethod(method);
+			this.method = method;
 			this.type = type;
 			this.lookup = lookup;
 			this.executor = executor;

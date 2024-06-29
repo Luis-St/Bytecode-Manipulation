@@ -2,7 +2,6 @@ package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
-import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.MethodType;
@@ -57,12 +56,10 @@ public class NotNullTransformer extends BaseClassTransformer {
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final List<Parameter> parameters = new ArrayList<>();
-		private final Method method;
 		private final boolean includeLocals;
 		
 		private NotNullVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
-			this.setMethod(method);
 			this.method = method;
 			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(NOT_NULL)).forEach(this.parameters::add);
 			this.includeLocals = method.getLocals().stream().anyMatch(local -> local.isAnnotatedWith(NOT_NULL));

@@ -18,7 +18,7 @@ public class LabelTrackingMethodVisitor extends MethodVisitor {
 	private final List<Label> labels = new LinkedList<>();
 	private final Set<Integer> inserts = new HashSet<>();
 	private final List<Local> locals = new ArrayList<>();
-	private Method method;
+	protected Method method;
 	
 	public LabelTrackingMethodVisitor() {
 		super(Opcodes.ASM9);
@@ -42,10 +42,6 @@ public class LabelTrackingMethodVisitor extends MethodVisitor {
 	
 	public @NotNull Set<Integer> getInserts() {
 		return this.inserts;
-	}
-	
-	public void setMethod(@NotNull Method method) {
-		this.method = method;
 	}
 	
 	public void insertLabel(@NotNull Label label) {

@@ -63,7 +63,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 		
 		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
-			this.setMethod(method);
+			this.method = method;
 			Annotation annotation = method.getAnnotation(CAUGHT);
 			this.action = CaughtAction.valueOf(annotation.getOrDefault("value"));
 			this.exceptionType = annotation.getOrDefault("exceptionType");

@@ -76,9 +76,8 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		
 		private RestrictedAccessMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
-			this.setMethod(method);
-			this.type = method.getOwner();
 			this.method = method;
+			this.type = method.getOwner();
 			Annotation annotation = method.getAnnotation(RESTRICTED_ACCESS);
 			this.values = Objects.requireNonNull(annotation.get("value"));
 			this.pattern = Boolean.TRUE.equals(annotation.get("pattern"));

@@ -59,7 +59,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 		
 		private DefaultVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
-			this.setMethod(method);
+			this.method = method;
 			method.getParameters().values().stream().filter(parameter -> parameter.isAnnotatedWith(DEFAULT)).forEach(this.lookup::add);
 		}
 		

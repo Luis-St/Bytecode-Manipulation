@@ -81,13 +81,11 @@ public class PatternTransformer extends BaseClassTransformer {
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final Map<Type, String> lookup;
-		private final Method method;
 		
 		private PatternMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method, @NotNull Map<Type, String> lookup) {
 			super(visitor);
-			this.setMethod(method);
-			this.lookup = lookup;
 			this.method = method;
+			this.lookup = lookup;
 			this.validate(method);
 			method.getParameters().values().forEach(this::validate);
 		}
