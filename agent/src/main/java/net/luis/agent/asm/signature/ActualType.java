@@ -49,4 +49,17 @@ public class ActualType {
 	public @NotNull List<ActualType> nested() {
 		return List.copyOf(this.nested);
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder(this.type.getDescriptor());
+		if (!this.nested.isEmpty()) {
+			builder.append('<');
+			for (ActualType nested : this.nested) {
+				builder.append(nested);
+			}
+			builder.append('>');
+		}
+		return builder.toString();
+	}
 }

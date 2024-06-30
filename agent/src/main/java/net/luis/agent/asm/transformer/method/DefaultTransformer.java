@@ -4,8 +4,7 @@ import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.asm.type.TypeAccess;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
@@ -75,7 +74,9 @@ public class DefaultTransformer extends BaseClassTransformer {
 				if (parameter.is(STRING)) {
 					this.mv.visitLdcInsn(value);
 				} else {
-					instrumentFactoryCall(this.mv, this.getFactory(parameter), parameter.getType(), value);
+					String classSignature = Agent.getClass(this.method.getOwner()).getSignature(SignatureType.GENERIC);
+					String methodSignature = this.method.getSignature(SignatureType.GENERIC);
+					instrumentFactoryCall(this.mv, this.getFactory(parameter), parameter.getType(), classSignature, methodSignature, parameter.getIndex(), value);
 				}
 				
 				this.visitVarInsn(Opcodes.ASTORE, parameter.getLoadIndex());

@@ -6,6 +6,7 @@ import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
@@ -386,16 +387,24 @@ public class Instrumentations {
 		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "equalsIgnoreCase", "(Ljava/lang/String;)Z", false);
 	}
 	
-	public static void instrumentFactoryCall(@NotNull MethodVisitor visitor, @NotNull Type factory, @NotNull Type target, @NotNull String value) {
+	public static void instrumentFactoryCall(@NotNull MethodVisitor visitor, @NotNull Type factory, @NotNull Type target, @Nullable String classSignature, @Nullable String methodSignature, int parameterIndex, @NotNull String value) {
 		visitor.visitFieldInsn(Opcodes.GETSTATIC, factory.getInternalName(), "INSTANCE", factory.getDescriptor());
 		visitor.visitLdcInsn(target.getDescriptor());
 		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, TYPE.getInternalName(), "getType", "(Ljava/lang/String;)Lorg/objectweb/asm/Type;", false);
 		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME_UTILS.getInternalName(), "getTypeAsString", "(Lorg/objectweb/asm/Type;)Ljava/lang/String;", false);
+		if (methodSignature == null) {
+			visitor.visitInsn(Opcodes.ACONST_NULL);
+		} else {
+			visitor.visitLdcInsn(classSignature == null ? "" : classSignature);
+			visitor.visitLdcInsn(methodSignature);
+			loadInteger(visitor, parameterIndex);
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME_UTILS.getInternalName(), "getActualType", "(Ljava/lang/String;Ljava/lang/String;I)Lnet/luis/agent/asm/signature/ActualType;", false);
+		}
 		visitor.visitTypeInsn(Opcodes.NEW, SCOPED_STRING_READER.getInternalName());
 		visitor.visitInsn(Opcodes.DUP);
 		visitor.visitLdcInsn(value);
 		visitor.visitMethodInsn(Opcodes.INVOKESPECIAL, SCOPED_STRING_READER.getInternalName(), "<init>", "(Ljava/lang/String;)V", false);
-		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, factory.getInternalName(), "create", "(Ljava/lang/String;Lnet/luis/utils/io/reader/ScopedStringReader;)Ljava/lang/Object;", false);
+		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, factory.getInternalName(), "create", "(Ljava/lang/String;Lnet/luis/agent/asm/signature/ActualType;Lnet/luis/utils/io/reader/ScopedStringReader;)Ljava/lang/Object;", false);
 		visitor.visitTypeInsn(Opcodes.CHECKCAST, target.getInternalName());
 	}
 	

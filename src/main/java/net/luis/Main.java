@@ -7,7 +7,12 @@ import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
 import net.luis.agent.annotation.string.condition.NotEmpty;
 import net.luis.agent.annotation.string.modification.Substring;
+import net.luis.agent.asm.signature.ActualType;
+import net.luis.agent.asm.signature.SignatureUtils;
+import net.luis.agent.asm.type.SignatureType;
+import net.luis.agent.util.factory.StringFactoryRegistry;
 import net.luis.utils.collection.WeightCollection;
+import net.luis.utils.io.reader.ScopedStringReader;
 import net.luis.utils.lang.StringUtils;
 import net.luis.utils.logging.LoggerConfiguration;
 import net.luis.utils.logging.LoggingType;
@@ -15,6 +20,7 @@ import org.apache.logging.log4j.Level;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Type;
 
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
@@ -34,9 +40,9 @@ public final class Main {
 	 *  - Add transformers for unused annotations
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add support for static redirect methods to copy the original parameters -> requires a local variable -> pop caller -> load local variable
-	 *  - Add parsing of signature -> Method#getSignature -> Signature -> update StringFactory (if possible, else argument for annotation)
 	 *  - Readonly and Writeonly annotations for collections
-	 *  - Ref annotation for references -> wraps the object into an array with a length of 1
+	 *  - @Ref annotation for references -> wraps the object into an array with a length of 1
+	 *  - Allow @Schedule annotation on instance methods
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {
@@ -58,7 +64,7 @@ public final class Main {
 		
 		new InjectTest("ABC").test(1, new int[] { 1 });
 		
-		execute("ls", null, null);
+		execute("ls", null, null, null);
 		parseUUID("550e8400-e29b-41d4-a716-446655440000");
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
@@ -82,13 +88,17 @@ public final class Main {
 	}
 	
 	@RestrictedAccess("Main#main")
-	public static void execute(@Pattern("^[a-z]*$") @NotEmpty String command, @Default("[-t, -r]") @NotNull String[] args, /*@Default*/ List<String> values) {
+	public static void execute(@Pattern("^[a-z]*$") String command, @Default("[-t, -r]") String[] args, @Default("[1, '2.05']") List<Number> values, @Default("{user=test,debug=false,threads=2}") LinkedHashMap<String, Object> environment) {
 		@Substring("1:*-1")
 		@NotEmpty
 		String arguments = Arrays.toString(args);
 		System.out.println("Command: " + command);
 		System.out.println("Args: " + arguments);
 		System.out.println("Values: " + values);
+		System.out.println("Environment: ");
+		for (Map.Entry<String, Object> entry : environment.entrySet()) {
+			System.out.println("  " + entry.getKey() + ": " + entry.getValue() + " (" + entry.getValue().getClass().getSimpleName() + ")");
+		}
 	}
 	
 	public static void parseUUID(@UUID String uuid) {

@@ -26,6 +26,7 @@ public class RuntimeUtilsGenerator extends Generator {
 		generateDefaultConstructor(cv, RUNTIME_UTILS);
 		this.generateIsAccessAllowed(cv);
 		this.generateGetTypeAsString(cv);
+		this.generateGetActualType(cv);
 		cv.visitEnd();
 	}
 	
@@ -175,6 +176,39 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitInsn(Opcodes.ARETURN);
 		mv.visitLabel(end);
 		mv.visitLocalVariable("type", "Lorg/objectweb/asm/Type;", null, start, end, 0);
+		mv.visitMaxs(0, 0);
+		mv.visitEnd();
+	}
+	//endregion
+	
+	//region RuntimeUtils#getActualType
+	private void generateGetActualType(@NotNull ClassVisitor cv) {
+		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "getActualType", "(Ljava/lang/String;Ljava/lang/String;I)Lnet/luis/agent/asm/signature/ActualType;", null, null);
+		//region Labels
+		Label start = new Label();
+		Label jump = new Label();
+		Label end = new Label();
+		//endregion
+		mv.visitAnnotation(NOT_NULL.getDescriptor(), false).visitEnd();
+		mv.visitParameter("classSignature", 0);
+		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
+		mv.visitParameter("methodSignature", 0);
+		mv.visitParameterAnnotation(1, NOT_NULL.getDescriptor(), false).visitEnd();
+		mv.visitParameter("index", 0);
+		mv.visitCode();
+		mv.visitLabel(start);
+		mv.visitVarInsn(Opcodes.ALOAD, 0);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "net/luis/agent/asm/signature/SignatureUtils", "parseGenericDeclarations", "(Ljava/lang/String;)Ljava/util/Map;", false);
+		mv.visitVarInsn(Opcodes.ALOAD, 1);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "net/luis/agent/asm/signature/SignatureUtils", "parseSignatureParameters", "(Ljava/util/Map;Ljava/lang/String;)Ljava/util/List;", false);
+		mv.visitVarInsn(Opcodes.ILOAD, 2);
+		mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, "java/util/List", "get", "(I)Ljava/lang/Object;", true);
+		mv.visitTypeInsn(Opcodes.CHECKCAST, "net/luis/agent/asm/signature/ActualType");
+		mv.visitInsn(Opcodes.ARETURN);
+		mv.visitLabel(end);
+		mv.visitLocalVariable("classSignature", STRING.getDescriptor(), null, start, end, 0);
+		mv.visitLocalVariable("methodSignature", STRING.getDescriptor(), null, start, end, 1);
+		mv.visitLocalVariable("index", "I", null, start, end, 2);
 		mv.visitMaxs(0, 0);
 		mv.visitEnd();
 	}
