@@ -18,6 +18,7 @@
 
 package net.luis.utils.io.reader;
 
+import net.luis.utils.exception.InvalidStringException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -80,7 +81,7 @@ public class ScopedStringReader extends StringReader {
 	 * @return The read string
 	 * @throws NullPointerException If the scope is null
 	 * @throws IllegalArgumentException If the next character is not the opening character of the scope
-	 * @throws IllegalStateException If the scope is invalid
+	 * @throws InvalidStringException If the scope is invalid
 	 */
 	public @NotNull String readScope(@NotNull StringScope scope) {
 		Objects.requireNonNull(scope, "Scope must not be null");
@@ -123,13 +124,26 @@ public class ScopedStringReader extends StringReader {
 			escaped = false;
 		}
 		if (depth > 0) {
-			throw new IllegalStateException("Invalid scope, " + depth + " scope" + (depth > 1 ? "s" : "") + " are not closed, expected '" + scope.close + "'");
+			throw new InvalidStringException("Invalid scope, " + depth + " scope" + (depth > 1 ? "s" : "") + " are not closed, expected '" + scope.close + "'");
 		} else if (depth < 0) {
-			throw new IllegalStateException("Invalid scope, " + -depth + " scope" + (-depth > 1 ? "s" : "") + " are not opened, expected '" + scope.open + "'");
+			throw new InvalidStringException("Invalid scope, " + -depth + " scope" + (-depth > 1 ? "s" : "") + " are not opened, expected '" + scope.open + "'");
 		}
 		return builder.toString();
 	}
 	
+	/**
+	 * Reads the string until the given terminator is found.<br>
+	 * The terminator and escape character ('\\') are read but not included in the result.<br>
+	 * <p>
+	 *     If the terminator is found at the beginning or at the end of the string, an empty string is returned.<br>
+	 *     If the terminator is found in a quoted part or in a scope, the terminator is ignored.<br>
+	 *     If the terminator is not found, the rest of the string is returned.<br>
+	 * </p>
+	 * @param terminator The terminator to read until
+	 * @return The read string
+	 * @throws IllegalArgumentException If the terminator is a backslash
+	 * @throws InvalidStringException If the scope is invalid
+	 */
 	@Override
 	public @NotNull String readUntil(char terminator) {
 		if (terminator == '\\') {
@@ -162,18 +176,37 @@ public class ScopedStringReader extends StringReader {
 		}
 		if (!stack.isEmpty()) {
 			String scopes = stack.reversed().stream().map(SCOPE_REGISTRY::get).map(String::valueOf).collect(Collectors.joining("', '", "'", "'"));
-			throw new IllegalStateException("Invalid scope, " + stack.size() + " scope" + (stack.size() > 1 ? "s" : "") + " are not closed, expected closing characters in order: " + scopes);
+			throw new InvalidStringException("Invalid scope, " + stack.size() + " scope" + (stack.size() > 1 ? "s" : "") + " are not closed, expected closing characters in order: " + scopes);
 		}
 		return builder.toString();
 	}
 	
+	/**
+	 * Reads a collection like object from the string.<br>
+	 * <p>
+	 *     The collection is defined by an opening and a closing character.<br>
+	 *     If there are no more characters to read, an empty collection is returned.<br>
+	 *     Whitespace characters are ignored.<br>
+	 * </p>
+	 * <p>
+	 *     The elements of the collection are separated by a comma.<br>
+	 *     The elements are parsed by the given parser.<br>
+	 * </p>
+	 * @param scope The scope with the opening and closing character
+	 * @param parser The parser to parse the elements
+	 * @return The read collection
+	 * @param <T> The type of the elements
+	 * @throws NullPointerException If the scope or parser is null
+	 * @throws IllegalArgumentException If an error occurs while reading the collection
+	 */
 	@Unmodifiable
 	private <T> @NotNull Collection<T> readCollection(@NotNull StringScope scope, @NotNull Function<ScopedStringReader, T> parser) {
+		Objects.requireNonNull(scope, "Scope must not be null");
 		Objects.requireNonNull(parser, "Parser must not be null");
 		ScopedStringReader reader = new ScopedStringReader(this.readScope(scope));
 		char next = reader.peek();
 		if (next != scope.open) {
-			throw new IllegalArgumentException("Expected '" + scope.open + "' but got '" + next + "'");
+			throw new InvalidStringException("Expected '" + scope.open + "' but got '" + next + "'");
 		}
 		reader.skip();
 		reader.skipWhitespaces();
@@ -195,6 +228,16 @@ public class ScopedStringReader extends StringReader {
 		return List.copyOf(collection);
 	}
 	
+	/**
+	 * Reads a list from the string.<br>
+	 * The list is defined by square brackets.<br>
+	 * @param parser The parser to parse the elements
+	 * @return The read list as an {@link ArrayList}
+	 * @param <T> The type of the elements
+	 * @throws NullPointerException If the parser is null
+	 * @throws InvalidStringException If an error occurs while reading the list
+	 * @see #readCollection(StringScope, Function)
+	 */
 	public <T> @NotNull List<T> readList(@NotNull Function<ScopedStringReader, T> parser) {
 		Objects.requireNonNull(parser, "List element parser must not be null");
 		if (!this.canRead()) {
@@ -203,6 +246,19 @@ public class ScopedStringReader extends StringReader {
 		return new ArrayList<>(this.readCollection(SQUARE_BRACKETS, parser));
 	}
 	
+	/**
+	 * Reads a set from the string.<br>
+	 * <p>
+	 *     The order of the elements is not guaranteed.<br>
+	 *     Duplicates are ignored.<br>
+	 * </p>
+	 * @param parser The parser to parse the elements
+	 * @return The read set as an {@link HashSet}
+	 * @param <T> The type of the elements
+	 * @throws NullPointerException If the parser is null
+	 * @throws InvalidStringException If an error occurs while reading the set
+	 * @see #readCollection(StringScope, Function)
+	 */
 	public <T> @NotNull Set<T> readSet(@NotNull Function<ScopedStringReader, T> parser) {
 		Objects.requireNonNull(parser, "Set element parser must not be null");
 		if (!this.canRead()) {
@@ -211,6 +267,25 @@ public class ScopedStringReader extends StringReader {
 		return new HashSet<>(this.readCollection(PARENTHESES, parser));
 	}
 	
+	/**
+	 * Reads a map from the string.<br>
+	 * <p>
+	 *     The map is defined by curly brackets.<br>
+	 *     The key and value are separated by an equal sign ('=').<br>
+	 *     The entries are separated by a comma.<br>
+	 * </p>
+	 * <p>
+	 *     If a key is defined multiple times, the last value is used.<br>
+	 * </p>
+	 * @param keyParser The parser to parse the keys
+	 * @param valueParser The parser to parse the values
+	 * @return The read map as a {@link HashMap}
+	 * @param <K> The type of the keys
+	 * @param <V> The type of the values
+	 * @throws NullPointerException If the key or value parser is null
+	 * @throws InvalidStringException If an error occurs while reading the map
+	 * @see #readCollection(StringScope, Function)
+	 */
 	public <K, V> @NotNull Map<K, V> readMap(@NotNull Function<ScopedStringReader, K> keyParser, @NotNull Function<ScopedStringReader, V> valueParser) {
 		Objects.requireNonNull(keyParser, "Map key parser must not be null");
 		Objects.requireNonNull(valueParser, "Map value parser must not be null");
@@ -221,7 +296,7 @@ public class ScopedStringReader extends StringReader {
 		Collection<String> entries = this.readCollection(CURLY_BRACKETS, reader -> reader.readUntil(',').strip());
 		for (String entry : entries) {
 			if (!entry.contains("=")) {
-				throw new IllegalStateException("Invalid map entry, expected key=value but got: '" + entry + "'");
+				throw new InvalidStringException("Invalid map entry, expected 'key=value' but got: '" + entry + "'");
 			}
 			ScopedStringReader reader = new ScopedStringReader(entry);
 			K key = keyParser.apply(new ScopedStringReader(reader.readUntil('=').strip()));
