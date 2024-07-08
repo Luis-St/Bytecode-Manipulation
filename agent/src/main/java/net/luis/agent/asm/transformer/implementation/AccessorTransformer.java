@@ -39,7 +39,7 @@ public class AccessorTransformer extends BaseClassTransformer {
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private AccessorVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+		private AccessorVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<String>> lookup) {
 			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
@@ -72,7 +72,6 @@ public class AccessorTransformer extends BaseClassTransformer {
 		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSignature(SignatureType.DEBUG);
-			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Accessor must be public", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Accessor", signature).exception();
 			}
@@ -82,7 +81,6 @@ public class AccessorTransformer extends BaseClassTransformer {
 			if (!ifaceMethod.is(TypeModifier.ABSTRACT)) {
 				throw CrashReport.create("Method annotated with @Accessor must not be default implemented", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Accessor", signature).exception();
 			}
-			//endregion
 			if (ifaceMethod.returns(Type.VOID_TYPE)) {
 				throw CrashReport.create("Method annotated with @Accessor has void return type", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Accessor", signature).exception();
 			}

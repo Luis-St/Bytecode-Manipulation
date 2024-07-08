@@ -43,6 +43,7 @@ public final class Main {
 	 *  - Readonly and Writeonly annotations for collections
 	 *  - @Ref annotation for references -> wraps the object into an array with a length of 1
 	 *  - Allow @Schedule annotation on instance methods
+	 *  - Add support for @Default with Enum values
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

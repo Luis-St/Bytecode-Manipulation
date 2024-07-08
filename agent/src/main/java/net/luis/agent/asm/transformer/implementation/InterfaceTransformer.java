@@ -76,6 +76,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		private static final Map<Type, List<String>> ALIASES = Utils.make(new HashMap<>(), map -> {
 			map.put(INJECT, List.of("inject"));
 			map.put(REDIRECT, List.of("redirect"));
+			map.put(MODIFY, List.of("modify"));
 		});
 		
 		private final Type target;

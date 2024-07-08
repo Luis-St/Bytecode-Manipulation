@@ -40,7 +40,7 @@ public class InvokerTransformer extends BaseClassTransformer {
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private InvokerVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+		private InvokerVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<String>> lookup) {
 			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
@@ -73,7 +73,6 @@ public class InvokerTransformer extends BaseClassTransformer {
 		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSignature(SignatureType.DEBUG);
-			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Invoker must be public", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature).exception();
 			}
@@ -83,7 +82,6 @@ public class InvokerTransformer extends BaseClassTransformer {
 			if (!ifaceMethod.is(TypeModifier.ABSTRACT)) {
 				throw CrashReport.create("Method annotated with @Invoker must not be default implemented", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature).exception();
 			}
-			//endregion
 			Method existingMethod = targetClass.getMethod(ifaceMethod.getSignature(SignatureType.FULL));
 			if (existingMethod != null) {
 				throw CrashReport.create("Target class of invoker already has method with same signature", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Invoker", signature)

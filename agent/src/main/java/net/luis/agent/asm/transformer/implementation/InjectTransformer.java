@@ -50,10 +50,10 @@ public class InjectTransformer extends BaseClassTransformer {
 	
 	private static class InjectClassVisitor extends ContextBasedClassVisitor {
 		
-		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		private final Map</*Method Signature*/String, List<InjectData>> injects = new HashMap<>();
+		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private InjectClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+		private InjectClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<String>> lookup) {
 			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
@@ -86,14 +86,12 @@ public class InjectTransformer extends BaseClassTransformer {
 		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSignature(SignatureType.DEBUG);
-			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Inject must be public", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).exception();
 			}
 			if (ifaceMethod.is(TypeModifier.ABSTRACT)) {
 				throw CrashReport.create("Method annotated with @Inject must be default implemented", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).exception();
 			}
-			//endregion
 			if (ifaceMethod.getExceptionCount() > 0) {
 				throw CrashReport.create("Method annotated with @Inject must not throw exceptions", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature)
 					.addDetail("Exceptions", ifaceMethod.getExceptions()).exception();

@@ -38,7 +38,7 @@ public class ImplementedTransformer extends BaseClassTransformer {
 		
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private ImplementedVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+		private ImplementedVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<String>> lookup) {
 			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
@@ -71,7 +71,6 @@ public class ImplementedTransformer extends BaseClassTransformer {
 		
 		protected void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSignature(SignatureType.DEBUG);
-			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw createReport("Method annotated with @Implemented must be public", ifaceMethod.getOwner(), signature).exception();
 			}
@@ -81,7 +80,6 @@ public class ImplementedTransformer extends BaseClassTransformer {
 			if (!ifaceMethod.is(TypeModifier.ABSTRACT)) {
 				throw createReport("Method annotated with @Implemented must not be default implemented", ifaceMethod.getOwner(), signature).exception();
 			}
-			//endregion
 			Method targetMethod = targetClass.getMethod(ifaceMethod.getSignature(SignatureType.FULL));
 			if (targetMethod == null) {
 				throw createReport("Method annotated with @Implemented must be implemented in target class", ifaceMethod.getOwner(), signature)

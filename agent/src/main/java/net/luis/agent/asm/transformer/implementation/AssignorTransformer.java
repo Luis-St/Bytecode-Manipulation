@@ -40,7 +40,7 @@ public class AssignorTransformer extends BaseClassTransformer {
 		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		private final List<String> unfinal = new ArrayList<>();
 		
-		private AssignorVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+		private AssignorVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<String>> lookup) {
 			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
@@ -73,7 +73,6 @@ public class AssignorTransformer extends BaseClassTransformer {
 		
 		private void validateMethod(@NotNull Method ifaceMethod, @NotNull Class targetClass) {
 			String signature = ifaceMethod.getSignature(SignatureType.DEBUG);
-			//region Base validation
 			if (!ifaceMethod.is(TypeAccess.PUBLIC)) {
 				throw CrashReport.create("Method annotated with @Assignor must be public", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Assignor", signature).exception();
 			}
@@ -83,7 +82,6 @@ public class AssignorTransformer extends BaseClassTransformer {
 			if (!ifaceMethod.is(TypeModifier.ABSTRACT)) {
 				throw CrashReport.create("Method annotated with @Assignor must not be default implemented", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Assignor", signature).exception();
 			}
-			//endregion
 			if (!ifaceMethod.returns(Type.VOID_TYPE)) {
 				throw CrashReport.create("Method annotated with @Assignor must return void", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Assignor", signature).exception();
 			}

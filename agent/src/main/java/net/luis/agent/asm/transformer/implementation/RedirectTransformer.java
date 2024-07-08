@@ -43,15 +43,15 @@ public class RedirectTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
-		return new RedirectClassVisitor(writer, type, () -> this.modified = true, this.lookup);
+		return new RedirectClassVisitor(writer, type, this.lookup, () -> this.modified = true);
 	}
 	
 	private static class RedirectClassVisitor extends ContextBasedClassVisitor {
 		
-		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		private final Map</*Method Signature*/String, List<RedirectData>> redirects = new HashMap<>();
+		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
 		
-		private RedirectClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map</*Target Class*/String, /*Interfaces*/List<String>> lookup) {
+		private RedirectClassVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Map<String, List<String>> lookup, @NotNull Runnable markModified) {
 			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
@@ -129,14 +129,12 @@ public class RedirectTransformer extends BaseClassTransformer {
 					}
 				}
 			}
-			
 			Annotation annotation = Objects.requireNonNull(ifaceMethod.getAnnotation(REDIRECT).get("target"));
 			TargetType target = TargetType.valueOf(annotation.get("type"));
 			if (target != TargetType.NEW && target != TargetType.INVOKE) {
 				throw CrashReport.create("Unsupported target type specified in redirect, supported are New and Invoke", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature)
 					.addDetail("Target Type", target).exception();
 			}
-			
 			TargetClassScanner scanner = new TargetClassScanner(method, annotation);
 			ClassFileScanner.scanClass(this.type, scanner);
 			if (!scanner.visitedTarget()) {
@@ -154,7 +152,6 @@ public class RedirectTransformer extends BaseClassTransformer {
 					.addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Lambda", lambdaMethod).addDetail("Target", annotation.get("value")).addDetail("Target Type", annotation.get("type"))
 					.addDetail("Target Mode", annotation.getOrDefault("mode")).addDetail("Target Ordinal", annotation.getOrDefault("ordinal")).removeNullValues(true).exception();
 			}
-			
 			String key = (lambdaMethod != null ? lambdaMethod : method).getSignature(SignatureType.FULL);
 			this.redirects.computeIfAbsent(key, m -> new ArrayList<>()).add(new RedirectData(line, ifaceMethod, lambdaMethod != null, annotation.getOrDefault("value"), target, annotation.getOrDefault("ordinal")));
 		}
@@ -162,7 +159,6 @@ public class RedirectTransformer extends BaseClassTransformer {
 		@Override
 		public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
-			
 			String fullSignature = name + descriptor;
 			Method method = Agent.getClass(this.type).getMethod(fullSignature);
 			if (this.redirects.containsKey(fullSignature) && method != null) {
