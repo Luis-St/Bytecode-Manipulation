@@ -37,13 +37,10 @@ public final class Main {
 	
 	/*
 	 * ToDo:
-	 *  - Add transformers for unused annotations
-	 *  - Update CrashReport -> global context where details can be pushed and popped
-	 *  - Add support for static redirect methods to copy the original parameters -> requires a local variable -> pop caller -> load local variable
-	 *  - Readonly and Writeonly annotations for collections
-	 *  - @Ref annotation for references -> wraps the object into an array with a length of 1
-	 *  - Allow @Schedule annotation on instance methods
 	 *  - Add support for @Default with Enum values
+	 *  - Allow @Schedule annotation on instance methods
+	 *  - Update CrashReport -> global context where details can be pushed and popped
+	 *  - Add transformers for unused annotations
 	 */
 	
 	public static void main(@Default @NotNull String[] args) {

@@ -5,7 +5,6 @@ import net.luis.agent.asm.generation.generators.MemorizedSupplierGenerator;
 import net.luis.agent.asm.generation.generators.RuntimeUtilsGenerator;
 import net.luis.agent.asm.generation.generators.concurrent.*;
 import net.luis.agent.asm.transformer.*;
-import net.luis.agent.asm.transformer.implementation.*;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -46,15 +45,6 @@ public class Main {
 	}
 	
 	private static void initializeTransformers(@NotNull Instrumentation inst) {
-		inst.addTransformer(new InterfaceInjectionTransformer());
-		inst.addTransformer(new ImplementedTransformer());
-		inst.addTransformer(new AccessorTransformer());
-		inst.addTransformer(new AssignorTransformer());
-		inst.addTransformer(new InvokerTransformer());
-		inst.addTransformer(new InjectTransformer());
-		inst.addTransformer(new RedirectTransformer());
-		inst.addTransformer(new InterfaceTransformer());
-		
 		inst.addTransformer(new ScheduledTransformer()); // 3: Schedule
 		inst.addTransformer(new AsyncTransformer()); // 2: Wrap in async
 		inst.addTransformer(new CaughtTransformer()); // 1: Wrap in try-catch
