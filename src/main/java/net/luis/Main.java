@@ -63,29 +63,12 @@ public final class Main {
 		};
 		Lists.newArrayList("10", "1").stream().map(converter::convert).forEach(System.out::println);
 		
-		new InjectTest("ABC").test(1, new int[] { 1 });
-		
 		execute("ls", null, null, null);
 		parseUUID("550e8400-e29b-41d4-a716-446655440000");
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
 		caught();
 		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
-		LoggerConfiguration logger = new LoggerConfiguration("*");
-		if (logger instanceof ILoggerConfiguration iLogger) {
-			System.out.println("LoggerConfiguration is an instance of ILoggerConfiguration!");
-			System.out.println(iLogger.build().getName());
-			List<String> loggers = iLogger.getLoggers();
-			Set<LoggingType> types = iLogger.getTypes();
-			System.out.println(loggers);
-			System.out.println(types);
-			iLogger.setLoggers(loggers);
-			iLogger.setTypes(types);
-			System.out.println(iLogger.invokeGetPattern(LoggingType.CONSOLE, Level.TRACE));
-			System.out.println(iLogger.getLoggingPattern(LoggingType.FILE, Level.ERROR));
-		} else {
-			System.out.println("LoggerConfiguration is not an instance of ILoggerConfiguration!");
-		}
 	}
 	
 	@RestrictedAccess("Main#main")

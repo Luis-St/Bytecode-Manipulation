@@ -4,8 +4,8 @@ import net.luis.agent.asm.generation.GenerationLoader;
 import net.luis.agent.asm.generation.generators.MemorizedSupplierGenerator;
 import net.luis.agent.asm.generation.generators.RuntimeUtilsGenerator;
 import net.luis.agent.asm.generation.generators.concurrent.*;
+import net.luis.agent.asm.transformer.*;
 import net.luis.agent.asm.transformer.implementation.*;
-import net.luis.agent.asm.transformer.method.*;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 

@@ -1,4 +1,4 @@
-package net.luis.agent.asm.transformer.method;
+package net.luis.agent.asm.transformer;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;

@@ -1,17 +1,13 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.annotation.*;
-import net.luis.agent.annotation.implementation.*;
 import net.luis.agent.annotation.range.*;
 import net.luis.agent.annotation.string.condition.*;
 import net.luis.agent.annotation.string.modification.*;
-import net.luis.agent.annotation.util.*;
 import net.luis.agent.util.Utils;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
-
-import java.util.Set;
 
 /**
  *
@@ -53,25 +49,6 @@ public class Types {
 	public static final Type BI_CONSUMER = Type.getType("Ljava/util/function/BiConsumer;");
 	public static final Type THREAD_FACTORY = Type.getType("Ljava/util/concurrent/ThreadFactory;");
 	public static final Type SCHEDULED_FUTURE = Type.getType("Ljava/util/concurrent/ScheduledFuture;");
-	//endregion
-	
-	//region Implementation annotations
-	public static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
-	
-	public static final Type IMPLEMENTED = Type.getType(Implemented.class);
-	public static final Type ACCESSOR = Type.getType(Accessor.class);
-	public static final Type ASSIGNOR = Type.getType(Assignor.class);
-	public static final Type INVOKER = Type.getType(Invoker.class);
-	public static final Type INJECT = Type.getType(Inject.class);
-	public static final Type REDIRECT = Type.getType(Redirect.class);
-	public static final Type MODIFY = Type.getType(Modify.class);
-	public static final Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER, INJECT, REDIRECT, MODIFY);
-	//endregion
-	
-	//region Parameter annotations
-	public static final Type THIS = Type.getType(This.class);
-	public static final Type LOCAL = Type.getType(Local.class);
-	public static final Type ORIGINAL = Type.getType(Original.class);
 	//endregion
 	
 	//region Method annotations

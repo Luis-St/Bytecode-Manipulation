@@ -1,10 +1,6 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.asm.data.*;
-import net.luis.agent.asm.report.CrashReport;
-import net.luis.agent.asm.type.SignatureType;
-import net.luis.agent.asm.type.TypeModifier;
-import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -268,70 +264,6 @@ public class Instrumentations {
 	}
 	//endregion
 	
-	//region @This and @Local
-	public static int getLoadIndex(@NotNull String type, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method, int scopeIndex) {
-		if (parameter.isAnnotatedWith(THIS)) {
-			checkStatic(type, parameter, ifaceMethod, method);
-			return 0;
-		}
-		Annotation annotation = parameter.getAnnotation(LOCAL);
-		String value = annotation.getOrDefault("value");
-		if (value.isEmpty()) {
-			if (!parameter.isNamed()) {
-				throw CrashReport.create("Unable to map " + type + " parameter to target by name, because the parameter name was not included into the class file during compilation", "Missing Debug Information")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
-					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
-			}
-			String name = parameter.getName();
-			if ("_this".equals(name)) {
-				checkStatic(type, parameter, ifaceMethod, method);
-				System.out.println("Found parameter which specifies 'this' as target using the @Local(\"_this\") annotation, use the @This annotation instead");
-				return 0;
-			}
-			int index = getLoadIndex(type, name, parameter, ifaceMethod, method);
-			if (index != -1) {
-				return index;
-			}
-		} else if (value.chars().allMatch(Character::isDigit)) {
-			int index = Integer.parseInt(value);
-			if (index == 0 && !method.is(TypeModifier.STATIC)) {
-				System.out.println("Found parameter which specifies 'this' as target using the @Local(\"0\") annotation, use the @This annotation instead");
-				return 0;
-			}
-			int max = method.getParameterCount() + (method.is(TypeModifier.STATIC) ? 0 : 1);
-			if (max > index) {
-				return index;
-			}
-			List<LocalVariable> locals = method.getLocals(index);
-			if (locals.isEmpty()) {
-				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the local variables were not included into the class file during compilation", "Missing Debug Information")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
-					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
-			}
-			LocalVariable local = locals.stream().filter(l -> l.isInScope(scopeIndex)).findFirst().orElse(null);
-			if (local == null) {
-				throw CrashReport.create("Unable to map " + type + " parameter to target by index, because the index is not available in the current scope", Utils.capitalize(type) + " Implementation Error")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
-					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).addDetail("Scope Index", scopeIndex)
-					.addDetail("Possible Local Variables", locals).exception();
-			}
-			return local.getIndex();
-		} else if ("this".equals(value)) {
-			checkStatic(type, parameter, ifaceMethod, method);
-			System.out.println("Found parameter which specifies 'this' as target using the @Local annotation, use the @This annotation instead");
-			return 0;
-		} else {
-			int index = getLoadIndex(type, value, parameter, ifaceMethod, method);
-			if (index != -1) {
-				return index;
-			}
-		}
-		throw CrashReport.create("Unable to find target for " + type + " parameter", Utils.capitalize(type) + " Implementation Error").addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG))
-			.addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-			.addDetail("Local Annotation Value", value).exception();
-	}
-	//endregion
-	
 	//region Stack manipulation
 	public static void pop(@NotNull MethodVisitor visitor, @NotNull Type type) {
 		if (convertToPrimitive(type).getSize() == 2) {
@@ -460,37 +392,6 @@ public class Instrumentations {
 		} else {
 			visitor.visitLdcInsn(d);
 		}
-	}
-	
-	private static void checkStatic(@NotNull String type, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
-		if (method.is(TypeModifier.STATIC)) {
-			throw CrashReport.create("Unable to map " + type + " parameter to 'this', because the method is static", "Missing Debug Information").addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG))
-				.addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
-		}
-	}
-	
-	private static int getLoadIndex(@NotNull String type, @NotNull String value, @NotNull Parameter parameter, @NotNull Method ifaceMethod, @NotNull Method method) {
-		for (Parameter param : method.getParameters().values()) {
-			if (!param.isNamed()) {
-				throw CrashReport.create("Unable to find target by name for " + type + " parameter, because the name was not included into the class file during compilation", "Missing Debug Information")
-					.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
-					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
-			}
-			if (param.getName().equals(value)) {
-				return param.getLoadIndex();
-			}
-		}
-		if (method.getLocals().isEmpty()) {
-			throw CrashReport.create("Unable to find target by name for " + type + " parameter, because the local variables were not included into the class file during compilation", "Missing Debug Information")
-				.addDetail(Utils.capitalize(type), ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
-				.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
-		}
-		for (LocalVariable local : method.getLocals()) {
-			if (local.getName().equals(value)) {
-				return local.getIndex();
-			}
-		}
-		return -1;
 	}
 	//endregion
 }
