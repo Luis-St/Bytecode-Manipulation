@@ -1,7 +1,7 @@
 package net.luis.agent.annotation;
 
-import net.luis.agent.util.factory.StringFactoryRegistry;
 import net.luis.agent.util.factory.StringFactory;
+import net.luis.agent.util.factory.StringFactoryRegistry;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;

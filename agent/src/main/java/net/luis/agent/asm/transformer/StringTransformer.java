@@ -2,8 +2,8 @@ package net.luis.agent.asm.transformer;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
-import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.SignatureType;
 import net.luis.agent.util.StripMode;

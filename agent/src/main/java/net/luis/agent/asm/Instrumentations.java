@@ -1,6 +1,7 @@
 package net.luis.agent.asm;
 
-import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.data.Annotation;
+import net.luis.agent.asm.data.Method;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;

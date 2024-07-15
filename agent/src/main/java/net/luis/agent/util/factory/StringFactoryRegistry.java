@@ -3,10 +3,9 @@ package net.luis.agent.util.factory;
 import net.luis.agent.asm.signature.ActualType;
 import net.luis.utils.io.reader.ScopedStringReader;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static net.luis.agent.util.factory.DefaultStringFactories.*;

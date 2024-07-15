@@ -1,7 +1,6 @@
 package net.luis.agent.asm.data;
 
 import net.luis.agent.Agent;
-import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.SignatureType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

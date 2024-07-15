@@ -1,7 +1,8 @@
 package net.luis.agent.asm.scanner;
 
 import net.luis.agent.asm.data.*;
-import net.luis.agent.asm.type.*;
+import net.luis.agent.asm.type.MethodType;
+import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
