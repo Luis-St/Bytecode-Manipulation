@@ -12,9 +12,9 @@ import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
@@ -30,6 +30,7 @@ public class ModifyTransformer extends BaseClassTransformer {
 	// ToDo:
 	//  - Add recursive support for lambda expressions
 	//  - Add priority for modify methods
+	//  - Add include ordinal in target
 	
 	private static final String REPORT_CATEGORY = "Modify Implementation Error";
 	
@@ -153,7 +154,7 @@ public class ModifyTransformer extends BaseClassTransformer {
 			Method method = Agent.getClass(this.type).getMethod(fullSignature);
 			if (this.modifiers.containsKey(fullSignature) && method != null) {
 				this.markModified();
-				return new ModifyMethodVisitor(visitor, method, this.modifiers.get(fullSignature));
+				return new ModifyMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), method, this.modifiers.get(fullSignature));
 			}
 			return visitor;
 		}
@@ -184,6 +185,7 @@ public class ModifyTransformer extends BaseClassTransformer {
 	private static class ModifyMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String MISSING_INFORMATION = "Missing Debug Information";
+		private static final String TYPE_MISMATCH = "Type Mismatch";
 		private static final String NOT_FOUND = "Not Found";
 		
 		private final Method method;
@@ -192,7 +194,7 @@ public class ModifyTransformer extends BaseClassTransformer {
 		private final Map</*Constant*/String, List</*Iface Method*/Method>> constantTargets = new HashMap<>();
 		private final List</*Iface Method*/Method> returnTargets;
 		
-		private ModifyMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method, @NotNull EnumMap<ModifyTarget, List<Method>> modifiers) {
+		private ModifyMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method, @NotNull EnumMap<ModifyTarget, List<Method>> modifiers) {
 			super(visitor);
 			this.method = method;
 			for (Method ifaceMethod : modifiers.getOrDefault(ModifyTarget.FIELD, Collections.emptyList())) {
@@ -239,8 +241,15 @@ public class ModifyTransformer extends BaseClassTransformer {
 			super.visitCode();
 			if (!this.parameterTargets.isEmpty()) {
 				for (Parameter parameter : this.method.getParameters().values()) {
-					for (Method target : this.parameterTargets.getOrDefault(parameter.getIndex(), Collections.emptyList())) {
-						this.instrumentModify(target, () -> {
+					for (Method ifaceMethod : this.parameterTargets.getOrDefault(parameter.getIndex(), Collections.emptyList())) {
+						//region Validation
+						if (!ifaceMethod.returns(parameter.getType())) {
+							throw CrashReport.create("Method annotated with @Modify with target type parameter must return the same type as the parameter", TYPE_MISMATCH).addDetail("Interface", ifaceMethod.getOwner())
+								.addDetail("Modify", ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType())
+								.addDetail("Parameter Name", parameter.getName()).exception();
+						}
+						//endregion
+						this.instrumentModify(ifaceMethod, () -> {
 							this.mv.visitVarInsn(parameter.getType().getOpcode(Opcodes.ILOAD), parameter.getIndex());
 						});
 						this.mv.visitVarInsn(parameter.getType().getOpcode(Opcodes.ISTORE), parameter.getIndex());
@@ -251,11 +260,32 @@ public class ModifyTransformer extends BaseClassTransformer {
 		
 		@Override
 		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
+			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
+				if (!this.fieldTargets.isEmpty()) {
+					for (Method ifaceMethod : this.fieldTargets.getOrDefault(name, Collections.emptyList())) {
+						Type type = Type.getType(descriptor);
+						//region Validation
+						if (!ifaceMethod.returns(type)) {
+							throw CrashReport.create("Method annotated with @Modify with target type field must return the same type as the field", TYPE_MISMATCH).addDetail("Interface", ifaceMethod.getOwner())
+								.addDetail("Modify", ifaceMethod.getSignature(SignatureType.DEBUG)).addDetail("Field Owner", Type.getObjectType(owner)).addDetail("Field", name).addDetail("Field Type", type).exception();
+						}
+						//endregion
+						int index = newLocal(this.mv, type);
+						this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), index); // ToDo: Add local information
+						this.instrumentModify(ifaceMethod, () -> {
+							this.mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+						});
+					}
+				}
+			}
 			super.visitFieldInsn(opcode, owner, name, descriptor);
 		}
 		
 		@Override
 		public void visitInsn(int opcode) {
+			if (!this.constantTargets.isEmpty()) {
+			
+			}
 			super.visitInsn(opcode);
 		}
 		
@@ -283,23 +313,23 @@ public class ModifyTransformer extends BaseClassTransformer {
 			}
 			this.mv.visitMethodInsn(ifaceMethod.is(TypeModifier.STATIC) ? Opcodes.INVOKESTATIC : Opcodes.INVOKEINTERFACE, ifaceMethod.getOwner().getInternalName(), ifaceMethod.getName(), ifaceMethod.getType().getDescriptor(), true);
 		}
+		
+		private @NotNull String getConstant(int opcode) {
+			return switch (opcode) {
+				case Opcodes.ACONST_NULL -> "null";
+				case Opcodes.ICONST_M1 -> "-1";
+				case Opcodes.ICONST_0, Opcodes.LCONST_0 -> "0";
+				case Opcodes.ICONST_1, Opcodes.LCONST_1 -> "1";
+				case Opcodes.ICONST_2 -> "2";
+				case Opcodes.ICONST_3 -> "3";
+				case Opcodes.ICONST_4 -> "4";
+				case Opcodes.ICONST_5 -> "5";
+				case Opcodes.FCONST_0, Opcodes.DCONST_0 -> "0.0";
+				case Opcodes.FCONST_1, Opcodes.DCONST_1  -> "1.0";
+				case Opcodes.FCONST_2 -> "2.0";
+				default -> throw new IllegalArgumentException("Unknown constant opcode: " + opcode);
+			};
+		}
 		//endregion
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }
