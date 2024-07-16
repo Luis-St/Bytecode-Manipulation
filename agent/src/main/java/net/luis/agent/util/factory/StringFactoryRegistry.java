@@ -41,7 +41,17 @@ public class StringFactoryRegistry implements StringFactory {
 	}
 	
 	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public @NotNull Object create(@NotNull String type, @NotNull ActualType actual, @NotNull ScopedStringReader reader) {
+		try {
+			if (!type.contains("[") && !type.contains("]")) {
+				Class<?> clazz = Class.forName(type);
+				if (clazz.isEnum()) {
+					String value = reader.getString().strip().replace(" ", "_").toUpperCase();
+					return Enum.valueOf((Class<? extends Enum>) clazz, value);
+				}
+			}
+		} catch (Exception ignored) {}
 		for (RegistryEntry entry : this.entries) {
 			if (entry.matches(type)) {
 				return entry.factory().create(type, actual, reader);
@@ -63,7 +73,8 @@ public class StringFactoryRegistry implements StringFactory {
 		
 		boolean matches(@NotNull String type);
 		
-		@NotNull StringFactory factory();
+		@NotNull
+		StringFactory factory();
 	}
 	
 	private record StringRegistryEntry(@NotNull String type, @NotNull StringFactory factory) implements RegistryEntry {

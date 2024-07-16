@@ -28,7 +28,6 @@ public final class Main {
 	
 	/*
 	 * ToDo:
-	 *  - Add support for @Default with Enum values
 	 *  - Allow @Schedule annotation on instance methods
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add transformers for unused annotations
@@ -52,7 +51,7 @@ public final class Main {
 		Lists.newArrayList("10", "1").stream().map(converter::convert).forEach(System.out::println);
 		
 		execute("ls", null, null, null);
-		parseUUID("550e8400-e29b-41d4-a716-446655440000");
+		parseUUID("550e8400-e29b-41d4-a716-446655440000", null, null);
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
 		caught();
@@ -73,8 +72,10 @@ public final class Main {
 		}
 	}
 	
-	public static void parseUUID(@UUID String uuid) {
+	public static void parseUUID(@UUID String uuid, @Default("strict") ParserMode first, @Default("built in") ParserMode second) {
 		System.out.println("UUID: " + uuid);
+		System.out.println("First: " + first);
+		System.out.println("Second: " + second);
 	}
 	
 	@Pattern("^.*$")
@@ -111,5 +112,9 @@ public final class Main {
 	@Scheduled(5000)
 	public static void scheduled(int count, @NotNull ScheduledFuture<?> future) {
 		System.out.println(count + " " + future);
+	}
+	
+	public enum ParserMode {
+		DEFAULT, STRICT, LENIENT, BUILT_IN
 	}
 }

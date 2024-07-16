@@ -3,7 +3,6 @@ package net.luis.agent.asm;
 import net.luis.agent.asm.data.Annotation;
 import net.luis.agent.asm.data.Method;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
@@ -320,15 +319,17 @@ public class Instrumentations {
 		visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "equalsIgnoreCase", "(Ljava/lang/String;)Z", false);
 	}
 	
-	public static void instrumentFactoryCall(@NotNull MethodVisitor visitor, @NotNull Type factory, @NotNull Type target, @Nullable String classSignature, @Nullable String methodSignature, int parameterIndex, @NotNull String value) {
+	public static void instrumentFactoryCall(@NotNull MethodVisitor visitor, @NotNull Type factory, @NotNull Type target, @NotNull String classSignature, @NotNull String methodSignature, int parameterIndex, @NotNull String value) {
 		visitor.visitFieldInsn(Opcodes.GETSTATIC, factory.getInternalName(), "INSTANCE", factory.getDescriptor());
 		visitor.visitLdcInsn(target.getDescriptor());
 		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, TYPE.getInternalName(), "getType", "(Ljava/lang/String;)Lorg/objectweb/asm/Type;", false);
 		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME_UTILS.getInternalName(), "getTypeAsString", "(Lorg/objectweb/asm/Type;)Ljava/lang/String;", false);
-		if (methodSignature == null) {
-			visitor.visitInsn(Opcodes.ACONST_NULL);
+		if (methodSignature.isEmpty()) {
+			visitor.visitLdcInsn(target.getDescriptor());
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, TYPE.getInternalName(), "getType", "(Ljava/lang/String;)Lorg/objectweb/asm/Type;", false);
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, "net/luis/agent/asm/signature/ActualType", "of", "(Lorg/objectweb/asm/Type;)Lnet/luis/agent/asm/signature/ActualType;", false);
 		} else {
-			visitor.visitLdcInsn(classSignature == null ? "" : classSignature);
+			visitor.visitLdcInsn(classSignature);
 			visitor.visitLdcInsn(methodSignature);
 			loadInteger(visitor, parameterIndex);
 			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME_UTILS.getInternalName(), "getActualType", "(Ljava/lang/String;Ljava/lang/String;I)Lnet/luis/agent/asm/signature/ActualType;", false);
