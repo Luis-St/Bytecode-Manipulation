@@ -28,7 +28,6 @@ public final class Main {
 	
 	/*
 	 * ToDo:
-	 *  - Allow @Schedule annotation on instance methods
 	 *  - Update CrashReport -> global context where details can be pushed and popped
 	 *  - Add transformers for unused annotations
 	 */
