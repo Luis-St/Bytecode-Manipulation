@@ -51,7 +51,7 @@ public class Types {
 	public static final Type SCHEDULED_FUTURE = Type.getType("Ljava/util/concurrent/ScheduledFuture;");
 	//endregion
 	
-	//region Method annotations
+	//region Annotation types
 	public static final Type ABOVE = Type.getType(Above.class);
 	public static final Type ABOVE_EQUAL = Type.getType(AboveEqual.class);
 	public static final Type BELOW = Type.getType(Below.class);
@@ -77,6 +77,7 @@ public class Types {
 	public static final Type NOT_NULL = Type.getType(NotNull.class);
 	public static final Type PATTERN = Type.getType(Pattern.class);
 	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
+	public static final Type SUPPORTS = Type.getType(Supports.class);
 	//endregion
 	
 	//region LUtils types

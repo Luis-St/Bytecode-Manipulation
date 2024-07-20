@@ -50,8 +50,9 @@ public class Main {
 		inst.addTransformer(new AsyncTransformer()); // 2: Wrap in async
 		inst.addTransformer(new CaughtTransformer()); // 1: Wrap in try-catch
 		
-		inst.addTransformer(new PatternTransformer()); // 4: Check pattern
-		inst.addTransformer(new StringTransformer()); // 3: Modify/check string
+		inst.addTransformer(new PatternTransformer()); // 5: Check pattern
+		inst.addTransformer(new StringTransformer()); // 4: Modify/check string
+		inst.addTransformer(new SupportsTransformer()); // 3: Check type
 		inst.addTransformer(new NotNullTransformer()); // 2: Throw if null
 		inst.addTransformer(new DefaultTransformer()); // 1: Ensure not null
 		

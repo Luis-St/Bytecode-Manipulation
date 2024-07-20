@@ -49,12 +49,19 @@ public final class Main {
 		};
 		Lists.newArrayList("10", "1").stream().map(converter::convert).forEach(System.out::println);
 		
+		supports(new ArrayList<>(Arrays.asList("Hello", "World")));
+		supports(new HashMap<>(Map.of("Hello", "World")));
+		supports(10);
 		execute("ls", null, null, null);
 		parseUUID("550e8400-e29b-41d4-a716-446655440000", null, null);
 		validateIndex(1);
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
 		caught();
 		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
+	}
+	
+	public static void supports(@NotNull @Supports({ List.class, Map.class, int.class }) Object obj) {
+		System.out.println(obj.getClass());
 	}
 	
 	@RestrictedAccess("Main#main")
