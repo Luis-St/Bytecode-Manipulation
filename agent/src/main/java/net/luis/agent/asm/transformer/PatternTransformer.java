@@ -102,7 +102,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				String value = this.getPattern(annotation);
 				
 				instrumentPatternCheck(this.mv, value, parameter.getLoadIndex(), label);
-				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, parameter.getMessageName() + " must match pattern '" + value + "'");
+				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentMessage(parameter.getLoadIndex(), parameter.getMessageName() + " must match pattern '" + value + "', but was '\u0001'"));
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.insertLabel(label);
@@ -121,7 +121,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				this.insertLabel(start);
 				
 				instrumentPatternCheck(this.mv, value, local, end);
-				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must match pattern '" + value + "'");
+				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentMessage(local, "Method return value must match pattern '" + value + "', but was '\u0001'"));
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.insertLabel(end);
@@ -130,6 +130,13 @@ public class PatternTransformer extends BaseClassTransformer {
 			}
 			this.mv.visitInsn(opcode);
 		}
+		
+		//region Instrumentation
+		private void instrumentMessage(int index, @NotNull String message) {
+			this.mv.visitVarInsn(Opcodes.ALOAD, index);
+			this.mv.visitInvokeDynamicInsn("makeConcatWithConstants", "(Ljava/lang/String;)Ljava/lang/String;", STRING_CONCAT_HANDLE, message);
+		}
+		//endregion
 		
 		//region Helper methods
 		private void validate(@NotNull ASMData data) {

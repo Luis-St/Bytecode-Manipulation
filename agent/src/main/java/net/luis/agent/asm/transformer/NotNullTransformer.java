@@ -78,10 +78,10 @@ public class NotNullTransformer extends BaseClassTransformer {
 		@Override
 		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
 			Type type = Type.getType(descriptor);
-			if (opcode == Opcodes.PUTFIELD && type.getSort() == Type.OBJECT) {
+			if (opcode == Opcodes.PUTFIELD && !isPrimitive(type)) {
 				Field field = Agent.getClass(Type.getObjectType(owner)).getField(name);
 				if (field != null && field.isAnnotatedWith(NOT_NULL)) {
-					instrumentNonNullCheck(this.mv, -1, this.getMessage(field.getAnnotation(NOT_NULL), getSimpleName(field.getOwner()) + "#" + name));
+					instrumentNonNullCheck(this.mv, -1, this.getMessage(field.getAnnotation(NOT_NULL), field.getSignature(SignatureType.SOURCE)));
 					this.mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
 				}
 			}
@@ -105,7 +105,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.method.isAnnotatedWith(NOT_NULL)) {
 				this.validateMethod();
-				instrumentNonNullCheck(this.mv, -1, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " must not return null");
+				instrumentNonNullCheck(this.mv, -1, "Method must not return null");
 				this.mv.visitTypeInsn(Opcodes.CHECKCAST, this.method.getReturnType().getInternalName());
 			}
 			this.mv.visitInsn(opcode);

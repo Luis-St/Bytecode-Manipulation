@@ -103,11 +103,7 @@ public class LocalVariable implements ASMData {
 	
 	//region Functional getters
 	public @NotNull String getMessageName() {
-		String simpleName = Types.getSimpleName(this.type);
-		if (simpleName.contains("$")) {
-			simpleName = simpleName.substring(simpleName.lastIndexOf("$") + 1);
-		}
-		return Utils.capitalize(Utils.getSeparated(simpleName)) + " (local #" + this.index + ")";
+		return Utils.capitalize(Utils.getSeparated(this.name));
 	}
 	
 	public boolean isInScope(int scope) {

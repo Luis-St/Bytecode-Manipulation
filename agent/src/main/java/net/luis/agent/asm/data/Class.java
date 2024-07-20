@@ -157,6 +157,10 @@ public class Class implements ASMData {
 		return this.methods.values().stream().flatMap(method -> method.getParameters().values().stream()).toList();
 	}
 	
+	public @NotNull List<LocalVariable> getLocals() {
+		return this.methods.values().stream().flatMap(method -> method.getLocals().stream()).toList();
+	}
+	
 	public boolean is(@NotNull ClassType type) {
 		return this.classType == type;
 	}

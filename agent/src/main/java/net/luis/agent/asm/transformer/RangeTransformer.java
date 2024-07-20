@@ -145,7 +145,7 @@ public class RangeTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
 				this.insertLabel(start);
 				
-				String message = "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must be ";
+				String message = "Method return value must be ";
 				if (this.method.isAnnotatedWith(ABOVE)) {
 					this.instrument(this.method.getAnnotation(ABOVE), type, local, true, Opcodes.IFGT, message + "above");
 				}
@@ -167,29 +167,37 @@ public class RangeTransformer extends BaseClassTransformer {
 			this.mv.visitInsn(opcode);
 		}
 		
-		//region Helper methods
-		private boolean isNoNumber(@NotNull Type type) {
-			return Utils.indexOf(NUMBERS, convertToPrimitive(type)) == -1;
-		}
-		
-		private void instrument(@NotNull Annotation annotation, @NotNull Type type, int loadIndex, boolean above, int compare, String message) {
+		//region Instrumentation
+		private void instrument(@NotNull Annotation annotation, @NotNull Type type, int index, boolean above, int compare, String message) {
 			Label label = new Label();
 			Double value = annotation.get("value");
 			if (value == null) {
 				return;
 			}
 			if (above) {
-				loadNumberAsDouble(this.mv, type, loadIndex);
+				loadNumberAsDouble(this.mv, type, index);
 				loadNumber(this.mv, value);
 			} else {
 				loadNumber(this.mv, value);
-				loadNumberAsDouble(this.mv, type, loadIndex);
+				loadNumberAsDouble(this.mv, type, index);
 			}
 			this.mv.visitInsn(Opcodes.DCMPL);
 			this.mv.visitJumpInsn(compare, label);
-			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, message + " " + value);
+			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, /*message + " " + value */() -> this.instrumentMessage(index, type, message, value));
 			this.mv.visitJumpInsn(Opcodes.GOTO, label);
 			this.insertLabel(label);
+		}
+		
+		private void instrumentMessage(int index, @NotNull Type type, @NotNull String baseMessage, @NotNull Double value) {
+			String valueMessage = type.equals(FLOAT) || type.equals(DOUBLE) ? String.valueOf(value) : String.valueOf(value.intValue());
+			this.mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), index);
+			this.mv.visitInvokeDynamicInsn("makeConcatWithConstants", "(" + type.getDescriptor() + ")Ljava/lang/String;", STRING_CONCAT_HANDLE, baseMessage + " " + valueMessage + ", but was '\u0001'");
+		}
+		//endregion
+		
+		//region Helper methods
+		private boolean isNoNumber(@NotNull Type type) {
+			return Utils.indexOf(NUMBERS, convertToPrimitive(type)) == -1;
 		}
 		//endregion
 	}

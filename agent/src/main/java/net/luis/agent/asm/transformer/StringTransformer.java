@@ -42,7 +42,8 @@ public class StringTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		Class clazz = Agent.getClass(type);
-		return clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ALL)) && clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ALL));
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ALL)) && clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ALL)) &&
+			clazz.getLocals().stream().noneMatch(local -> local.isAnnotatedWithAny(ALL));
 	}
 	//endregion
 	
@@ -312,7 +313,8 @@ public class StringTransformer extends BaseClassTransformer {
 			this.mv.visitLdcInsn(value);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "contains", "(Ljava/lang/CharSequence;)Z", false);
 			this.mv.visitJumpInsn(Opcodes.IFNE, label);
-			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "String must contain '" + value + "'");
+			
+			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentMessage(index, "String must contain '" + value + "', but found '\u0001'"));
 			this.insertLabel(label);
 		}
 		
@@ -324,7 +326,7 @@ public class StringTransformer extends BaseClassTransformer {
 			this.mv.visitLdcInsn(value);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "endsWith", "(Ljava/lang/String;)Z", false);
 			this.mv.visitJumpInsn(Opcodes.IFNE, label);
-			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "String must end with '" + value + "'");
+			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentMessage(index, "String must end with '" + value + "', but found '\u0001'"));
 			this.insertLabel(label);
 		}
 		
@@ -360,7 +362,7 @@ public class StringTransformer extends BaseClassTransformer {
 			}
 			Label label = new Label();
 			this.mv.visitJumpInsn(Opcodes.IFNE, label);
-			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "String must start with '" + value + "'");
+			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentMessage(index, "String must start with '" + value + "', but found '\u0001'"));
 			this.insertLabel(label);
 		}
 		//endregion
@@ -383,6 +385,11 @@ public class StringTransformer extends BaseClassTransformer {
 			} else {
 				throw new IllegalArgumentException("Invalid locale format found, expected 'language:country:variant' but found '" + value + "'");
 			}
+		}
+		
+		private void instrumentMessage(int index, @NotNull String message) {
+			this.mv.visitVarInsn(Opcodes.ALOAD, index);
+			this.mv.visitInvokeDynamicInsn("makeConcatWithConstants", "(Ljava/lang/String;)Ljava/lang/String;", STRING_CONCAT_HANDLE, message);
 		}
 		//endregion
 	}

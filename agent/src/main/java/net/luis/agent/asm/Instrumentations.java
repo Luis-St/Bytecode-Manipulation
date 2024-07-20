@@ -300,6 +300,14 @@ public class Instrumentations {
 		visitor.visitInsn(Opcodes.ATHROW);
 	}
 	
+	public static void instrumentThrownException(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull Runnable messageLoader) {
+		visitor.visitTypeInsn(Opcodes.NEW, type.getInternalName());
+		visitor.visitInsn(Opcodes.DUP);
+		messageLoader.run();
+		visitor.visitMethodInsn(Opcodes.INVOKESPECIAL, type.getInternalName(), "<init>", "(Ljava/lang/String;)V", false);
+		visitor.visitInsn(Opcodes.ATHROW);
+	}
+	
 	public static void instrumentPatternCheck(@NotNull MethodVisitor visitor, @NotNull String pattern, int index, @NotNull Label end) {
 		visitor.visitLdcInsn(pattern);
 		visitor.visitVarInsn(Opcodes.ALOAD, index);

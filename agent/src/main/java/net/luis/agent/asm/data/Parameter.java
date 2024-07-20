@@ -110,7 +110,7 @@ public class Parameter implements ASMData {
 		if (simpleName.contains("$")) {
 			simpleName = simpleName.substring(simpleName.lastIndexOf("$") + 1);
 		}
-		return Utils.capitalize(Utils.getSeparated(simpleName)) + " (parameter #" + this.index + ")";
+		return Utils.capitalize(Utils.getSeparated(simpleName));
 	}
 	//endregion
 	

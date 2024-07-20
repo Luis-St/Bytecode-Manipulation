@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.Above;
 import net.luis.agent.annotation.range.BelowEqual;
+import net.luis.agent.annotation.string.condition.Contains;
 import net.luis.agent.annotation.string.condition.NotEmpty;
 import net.luis.agent.annotation.string.modification.Substring;
 import net.luis.utils.collection.WeightCollection;
@@ -28,7 +29,8 @@ public final class Main {
 	
 	/*
 	 * ToDo:
-	 *  - Update CrashReport -> global context where details can be pushed and popped
+	 *  - Add support for string annotations on fields
+	 *  - Add support for range annotations on fields and local variables
 	 *  - Add transformers for unused annotations
 	 */
 	
@@ -66,8 +68,9 @@ public final class Main {
 	
 	@RestrictedAccess("Main#main")
 	public static void execute(@Pattern("^[a-z]*$") String command, @Default("[-t, -r]") String[] args, @Default("[1, '2.05']") List<Number> values, @Default("{user=test,debug=false,threads=2}") LinkedHashMap<String, Object> environment) {
-		@Substring("1:*-1")
 		@NotEmpty
+		@Contains("-")
+		@Substring("1:*-1")
 		String arguments = Arrays.toString(args);
 		System.out.println("Command: " + command);
 		System.out.println("Args: " + arguments);
