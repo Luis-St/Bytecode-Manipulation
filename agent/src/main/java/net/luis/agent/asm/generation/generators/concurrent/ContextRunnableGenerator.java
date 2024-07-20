@@ -44,9 +44,9 @@ public class ContextRunnableGenerator extends Generator {
 		Label end = new Label();
 		mv.visitParameter("method", 0);
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
-		mv.visitParameter("lookup", 1);
+		mv.visitParameter("lookup", 0);
 		mv.visitParameterAnnotation(1, NOT_NULL.getDescriptor(), false).visitEnd();
-		mv.visitParameter("action", 2);
+		mv.visitParameter("action", 0);
 		mv.visitParameterAnnotation(2, NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitCode();
 		mv.visitLabel(start);

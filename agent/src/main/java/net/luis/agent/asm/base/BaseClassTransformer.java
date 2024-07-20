@@ -53,13 +53,13 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 	@Override
 	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String className, @Nullable Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
 		Type type = Type.getObjectType(className);
-		if (this.shouldIgnoreClass(type) || this.isInternalClass(type)) {
-			return null;
-		}
-		ClassReader reader = new ClassReader(buffer);
-		ClassWriter writer = new ClassWriter(reader, this.computeFrames ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
-		ClassVisitor visitor = this.visit(type, writer);
 		try {
+			if (this.shouldIgnoreClass(type) || this.isInternalClass(type)) {
+				return null;
+			}
+			ClassReader reader = new ClassReader(buffer);
+			ClassWriter writer = new ClassWriter(reader, this.computeFrames ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
+			ClassVisitor visitor = this.visit(type, writer);
 			reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 			byte[] bytes = writer.toByteArray();
 			if (this.modified) {
@@ -69,6 +69,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			}
 			return bytes;
 		} catch (Throwable throwable) {
+			System.out.println("Error occurred while transforming class '" + type + "'");
 			CrashReport report;
 			if (throwable instanceof ReportedException ex) {
 				report = ex.getReport();

@@ -80,7 +80,6 @@ public class DefaultTransformer extends BaseClassTransformer {
 				}
 				
 				this.visitVarInsn(Opcodes.ASTORE, parameter.getLoadIndex());
-				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.insertLabel(label);
 			}
 		}
