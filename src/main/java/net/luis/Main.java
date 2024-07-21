@@ -29,10 +29,15 @@ public final class Main {
 	
 	/*
 	 * ToDo:
-	 *  - Add support for string annotations on fields
 	 *  - Add support for range annotations on fields and local variables
+	 *  - Add support for pattern annotation on fields
+	 *  - @ImplicitNotNull annotation for other annotations where the value must not be null
 	 *  - Add transformers for unused annotations
+	 *  - Find solution for annotations on fields works currently only on local fields (because of computing frames)
 	 */
+	
+	@NotEmpty
+	private static String test = "Hello";
 	
 	public static void main(@Default @NotNull String[] args) {
 		WeightCollection<String> collection = new WeightCollection<>();
@@ -60,6 +65,8 @@ public final class Main {
 		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
 		caught();
 		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
+		test += "World";
+		System.out.println(test);
 	}
 	
 	public static void supports(@NotNull @Supports({ List.class, Map.class, int.class }) Object obj) {

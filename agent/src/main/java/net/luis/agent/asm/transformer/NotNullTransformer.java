@@ -3,6 +3,7 @@ package net.luis.agent.asm.transformer;
 import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.MethodType;
 import net.luis.agent.asm.type.SignatureType;
@@ -39,6 +40,10 @@ public class NotNullTransformer extends BaseClassTransformer {
 					return false;
 				}
 				if (method.isAnnotatedWith(NOT_NULL)) {
+					return true;
+				}
+				Class clazz = Agent.getClass(method.getOwner());
+				if (clazz.getFields().values().stream().anyMatch(field -> field.isAnnotatedWith(NOT_NULL))) {
 					return true;
 				}
 				return method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(NOT_NULL)) || method.getLocals().stream().anyMatch(local -> local.isAnnotatedWith(NOT_NULL));
@@ -78,11 +83,13 @@ public class NotNullTransformer extends BaseClassTransformer {
 		@Override
 		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
 			Type type = Type.getType(descriptor);
-			if (opcode == Opcodes.PUTFIELD && !isPrimitive(type)) {
-				Field field = Agent.getClass(Type.getObjectType(owner)).getField(name);
-				if (field != null && field.isAnnotatedWith(NOT_NULL)) {
-					instrumentNonNullCheck(this.mv, -1, this.getMessage(field.getAnnotation(NOT_NULL), field.getSignature(SignatureType.SOURCE)));
-					this.mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
+			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
+				if (!isPrimitive(type))  {
+					Field field = Agent.getClass(Type.getObjectType(owner)).getField(name);
+					if (field != null && field.isAnnotatedWith(NOT_NULL)) {
+						instrumentNonNullCheck(this.mv, -1, this.getMessage(field.getAnnotation(NOT_NULL), field.getSignature(SignatureType.SOURCE)));
+						this.mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
+					}
 				}
 			}
 			super.visitFieldInsn(opcode, owner, name, descriptor);

@@ -59,6 +59,10 @@ public class StringTransformer extends BaseClassTransformer {
 				if (method.isAnnotatedWithAny(ALL) && method.returns(STRING)) {
 					return true;
 				}
+				Class clazz = Agent.getClass(method.getOwner());
+				if (clazz.getFields().values().stream().anyMatch(field -> field.isAnnotatedWithAny(ALL))) {
+					return true;
+				}
 				if (method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(ALL) && parameter.is(STRING))) {
 					return true;
 				}
@@ -107,11 +111,38 @@ public class StringTransformer extends BaseClassTransformer {
 					this.mv.visitVarInsn(Opcodes.ALOAD, index);
 					if (local.isAnnotatedWithAny(MODIFICATIONS)) {
 						this.instrumentModifications(index, local.getAnnotations());
+						this.mv.visitVarInsn(Opcodes.ASTORE, index);
 					}
-					this.mv.visitVarInsn(Opcodes.ASTORE, index);
 					this.instrumentConditions(index, local.getAnnotations());
 				}
 			}
+		}
+		
+		@Override
+		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
+			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
+				Field field = Agent.getClass(Type.getObjectType(owner)).getField(name);
+				if (field != null && field.is(STRING)) {
+					int local = newLocal(this.mv, STRING);
+					Label start = new Label();
+					Label end = new Label();
+					this.mv.visitVarInsn(Opcodes.ASTORE, local);
+					this.insertLabel(start);
+					
+					if (field.isAnnotatedWithAny(MODIFICATIONS)) {
+						this.instrumentModifications(local, field.getAnnotations());
+						this.mv.visitVarInsn(Opcodes.ASTORE, local);
+					}
+					if (field.isAnnotatedWithAny(CONDITIONS)) {
+						this.instrumentConditions(local, field.getAnnotations());
+					}
+					
+					this.mv.visitVarInsn(Opcodes.ALOAD, local);
+					this.insertLabel(end);
+					this.visitLocalVariable(local, "generated$StringTransformer$Temp" + local, STRING, null, start, end);
+				}
+			}
+			super.visitFieldInsn(opcode, owner, name, descriptor);
 		}
 		
 		@Override
@@ -120,14 +151,18 @@ public class StringTransformer extends BaseClassTransformer {
 				int local = newLocal(this.mv, STRING);
 				Label start = new Label();
 				Label end = new Label();
-				
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
 				this.insertLabel(start);
+				
+				if (this.method.isAnnotatedWithAny(MODIFICATIONS)) {
+					this.instrumentModifications(local, this.method.getAnnotations());
+					this.mv.visitVarInsn(Opcodes.ASTORE, local);
+				}
 				if (this.method.isAnnotatedWithAny(CONDITIONS)) {
 					this.instrumentConditions(local, this.method.getAnnotations());
 				}
+				
 				this.mv.visitVarInsn(Opcodes.ALOAD, local);
-				this.instrumentModifications(local, this.method.getAnnotations());
 				this.insertLabel(end);
 				this.visitLocalVariable(local, "generated$StringTransformer$Temp" + local, STRING, null, start, end);
 			}
