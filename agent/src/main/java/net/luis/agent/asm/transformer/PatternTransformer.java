@@ -27,7 +27,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class PatternTransformer extends BaseClassTransformer {
 	
-	private final Map<Type, String> lookup = Agent.stream().filter(clazz -> clazz.is(ClassType.ANNOTATION) && clazz.isAnnotatedWith(PATTERN))
+	static final Map<Type, String> LOOKUP = Agent.stream().filter(clazz -> clazz.is(ClassType.ANNOTATION) && clazz.isAnnotatedWith(PATTERN))
 		.collect(Collectors.toMap(Class::getType, clazz -> Objects.requireNonNull(clazz.getAnnotation(PATTERN).get("value"))));
 	
 	public PatternTransformer() {
@@ -38,7 +38,7 @@ public class PatternTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		Class clazz = Agent.getClass(type);
-		Type[] annotations = this.lookup.keySet().toArray(Type[]::new);
+		Type[] annotations = LOOKUP.keySet().toArray(Type[]::new);
 		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(PATTERN) || method.isAnnotatedWithAny(annotations)) &&
 			clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN) || parameter.isAnnotatedWithAny(annotations));
 	}
@@ -46,7 +46,7 @@ public class PatternTransformer extends BaseClassTransformer {
 	
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
-		return new PatternClassVisitor(writer, type, this.lookup, () -> this.modified = true);
+		return new PatternClassVisitor(writer, type, LOOKUP, () -> this.modified = true);
 	}
 	
 	private static class PatternClassVisitor extends MethodOnlyClassVisitor {
@@ -166,22 +166,22 @@ public class PatternTransformer extends BaseClassTransformer {
 		//endregion
 		
 		//region Helper methods
-		private void validate(@NotNull ASMData data) {
-			long count = data.getAnnotations().keySet().stream().filter(this.lookup::containsKey).count();
-			if (data.getAnnotations().containsKey(PATTERN)) {
+		private void validate(@NotNull ASMData element) {
+			long count = element.getAnnotations().keySet().stream().filter(this.lookup::containsKey).count();
+			if (element.getAnnotations().containsKey(PATTERN)) {
 				count++;
 			}
 			if (0 >= count) {
 				return;
 			}
 			if (count > 1) {
-				throw this.createReport(data, type -> "A " + type + " can not be annotated with multiple pattern annotations");
+				throw this.createReport(element, type -> "A " + type + " can not be annotated with multiple pattern annotations");
 			}
-			if (data instanceof Parameter parameter) {
+			if (element instanceof Parameter parameter) {
 				if (!parameter.getType().equals(STRING)) {
 					throw this.createReport(parameter, type -> "Parameter annotated with pattern annotation must be of type string");
 				}
-			} else if (data instanceof Method method) {
+			} else if (element instanceof Method method) {
 				if (!method.is(MethodType.METHOD)) {
 					throw CrashReport.create("Pattern annotation can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getName()).exception();
 				}

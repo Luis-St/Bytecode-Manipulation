@@ -4,6 +4,7 @@ import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.*;
 import net.luis.agent.annotation.string.condition.*;
 import net.luis.agent.annotation.string.modification.*;
+import net.luis.agent.annotation.util.ImplicitNotNull;
 import net.luis.agent.util.Utils;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
@@ -78,6 +79,16 @@ public class Types {
 	public static final Type PATTERN = Type.getType(Pattern.class);
 	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
 	public static final Type SUPPORTS = Type.getType(Supports.class);
+	
+	public static final Type IMPLICIT_NON_NULL = Type.getType(ImplicitNotNull.class);
+	
+	public static final Type[] ALL = {
+		ABOVE, ABOVE_EQUAL, BELOW, BELOW_EQUAL,
+		CONTAINS, ENDS_WITH, NOT_BLANK, NOT_EMPTY, STARTS_WITH,
+		LOWER_CASE, REPLACE, STRIP, SUBSTRING, TRIM, UPPER_CASE,
+		ASYNC, SCHEDULED, CAUGHT, DEFAULT, NOT_NULL, PATTERN, RESTRICTED_ACCESS, SUPPORTS,
+		IMPLICIT_NON_NULL
+	};
 	//endregion
 	
 	//region LUtils types

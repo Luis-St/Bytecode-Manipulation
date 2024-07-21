@@ -221,18 +221,18 @@ public class RangeTransformer extends BaseClassTransformer {
 		}
 		
 		//region Instrumentation
-		private void instrument(@NotNull ASMData data, @NotNull Type type, int index, String baseMessage) {
-			if (data.isAnnotatedWith(ABOVE)) {
-				this.instrument(data.getAnnotation(ABOVE), type, index, true, Opcodes.IFGT, baseMessage + "above");
+		private void instrument(@NotNull ASMData element, @NotNull Type type, int index, String baseMessage) {
+			if (element.isAnnotatedWith(ABOVE)) {
+				this.instrument(element.getAnnotation(ABOVE), type, index, true, Opcodes.IFGT, baseMessage + "above");
 			}
-			if (data.isAnnotatedWith(ABOVE_EQUAL)) {
-				this.instrument(data.getAnnotation(ABOVE_EQUAL), type, index, true, Opcodes.IFGE, baseMessage + "above or equal to");
+			if (element.isAnnotatedWith(ABOVE_EQUAL)) {
+				this.instrument(element.getAnnotation(ABOVE_EQUAL), type, index, true, Opcodes.IFGE, baseMessage + "above or equal to");
 			}
-			if (data.isAnnotatedWith(BELOW)) {
-				this.instrument(data.getAnnotation(BELOW), type, index, false, Opcodes.IFGT, baseMessage + "below");
+			if (element.isAnnotatedWith(BELOW)) {
+				this.instrument(element.getAnnotation(BELOW), type, index, false, Opcodes.IFGT, baseMessage + "below");
 			}
-			if (data.isAnnotatedWith(BELOW_EQUAL)) {
-				this.instrument(data.getAnnotation(BELOW_EQUAL), type, index, false, Opcodes.IFGE, baseMessage + "below or equal to");
+			if (element.isAnnotatedWith(BELOW_EQUAL)) {
+				this.instrument(element.getAnnotation(BELOW_EQUAL), type, index, false, Opcodes.IFGE, baseMessage + "below or equal to");
 			}
 		}
 		

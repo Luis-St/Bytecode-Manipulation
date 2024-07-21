@@ -67,7 +67,7 @@ public final class Main {
 		System.out.println(test);
 	}
 	
-	public static void supports(@NotNull @Supports({ List.class, Map.class, int.class }) Object obj) {
+	public static void supports(@Supports({ List.class, Map.class, int.class }) Object obj) {
 		System.out.println(obj.getClass());
 	}
 	
@@ -93,7 +93,7 @@ public final class Main {
 	}
 	
 	@Pattern("^.*$")
-	public static @NotNull String getExtension(@Nullable String file) {
+	public static String getExtension(@Nullable String file) {
 		String str = stripToEmpty(file);
 		@AboveEqual(-1)
 		int index = str.lastIndexOf(".");

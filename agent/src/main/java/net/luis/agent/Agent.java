@@ -9,6 +9,8 @@ import org.objectweb.asm.Type;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static net.luis.agent.asm.Types.*;
+
 /**
  *
  * @author Luis-St
@@ -18,6 +20,7 @@ import java.util.stream.Stream;
 public class Agent {
 	
 	private static final List<Type> classes = ClassPathScanner.getClasses().stream().filter(type -> !type.getDescriptor().contains("module-info") && !type.getDescriptor().contains("package-info")).toList();
+	private static final List<Type> internal = Arrays.asList(ALL);
 	private static final List<Type> generated = new ArrayList<>();
 	private static final Map<Type, Class> cache = new HashMap<>();
 	
@@ -46,6 +49,6 @@ public class Agent {
 	}
 	
 	public static @NotNull Stream<Class> stream() {
-		return classes.stream().map(Agent::getClass);
+		return Stream.concat(classes.stream(), internal.stream()).map(Agent::getClass);
 	}
 }
