@@ -3,8 +3,7 @@ package net.luis;
 import com.google.common.base.Converter;
 import com.google.common.collect.Lists;
 import net.luis.agent.annotation.*;
-import net.luis.agent.annotation.range.Above;
-import net.luis.agent.annotation.range.BelowEqual;
+import net.luis.agent.annotation.range.*;
 import net.luis.agent.annotation.string.condition.Contains;
 import net.luis.agent.annotation.string.condition.NotEmpty;
 import net.luis.agent.annotation.string.modification.Substring;
@@ -29,7 +28,6 @@ public final class Main {
 	
 	/*
 	 * ToDo:
-	 *  - Add support for range annotations on fields and local variables
 	 *  - Add support for pattern annotation on fields
 	 *  - @ImplicitNotNull annotation for other annotations where the value must not be null
 	 *  - Add transformers for unused annotations
@@ -97,6 +95,7 @@ public final class Main {
 	@Pattern("^.*$")
 	public static @NotNull String getExtension(@Nullable String file) {
 		String str = stripToEmpty(file);
+		@AboveEqual(-1)
 		int index = str.lastIndexOf(".");
 		if (index == -1) {
 			return "";

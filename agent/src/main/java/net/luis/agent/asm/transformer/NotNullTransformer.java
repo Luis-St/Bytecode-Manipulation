@@ -85,9 +85,9 @@ public class NotNullTransformer extends BaseClassTransformer {
 			Type type = Type.getType(descriptor);
 			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
 				if (!isPrimitive(type))  {
-					Field field = Agent.getClass(Type.getObjectType(owner)).getField(name);
+					Field field = Agent.getClass(this.method.getOwner()).getField(name);
 					if (field != null && field.isAnnotatedWith(NOT_NULL)) {
-						instrumentNonNullCheck(this.mv, -1, this.getMessage(field.getAnnotation(NOT_NULL), field.getSignature(SignatureType.SOURCE)));
+						instrumentNonNullCheck(this.mv, -1, this.getMessage(field.getAnnotation(NOT_NULL), "Field " + field.getName()));
 						this.mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
 					}
 				}

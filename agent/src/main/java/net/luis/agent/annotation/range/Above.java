@@ -9,7 +9,7 @@ import java.lang.annotation.*;
  */
 
 @Retention(RetentionPolicy.CLASS)
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE, ElementType.TYPE_USE /*Local Variable Only*/ })
 public @interface Above {
 	
 	double value();

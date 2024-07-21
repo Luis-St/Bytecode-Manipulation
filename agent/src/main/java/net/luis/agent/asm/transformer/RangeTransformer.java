@@ -12,8 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
@@ -26,7 +25,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class RangeTransformer extends BaseClassTransformer {
 	
-	private static final Type[] ANNOS = { ABOVE, ABOVE_EQUAL, BELOW, BELOW_EQUAL };
+	private static final Type[] ALL = { ABOVE, ABOVE_EQUAL, BELOW, BELOW_EQUAL };
 	
 	public RangeTransformer() {
 		super(true);
@@ -36,7 +35,7 @@ public class RangeTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		Class clazz = Agent.getClass(type);
-		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ANNOS)) && clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS));
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWithAny(ALL)) && clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWithAny(ALL));
 	}
 	//endregion
 	
@@ -49,7 +48,17 @@ public class RangeTransformer extends BaseClassTransformer {
 				if (!super.isMethodValid(method)) {
 					return false;
 				}
-				return method.isAnnotatedWithAny(ANNOS) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(ANNOS));
+				if (method.isAnnotatedWithAny(ALL)) {
+					return true;
+				}
+				Class clazz = Agent.getClass(method.getOwner());
+				if (clazz.getFields().values().stream().anyMatch(field -> field.isAnnotatedWithAny(ALL))) {
+					return true;
+				}
+				if (method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(ALL))) {
+					return true;
+				}
+				return method.getLocals().stream().anyMatch(local -> local.isAnnotatedWithAny(ALL));
 			}
 			
 			@Override
@@ -65,34 +74,15 @@ public class RangeTransformer extends BaseClassTransformer {
 		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
+		private final boolean includeLocals;
 		
 		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
 			this.method = method;
-			//region Parameter validation
-			String signature = method.getSignature(SignatureType.DEBUG);
-			for (Parameter parameter : method.getParameters().values()) {
-				if (parameter.isAnnotatedWithAny(ANNOS)) {
-					if (this.isNoNumber(parameter.getType())) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", signature)
-							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
-					}
-					if (parameter.getAnnotations().values().stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature)
-							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-							.addDetail("Annotations", parameter.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
-					}
-					if (parameter.getAnnotations().values().stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature)
-							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-							.addDetail("Annotations", parameter.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
-					}
-					this.lookup.add(parameter);
-				}
-			}
-			//endregion
+			this.includeLocals = method.getLocals().stream().anyMatch(local -> local.isAnnotatedWithAny(ALL));
 			//region Method validation
-			if (method.isAnnotatedWithAny(ANNOS)) {
+			String signature = method.getSignature(SignatureType.DEBUG);
+			if (method.isAnnotatedWithAny(ALL)) {
 				if (!this.method.is(MethodType.METHOD)) {
 					throw CrashReport.create(INVALID_CATEGORY, "Annotation @Above, @AboveEqual, @Below or @BelowEqual can not be applied to constructors and static initializers").addDetail("Method", method.getName()).exception();
 				}
@@ -110,33 +100,108 @@ public class RangeTransformer extends BaseClassTransformer {
 				}
 			}
 			//endregion
+			//region Parameter validation
+			for (Parameter parameter : method.getParameters().values()) {
+				if (parameter.isAnnotatedWithAny(ALL)) {
+					if (this.isNoNumber(parameter.getType())) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", signature)
+							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
+					}
+					if (parameter.getAnnotations().values().stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature)
+							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
+							.addDetail("Annotations", parameter.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
+					}
+					if (parameter.getAnnotations().values().stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature)
+							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
+							.addDetail("Annotations", parameter.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
+					}
+					this.lookup.add(parameter);
+				}
+			}
+			
+			//endregion
+			//region Field validation
+			for (Field field : Agent.getClass(method.getOwner()).getFields().values()) {
+				if (field.isAnnotatedWithAny(ALL)) {
+					if (this.isNoNumber(field.getType())) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Field annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", signature)
+							.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).exception();
+					}
+					if (field.getAnnotations().values().stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Field must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature)
+							.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).addDetail("Annotations", field.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
+					}
+					if (field.getAnnotations().values().stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Field must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature)
+							.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).addDetail("Annotations", field.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
+					}
+				}
+			}
+			//endregion
+			//region Local variable validation
+			for (LocalVariable local : method.getLocals()) {
+				if (local.isAnnotatedWithAny(ALL)) {
+					if (this.isNoNumber(local.getType())) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Local variable annotated with @Above, @AboveEqual, @Below or @BelowEqual must be a number type").addDetail("Method", signature)
+							.addDetail("Local Index", local.getIndex()).addDetail("Local Name", local.getName()).addDetail("Local Type", local.getType()).exception();
+					}
+					if (local.getAnnotations().values().stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Local variable must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature).addDetail("Local Index", local.getIndex())
+							.addDetail("Local Name", local.getName()).addDetail("Local Type", local.getType()).addDetail("Annotations", local.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
+					}
+					if (local.getAnnotations().values().stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
+						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Local variable must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature).addDetail("Local Index", local.getIndex())
+							.addDetail("Local Name", local.getName()).addDetail("Local Type", local.getType()).addDetail("Annotations", local.getAnnotations().values().stream().map(Annotation::getType).toList()).exception();
+					}
+				}
+			}
+			//endregion
 		}
 		
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
 			for (Parameter parameter : this.lookup) {
-				String message = parameter.getMessageName() + " must be ";
-				int index = parameter.getLoadIndex();
-				
-				if (parameter.isAnnotatedWith(ABOVE)) {
-					this.instrument(parameter.getAnnotation(ABOVE), parameter.getType(), index, true, Opcodes.IFGT, message + "above");
-				}
-				if (parameter.isAnnotatedWith(ABOVE_EQUAL)) {
-					this.instrument(parameter.getAnnotation(ABOVE_EQUAL), parameter.getType(), index, true, Opcodes.IFGE, message + "above or equal to");
-				}
-				if (parameter.isAnnotatedWith(BELOW)) {
-					this.instrument(parameter.getAnnotation(BELOW), parameter.getType(), index, false, Opcodes.IFGT, message + "below");
-				}
-				if (parameter.isAnnotatedWith(BELOW_EQUAL)) {
-					this.instrument(parameter.getAnnotation(BELOW_EQUAL), parameter.getType(), index, false, Opcodes.IFGE, message + "below or equal to");
-				}
+				this.instrument(parameter, parameter.getType(), parameter.getLoadIndex(), parameter.getMessageName() + " must be ");
 			}
 		}
 		
 		@Override
+		public void visitVarInsn(int opcode, int index) {
+			super.visitVarInsn(opcode, index);
+			if (this.includeLocals && isStore(opcode) && this.method.isLocal(index)) {
+				this.method.getLocals(index).stream().filter(l -> l.isAnnotatedWithAny(ALL)).filter(l -> l.isInScope(this.getScopeIndex())).findFirst().ifPresent(local -> {
+					this.instrument(local, local.getType(), index, local.getMessageName() + " must be ");
+				});
+			}
+		}
+		
+		@Override
+		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
+			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
+				Field field = Agent.getClass(this.method.getOwner()).getField(name);
+				if (field != null && field.isAnnotatedWithAny(ALL)) {
+					int local = newLocal(this.mv, field.getType());
+					Label start = new Label();
+					Label end = new Label();
+					this.mv.visitVarInsn(Opcodes.ASTORE, local);
+					this.insertLabel(start);
+					
+					this.instrument(field, field.getType(), local, "Field " + field.getName() + " must be ");
+					
+					this.mv.visitVarInsn(Opcodes.ALOAD, local);
+					this.insertLabel(end);
+					this.visitLocalVariable(local, "generated$RangeTransformer$Temp" + local, STRING, null, start, end);
+				}
+			}
+			super.visitFieldInsn(opcode, owner, name, descriptor);
+		}
+		
+		@Override
 		public void visitInsn(int opcode) {
-			if (isReturn(opcode) && this.method.isAnnotatedWithAny(ANNOS)) {
+			if (isReturn(opcode) && this.method.isAnnotatedWithAny(ALL)) {
 				Label start = new Label();
 				Label end = new Label();
 				Type type = this.method.getReturnType();
@@ -145,19 +210,7 @@ public class RangeTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
 				this.insertLabel(start);
 				
-				String message = "Method return value must be ";
-				if (this.method.isAnnotatedWith(ABOVE)) {
-					this.instrument(this.method.getAnnotation(ABOVE), type, local, true, Opcodes.IFGT, message + "above");
-				}
-				if (this.method.isAnnotatedWith(ABOVE_EQUAL)) {
-					this.instrument(this.method.getAnnotation(ABOVE_EQUAL), type, local, true, Opcodes.IFGE, message + "above or equal to");
-				}
-				if (this.method.isAnnotatedWith(BELOW)) {
-					this.instrument(this.method.getAnnotation(BELOW), type, local, false, Opcodes.IFGT, message + "below");
-				}
-				if (this.method.isAnnotatedWith(BELOW_EQUAL)) {
-					this.instrument(this.method.getAnnotation(BELOW_EQUAL), type, local, false, Opcodes.IFGE, message + "below or equal to");
-				}
+				this.instrument(this.method, type, local, "Method return value must be ");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.insertLabel(end);
@@ -168,6 +221,21 @@ public class RangeTransformer extends BaseClassTransformer {
 		}
 		
 		//region Instrumentation
+		private void instrument(@NotNull ASMData data, @NotNull Type type, int index, String baseMessage) {
+			if (data.isAnnotatedWith(ABOVE)) {
+				this.instrument(data.getAnnotation(ABOVE), type, index, true, Opcodes.IFGT, baseMessage + "above");
+			}
+			if (data.isAnnotatedWith(ABOVE_EQUAL)) {
+				this.instrument(data.getAnnotation(ABOVE_EQUAL), type, index, true, Opcodes.IFGE, baseMessage + "above or equal to");
+			}
+			if (data.isAnnotatedWith(BELOW)) {
+				this.instrument(data.getAnnotation(BELOW), type, index, false, Opcodes.IFGT, baseMessage + "below");
+			}
+			if (data.isAnnotatedWith(BELOW_EQUAL)) {
+				this.instrument(data.getAnnotation(BELOW_EQUAL), type, index, false, Opcodes.IFGE, baseMessage + "below or equal to");
+			}
+		}
+		
 		private void instrument(@NotNull Annotation annotation, @NotNull Type type, int index, boolean above, int compare, String message) {
 			Label label = new Label();
 			Double value = annotation.get("value");

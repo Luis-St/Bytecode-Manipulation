@@ -80,7 +80,6 @@ public class StringTransformer extends BaseClassTransformer {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
-		private final Set<Integer> handledLocals = new HashSet<>();
 		private final List<Parameter> parameters;
 		private final boolean includeLocals;
 		
@@ -105,7 +104,7 @@ public class StringTransformer extends BaseClassTransformer {
 		@Override
 		public void visitVarInsn(int opcode, int index) {
 			super.visitVarInsn(opcode, index);
-			if (this.includeLocals && isStore(opcode) && this.method.isLocal(index) && this.handledLocals.add(index)) {
+			if (this.includeLocals && isStore(opcode) && this.method.isLocal(index)) {
 				LocalVariable local = this.method.getLocals(index).stream().filter(l -> l.isAnnotatedWithAny(ALL)).filter(l -> l.isInScope(this.getScopeIndex())).findFirst().orElse(null);
 				if (local != null && local.is(STRING)) {
 					this.mv.visitVarInsn(Opcodes.ALOAD, index);
@@ -121,7 +120,7 @@ public class StringTransformer extends BaseClassTransformer {
 		@Override
 		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
 			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
-				Field field = Agent.getClass(Type.getObjectType(owner)).getField(name);
+				Field field = Agent.getClass(this.method.getOwner()).getField(name);
 				if (field != null && field.is(STRING)) {
 					int local = newLocal(this.mv, STRING);
 					Label start = new Label();
