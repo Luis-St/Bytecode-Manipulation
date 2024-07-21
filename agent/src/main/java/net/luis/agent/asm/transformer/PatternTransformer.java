@@ -66,8 +66,13 @@ public class PatternTransformer extends BaseClassTransformer {
 			if (method.isAnnotatedWith(PATTERN) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN))) {
 				return true;
 			}
+			Class clazz = Agent.getClass(method.getOwner());
+			if (clazz.getFields().values().stream().anyMatch(field -> field.isAnnotatedWith(PATTERN))) {
+				return true;
+			}
 			Type[] annotations = this.lookup.keySet().toArray(Type[]::new);
-			return method.isAnnotatedWithAny(annotations) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(annotations));
+			return method.isAnnotatedWithAny(annotations) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(annotations)) ||
+				clazz.getFields().values().stream().anyMatch(field -> field.isAnnotatedWithAny(annotations));
 		}
 		
 		@Override
@@ -104,9 +109,32 @@ public class PatternTransformer extends BaseClassTransformer {
 				instrumentPatternCheck(this.mv, value, parameter.getLoadIndex(), label);
 				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentMessage(parameter.getLoadIndex(), parameter.getMessageName() + " must match pattern '" + value + "', but was '\u0001'"));
 				
-				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.insertLabel(label);
 			}
+		}
+		
+		@Override
+		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
+			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
+				Field field = Agent.getClass(this.method.getOwner()).getField(name);
+				Annotation annotation = this.getAnnotation(field);
+				if (field != null && annotation != null) {
+					String value = this.getPattern(annotation);
+					int local = newLocal(this.mv, STRING);
+					Label start = new Label();
+					Label end = new Label();
+					this.mv.visitVarInsn(Opcodes.ASTORE, local);
+					this.insertLabel(start);
+					
+					instrumentPatternCheck(this.mv, value, local, end);
+					instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentMessage(local, "Method return value must match pattern '" + value + "', but was '\u0001'"));
+					
+					this.insertLabel(end);
+					this.mv.visitVarInsn(Opcodes.ALOAD, local);
+					this.visitLocalVariable(local, "generated$PatternTransformer$Temp" + local, STRING, null, start, end);
+				}
+			}
+			super.visitFieldInsn(opcode, owner, name, descriptor);
 		}
 		
 		@Override
@@ -123,7 +151,6 @@ public class PatternTransformer extends BaseClassTransformer {
 				instrumentPatternCheck(this.mv, value, local, end);
 				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentMessage(local, "Method return value must match pattern '" + value + "', but was '\u0001'"));
 				
-				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.insertLabel(end);
 				this.mv.visitVarInsn(Opcodes.ALOAD, local);
 				this.visitLocalVariable(local, "generated$PatternTransformer$Temp" + local, STRING, null, start, end);
@@ -164,7 +191,10 @@ public class PatternTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private @Nullable Annotation getAnnotation(@NotNull ASMData data) {
+		private @Nullable Annotation getAnnotation(@Nullable ASMData data) {
+			if (data == null) {
+				return null;
+			}
 			if (data.getAnnotations().containsKey(PATTERN)) {
 				return data.getAnnotation(PATTERN);
 			} else {
