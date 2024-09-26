@@ -10,4 +10,7 @@ import java.lang.annotation.*;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.CLASS)
-public @interface SetterAccessOnly {}
+public @interface SetterAccessOnly {
+	
+	boolean allowSecondaryConstructor() default true;
+}
