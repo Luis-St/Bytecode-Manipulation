@@ -1,6 +1,7 @@
-package net.luis.agent.annotation.string.modification;
+package net.luis.agent.annotation.string;
 
 import net.luis.agent.annotation.util.ImplicitNotNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
 
@@ -13,4 +14,9 @@ import java.lang.annotation.*;
 @ImplicitNotNull
 @Retention(RetentionPolicy.CLASS)
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE, ElementType.TYPE_USE /*Local Variable Only*/ })
-public @interface Trim {}
+public @interface StartsWith {
+	
+	@NotNull String value();
+	
+	int offset() default 0;
+}

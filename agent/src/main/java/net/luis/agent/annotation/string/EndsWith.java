@@ -1,4 +1,4 @@
-package net.luis.agent.annotation.string.condition;
+package net.luis.agent.annotation.string;
 
 import net.luis.agent.annotation.util.ImplicitNotNull;
 import org.jetbrains.annotations.NotNull;

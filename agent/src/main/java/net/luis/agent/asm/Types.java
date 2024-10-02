@@ -2,8 +2,7 @@ package net.luis.agent.asm;
 
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.range.*;
-import net.luis.agent.annotation.string.condition.*;
-import net.luis.agent.annotation.string.modification.*;
+import net.luis.agent.annotation.string.*;
 import net.luis.agent.annotation.util.ImplicitNotNull;
 import net.luis.agent.util.Utils;
 import org.intellij.lang.annotations.Pattern;
