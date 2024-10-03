@@ -193,6 +193,72 @@ public class Instrumentations {
 	}
 	//endregion
 	
+	//region Number conversion
+	public static void instrumentNumberConversion(@NotNull MethodVisitor visitor, @NotNull Type from, @NotNull Type to, int loadIndex) {
+		visitor.visitVarInsn(from.getOpcode(Opcodes.ILOAD), loadIndex);
+		instrumentNumberConversion(visitor, from, to);
+	}
+	
+	@SuppressWarnings("DuplicateExpressions")
+	public static void instrumentNumberConversion(@NotNull MethodVisitor visitor, @NotNull Type from, @NotNull Type to) {
+		if (from.equals(to)) {
+			return;
+		}
+		if (isPrimitive(from) && isPrimitive(to)) { // primitive -> primitive
+			if (from.equals(BYTE) || from.equals(SHORT) || from.equals(INT)) {
+				if (to.equals(SHORT)) {
+					visitor.visitInsn(Opcodes.I2S);
+				} else if (to.equals(INT)) {
+					visitor.visitInsn(Opcodes.I2B);
+				} else if (to.equals(LONG)) {
+					visitor.visitInsn(Opcodes.I2L);
+				} else if (to.equals(FLOAT)) {
+					visitor.visitInsn(Opcodes.I2F);
+				} else if (to.equals(DOUBLE)) {
+					visitor.visitInsn(Opcodes.I2D);
+				}
+			} else if (from.equals(LONG)) {
+				if (to.equals(BYTE) || to.equals(SHORT) || to.equals(INT)) {
+					visitor.visitInsn(Opcodes.L2I);
+					instrumentNumberConversion(visitor, INT, to);
+				} else if (to.equals(FLOAT)) {
+					visitor.visitInsn(Opcodes.L2F);
+				} else if (to.equals(DOUBLE)) {
+					visitor.visitInsn(Opcodes.L2D);
+				}
+			} else if (from.equals(FLOAT)) {
+				if (to.equals(BYTE) || to.equals(SHORT) || to.equals(INT)) {
+					visitor.visitInsn(Opcodes.F2I);
+					instrumentNumberConversion(visitor, INT, to);
+				} else if (to.equals(LONG)) {
+					visitor.visitInsn(Opcodes.F2L);
+				} else if (to.equals(DOUBLE)) {
+					visitor.visitInsn(Opcodes.F2D);
+				}
+			} else if (from.equals(DOUBLE)) {
+				if (to.equals(BYTE) || to.equals(SHORT) || to.equals(INT)) {
+					visitor.visitInsn(Opcodes.D2I);
+					instrumentNumberConversion(visitor, INT, to);
+				} else if (to.equals(LONG)) {
+					visitor.visitInsn(Opcodes.D2L);
+				} else if (to.equals(FLOAT)) {
+					visitor.visitInsn(Opcodes.D2F);
+				}
+			}
+		} else if (isPrimitive(from) && isWrapper(to)) { // primitive -> wrapper
+			Type toPrimitive = convertToPrimitive(to);
+			instrumentNumberConversion(visitor, from, toPrimitive);
+			visitor.visitMethodInsn(Opcodes.INVOKESTATIC, to.getInternalName(), "valueOf", "(" + toPrimitive.getDescriptor() + ")" + to.getDescriptor(), false);
+		} else if (isWrapper(from) && isPrimitive(to)) { // wrapper -> primitive
+			visitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, from.getInternalName(), to.getClassName() + "Value", "()" + to.getDescriptor(), false);
+		} else if (isWrapper(from) && isWrapper(to)) { // wrapper -> wrapper
+			Type fromPrimitive = convertToPrimitive(from);
+			instrumentNumberConversion(visitor, from, fromPrimitive);
+			instrumentNumberConversion(visitor, fromPrimitive, to);
+		}
+	}
+	//endregion
+	
 	//region Constants loading
 	public static void loadNumber(@NotNull MethodVisitor visitor, @NotNull Number number) {
 		if (number instanceof Byte || number instanceof Short || number instanceof Integer) {
@@ -204,6 +270,11 @@ public class Instrumentations {
 		} else if (number instanceof Double d) {
 			loadDouble(visitor, d);
 		}
+	}
+	
+	public static void loadNumberAs(@NotNull MethodVisitor visitor, @NotNull Type type, @NotNull Number number) {
+		loadNumber(visitor, number);
+		instrumentNumberConversion(visitor, getNumberType(number), type);
 	}
 	
 	public static void loadDefaultConst(@NotNull MethodVisitor visitor, @NotNull Type type) {
@@ -362,6 +433,18 @@ public class Instrumentations {
 	}
 	
 	//region Internal
+	private static @NotNull Type getNumberType(@NotNull Number number) {
+		return switch (number) {
+			case Byte b -> BYTE;
+			case Short i -> SHORT;
+			case Integer i -> INT;
+			case Long l -> LONG;
+			case Float v -> FLOAT;
+			case Double v -> DOUBLE;
+			default -> throw new IllegalArgumentException("Unsupported number type: " + number.getClass().getName());
+		};
+	}
+	
 	private static void loadInteger(@NotNull MethodVisitor visitor, int i) {
 		if (i >= -1 && i <= 5) {
 			visitor.visitInsn(Opcodes.ICONST_0 + i);
