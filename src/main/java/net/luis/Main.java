@@ -3,7 +3,7 @@ package net.luis;
 import com.google.common.base.Converter;
 import com.google.common.collect.Lists;
 import net.luis.agent.annotation.*;
-import net.luis.agent.annotation.range.*;
+import net.luis.agent.annotation.math.*;
 import net.luis.agent.annotation.string.Contains;
 import net.luis.agent.annotation.string.NotEmpty;
 import net.luis.agent.annotation.string.Substring;

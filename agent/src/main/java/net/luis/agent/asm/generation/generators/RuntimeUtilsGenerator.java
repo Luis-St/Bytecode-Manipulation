@@ -27,6 +27,7 @@ public class RuntimeUtilsGenerator extends Generator {
 		this.generateIsAccessAllowed(cv);
 		this.generateGetTypeAsString(cv);
 		this.generateGetActualType(cv);
+		this.generateRoundTo(cv);
 		cv.visitEnd();
 	}
 	
@@ -34,7 +35,7 @@ public class RuntimeUtilsGenerator extends Generator {
 	private void generateIsAccessAllowed(@NotNull ClassVisitor cv) {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "isAccessAllowed", "(Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Z", null, null);
 		Label start = new Label();
-		Label[] labels = new Label[] {
+		Label[] labels = {
 			new Label(), new Label(), new Label(), new Label(), new Label(), new Label(), new Label(), new Label()
 		};
 		Label end = new Label();
@@ -186,7 +187,6 @@ public class RuntimeUtilsGenerator extends Generator {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "getActualType", "(Ljava/lang/String;Ljava/lang/String;I)Lnet/luis/agent/asm/signature/ActualType;", null, null);
 		//region Labels
 		Label start = new Label();
-		Label jump = new Label();
 		Label end = new Label();
 		//endregion
 		mv.visitAnnotation(NOT_NULL.getDescriptor(), false).visitEnd();
@@ -209,6 +209,53 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitLocalVariable("classSignature", STRING.getDescriptor(), null, start, end, 0);
 		mv.visitLocalVariable("methodSignature", STRING.getDescriptor(), null, start, end, 1);
 		mv.visitLocalVariable("index", "I", null, start, end, 2);
+		mv.visitMaxs(0, 0);
+		mv.visitEnd();
+	}
+	//endregion
+	
+	//region RuntimeUtils#roundTo
+	private void generateRoundTo(@NotNull ClassVisitor cv) {
+		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "roundTo", "(DI)D", null, null);
+		//region Labels
+		Label start = new Label();
+		Label jump = new Label();
+		Label end = new Label();
+		//endregion
+		mv.visitParameter("value", 0);
+		mv.visitParameter("digits", 0);
+		mv.visitCode();
+		mv.visitLabel(start);
+		mv.visitLdcInsn(10.0);
+		mv.visitVarInsn(Opcodes.ILOAD, 2);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "abs", "(I)I", false);
+		mv.visitInsn(Opcodes.I2D);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "pow", "(DD)D", false);
+		mv.visitVarInsn(Opcodes.DSTORE, 3);
+		mv.visitInsn(Opcodes.ICONST_0);
+		mv.visitVarInsn(Opcodes.ILOAD, 2);
+		mv.visitJumpInsn(Opcodes.IF_ICMPLE, jump);
+		mv.visitVarInsn(Opcodes.DLOAD, 0);
+		mv.visitVarInsn(Opcodes.DLOAD, 3);
+		mv.visitInsn(Opcodes.DDIV);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "round", "(D)J", false);
+		mv.visitInsn(Opcodes.L2D);
+		mv.visitVarInsn(Opcodes.DLOAD, 3);
+		mv.visitInsn(Opcodes.DMUL);
+		mv.visitInsn(Opcodes.DRETURN);
+		mv.visitLabel(jump);
+		mv.visitVarInsn(Opcodes.DLOAD, 0);
+		mv.visitVarInsn(Opcodes.DLOAD, 3);
+		mv.visitInsn(Opcodes.DMUL);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "round", "(D)J", false);
+		mv.visitInsn(Opcodes.L2D);
+		mv.visitVarInsn(Opcodes.DLOAD, 3);
+		mv.visitInsn(Opcodes.DDIV);
+		mv.visitInsn(Opcodes.DRETURN);
+		mv.visitLabel(end);
+		mv.visitLocalVariable("value", DOUBLE.getDescriptor(), null, start, end, 0);
+		mv.visitLocalVariable("digits", INT.getDescriptor(), null, start, end, 2);
+		mv.visitLocalVariable("factor", DOUBLE.getDescriptor(), null, start, end, 3);
 		mv.visitMaxs(0, 0);
 		mv.visitEnd();
 	}
