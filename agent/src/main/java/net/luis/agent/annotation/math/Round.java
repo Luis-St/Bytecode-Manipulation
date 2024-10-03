@@ -1,5 +1,6 @@
-package net.luis.agent.annotation.unused.math;
+package net.luis.agent.annotation.math;
 
+import net.luis.agent.annotation.util.ImplicitNotNull;
 import net.luis.agent.util.RoundingMode;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,11 +12,15 @@ import java.lang.annotation.*;
  *
  */
 
+@ImplicitNotNull
 @Retention(RetentionPolicy.CLASS)
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE, ElementType.TYPE_USE /*Local Variable Only*/ })
-public @interface Round { // Generate roundTo(int decimals) function
+public @interface Round {
 	
-	@NotNull RoundingMode value() default RoundingMode.ROUND;
+	@NotNull RoundingMode mode() default RoundingMode.ROUND;
 	
-	int decimals() default 1;
+	// Floor & Ceil -> Not used
+	// Round -> Decimals to round to
+	// Other Floor & Ceil -> Divisor
+	long value() default 1;
 }

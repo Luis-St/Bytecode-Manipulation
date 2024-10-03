@@ -1,7 +1,7 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.annotation.*;
-import net.luis.agent.annotation.range.*;
+import net.luis.agent.annotation.math.*;
 import net.luis.agent.annotation.string.*;
 import net.luis.agent.annotation.util.ImplicitNotNull;
 import net.luis.agent.util.Utils;
@@ -41,6 +41,7 @@ public class Types {
 	public static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
 	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType("Ljava/lang/IllegalArgumentException;");
 	
+	public static final Type MATH = Type.getType("Ljava/lang/Math;");
 	public static final Type MAP = Type.getType("Ljava/util/Map;");
 	public static final Type CONCURRENT_HASH_MAP = Type.getType("Ljava/util/concurrent/ConcurrentHashMap;");
 	
@@ -54,17 +55,23 @@ public class Types {
 	//region Annotation types
 	public static final Type ABOVE = Type.getType(Above.class);
 	public static final Type ABOVE_EQUAL = Type.getType(AboveEqual.class);
+	public static final Type ABS = Type.getType(Abs.class);
 	public static final Type BELOW = Type.getType(Below.class);
 	public static final Type BELOW_EQUAL = Type.getType(BelowEqual.class);
+	public static final Type CLAMP = Type.getType(Clamp.class);
+	public static final Type MAX = Type.getType(Max.class);
+	public static final Type MIN = Type.getType(Min.class);
+	public static final Type NEGATE = Type.getType(Negate.class);
+	public static final Type ROUND = Type.getType(Round.class);
+	public static final Type TRIGONOMETRIC = Type.getType(Trigonometric.class);
 	
 	public static final Type CONTAINS = Type.getType(Contains.class);
 	public static final Type ENDS_WITH = Type.getType(EndsWith.class);
+	public static final Type LOWER_CASE = Type.getType(LowerCase.class);
 	public static final Type NOT_BLANK = Type.getType(NotBlank.class);
 	public static final Type NOT_EMPTY = Type.getType(NotEmpty.class);
-	public static final Type STARTS_WITH = Type.getType(StartsWith.class);
-	
-	public static final Type LOWER_CASE = Type.getType(LowerCase.class);
 	public static final Type REPLACE = Type.getType(Replace.class);
+	public static final Type STARTS_WITH = Type.getType(StartsWith.class);
 	public static final Type STRIP = Type.getType(Strip.class);
 	public static final Type SUBSTRING = Type.getType(Substring.class);
 	public static final Type TRIM = Type.getType(Trim.class);
