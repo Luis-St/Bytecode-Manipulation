@@ -4,9 +4,8 @@ import com.google.common.base.Converter;
 import com.google.common.collect.Lists;
 import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.math.*;
-import net.luis.agent.annotation.string.Contains;
-import net.luis.agent.annotation.string.NotEmpty;
-import net.luis.agent.annotation.string.Substring;
+import net.luis.agent.annotation.string.*;
+import net.luis.agent.util.TrigonometricOperation;
 import net.luis.utils.collection.WeightCollection;
 import net.luis.utils.lang.StringUtils;
 import org.intellij.lang.annotations.Pattern;
@@ -36,6 +35,7 @@ public final class Main {
 	private static String test = "Hello";
 	
 	public static void main(@Default @NotNull String[] args) {
+		System.out.println(Math.tan(100.00000000000004));
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
 		
@@ -52,6 +52,10 @@ public final class Main {
 		};
 		Lists.newArrayList("10", "1").stream().map(converter::convert).forEach(System.out::println);
 		
+		autoSin(1.0);
+		System.out.println("BaseCalculation: " + baseCalculation(10.0, 10.0));
+		System.out.println("AlwaysNegative (+): " + alwaysNegative(10));
+		System.out.println("AlwaysNegative (-): " + alwaysNegative(10));
 		supports(new ArrayList<>(Arrays.asList("Hello", "World")));
 		supports(new HashMap<>(Map.of("Hello", "World")));
 		supports(10);
@@ -63,6 +67,21 @@ public final class Main {
 		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
 		test += "World";
 		System.out.println(test);
+	}
+	
+	public static void autoSin(@Trig(TrigonometricOperation.SIN) double value) {
+		System.out.println("Auto-Sin: " + value);
+	}
+	
+	@AboveEqual(0)
+	public static @Trig(value = TrigonometricOperation.TAN, degrees = true) @Round(2) @Negate @Max(100) double baseCalculation(double noneModified, @Log @Exp @Pow double value) {
+		System.out.println(noneModified + "^2 = " + value);
+		return value;
+	}
+	
+	@Below(0)
+	public static @Abs @Negate int alwaysNegative(int value) {
+		return value;
 	}
 	
 	public static void supports(@Supports({ List.class, Map.class, int.class }) Object obj) {

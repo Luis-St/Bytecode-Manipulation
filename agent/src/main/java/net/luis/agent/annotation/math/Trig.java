@@ -18,4 +18,6 @@ import java.lang.annotation.*;
 public @interface Trig {
 	
 	@NotNull TrigonometricOperation value();
+	
+	boolean degrees() default false;
 }

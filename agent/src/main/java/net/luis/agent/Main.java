@@ -56,7 +56,7 @@ public class Main {
 		inst.addTransformer(new NotNullTransformer()); // 2: Throw if null
 		inst.addTransformer(new DefaultTransformer()); // 1: Ensure not null
 		
-		//inst.addTransformer(new MathTransformer());
+		inst.addTransformer(new MathTransformer());
 		
 		inst.addTransformer(new RestrictedAccessTransformer());
 	}

@@ -13,6 +13,7 @@ import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
@@ -25,11 +26,13 @@ import static net.luis.agent.asm.Types.*;
 
 public class MathTransformer extends BaseClassTransformer {
 	
-	// ToDO: Support for Math.exp(value), Math.expm1(value), Math.log(value), Math.log10(value), Math.log(base, value) (custom impl) and Math.pow(base, exponent)
-	
-	private static final Type[] ALL = {
-		ABOVE, ABOVE_EQUAL, ABS, BELOW, BELOW_EQUAL, CLAMP, MAX, MIN, NEGATE, ROUND, TRIGONOMETRIC
+	private static final Type[] CONDITIONS = {
+		ABOVE, ABOVE_EQUAL, BELOW, BELOW_EQUAL
 	};
+	private static final Type[] MODIFICATIONS = {
+		ABS, CLAMP, EXP, LOG, MAX, MIN, NEGATE, POW, ROUND, TRIG
+	};
+	private static final Type[] ALL = Stream.concat(Arrays.stream(CONDITIONS), Arrays.stream(MODIFICATIONS)).toArray(Type[]::new);
 	
 	public MathTransformer() {
 		super(true);
@@ -67,20 +70,21 @@ public class MathTransformer extends BaseClassTransformer {
 			
 			@Override
 			protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
-				return new RangeVisitor(visitor, method);
+				return new MathVisitor(visitor, method);
 			}
 		};
 	}
 	
-	private static class RangeVisitor extends LabelTrackingMethodVisitor {
+	private static class MathVisitor extends LabelTrackingMethodVisitor {
 		
-		private static final String INVALID_CATEGORY = "Invalid Annotated Element";
+		private static final String INVALID_ELEMENT_CATEGORY = "Invalid Annotated Element";
+		private static final String INVALID_CONFIGURATION_CATEGORY = "Invalid Annotation Configuration";
 		private static final String UNSUPPORTED_CATEGORY = "Unsupported Annotation Combination";
 		
 		private final List<Parameter> lookup = new ArrayList<>();
 		private final boolean includeLocals;
 		
-		private RangeVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
+		private MathVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
 			this.method = method;
 			this.includeLocals = method.getLocals().stream().anyMatch(local -> local.isAnnotatedWithAny(ALL));
@@ -88,10 +92,10 @@ public class MathTransformer extends BaseClassTransformer {
 			String signature = method.getSignature(SignatureType.DEBUG);
 			if (method.isAnnotatedWithAny(ALL)) {
 				if (this.method.is(MethodType.STATIC_INITIALIZER)) {
-					throw CrashReport.create(INVALID_CATEGORY, "Math annotations can not be applied to static initializers").addDetail("Method", method.getName()).exception();
+					throw CrashReport.create(INVALID_ELEMENT_CATEGORY, "Math annotations can not be applied to static initializers").addDetail("Method", method.getName()).exception();
 				}
 				if (this.isNoNumber(method.getReturnType())) {
-					throw CrashReport.create(INVALID_CATEGORY, "Method annotated with math annotation must return a number type").addDetail("Method", signature)
+					throw CrashReport.create(INVALID_ELEMENT_CATEGORY, "Method annotated with math annotation must return a number type").addDetail("Method", signature)
 						.addDetail("Return Type", method.getReturnType()).exception();
 				}
 				Collection<Annotation> annotations = method.getAnnotations().values();
@@ -241,7 +245,7 @@ public class MathTransformer extends BaseClassTransformer {
 					
 					this.mv.visitVarInsn(Opcodes.ALOAD, local);
 					this.insertLabel(end);
-					this.visitLocalVariable(local, "generated$RangeTransformer$Temp" + local, STRING, null, start, end);
+					this.visitLocalVariable(local, "generated$MathTransformer$Temp" + local, STRING, null, start, end);
 				}
 			}
 			super.visitFieldInsn(opcode, owner, name, descriptor);
@@ -258,39 +262,55 @@ public class MathTransformer extends BaseClassTransformer {
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
 				this.insertLabel(start);
 				
+				this.instrumentModifications(this.method.getAnnotations(), type, local);
 				this.instrumentConditions(this.method.getAnnotations(), type, local, "Method return value must be ");
 				
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.insertLabel(end);
 				this.mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), local);
-				this.visitLocalVariable(local, "generated$RangeTransformer$Temp" + local, type, null, start, end);
+				this.visitLocalVariable(local, "generated$MathTransformer$Temp" + local, type, null, start, end);
 			}
 			this.mv.visitInsn(opcode);
 		}
 		
 		//region Instrumentation
-		private void instrumentModifications(@NotNull Map<Type, Annotation> annotations, @NotNull Type type, int index) {
-			if (annotations.containsKey(ROUND)) {
-				this.instrumentRound(annotations.get(TRIGONOMETRIC), type, index);
+		private void instrumentModifications(@NotNull Map<Type, Annotation> annotations, @NotNull Type orginalType, int index) {
+			if (Arrays.stream(MODIFICATIONS).noneMatch(annotations::containsKey)) {
+				return;
 			}
-			if (annotations.containsKey(TRIGONOMETRIC)) {
-				this.instrumentTrigonometric(annotations.get(TRIGONOMETRIC), type, index);
+			this.mv.visitVarInsn(orginalType.getOpcode(Opcodes.ILOAD), index);
+			Type resultType = orginalType;
+			if (annotations.containsKey(LOG)) {
+				resultType = this.instrumentLog(annotations.get(LOG), resultType, index);
+			}
+			if (annotations.containsKey(EXP)) {
+				resultType = this.instrumentExp(annotations.get(EXP), resultType, index);
+			}
+			if (annotations.containsKey(POW)) {
+				resultType = this.instrumentPow(annotations.get(POW), resultType, index);
+			}
+			if (annotations.containsKey(TRIG)) {
+				resultType = this.instrumentTrig(annotations.get(TRIG), resultType, index);
+			}
+			if (annotations.containsKey(ROUND)) {
+				resultType = this.instrumentRound(annotations.get(ROUND), resultType, index);
 			}
 			if (annotations.containsKey(ABS)) {
-				this.instrumentAbs(type, index);
+				resultType = this.instrumentAbs(resultType, index);
 			}
 			if (annotations.containsKey(NEGATE)) {
-				this.instrumentNegate(type, index);
+				resultType = this.instrumentNegate(resultType, index);
 			}
 			if (annotations.containsKey(CLAMP)) {
-				this.instrumentClamp(annotations.get(CLAMP), type, index);
+				resultType = this.instrumentClamp(annotations.get(CLAMP), resultType, index);
 			}
 			if (annotations.containsKey(MIN)) {
-				this.instrumentMin(annotations.get(MIN), type, index);
+				resultType = this.instrumentMin(annotations.get(MIN), resultType, index);
 			}
 			if (annotations.containsKey(MAX)) {
-				this.instrumentMax(annotations.get(MAX), type, index);
+				resultType = this.instrumentMax(annotations.get(MAX), resultType, index);
 			}
+			this.mv.visitVarInsn(resultType.getOpcode(Opcodes.ISTORE), index);
 		}
 		
 		private void instrumentConditions(@NotNull Map<Type, Annotation> annotations, @NotNull Type type, int index, @NotNull String baseMessage) {
@@ -310,93 +330,168 @@ public class MathTransformer extends BaseClassTransformer {
 		//endregion
 		
 		//region Instrumentation modifications
-		private void instrumentRound(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentLog(@NotNull Annotation annotation, @NotNull Type type, int index) {
+			double base = annotation.getOrDefault("value");
+			if (base <= 1) {
+				throw CrashReport.create("Invalid @Log annotation found, expected 'base > 1'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", base).exception();
+			}
+			boolean natural = annotation.getOrDefault("natural");
+			if (natural && Math.abs(base - Math.E) > 0.0001) {
+				throw CrashReport.create("Invalid @Log annotation found, expected 'natural = true' for base 'E'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", base).exception();
+			}
+			instrumentNumberConversion(this.mv, type, DOUBLE);
+			if (Math.abs(base - Math.E) < 0.0001) {
+				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), natural ? "log1p" : "log", "(D)D", false);
+			} else if (Math.abs(base - 10) < 0.0001) {
+				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "log10", "(D)D", false);
+			} else {
+				loadNumber(this.mv, base);
+				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME_UTILS.getInternalName(), "log", "(DD)D", false);
+			}
+			return DOUBLE;
+		}
+		
+		private @NotNull Type instrumentExp(@NotNull Annotation annotation, @NotNull Type type, int index) {
+			ExponentialOperation operation = ExponentialOperation.valueOf(annotation.getOrDefault("value"));
+			instrumentNumberConversion(this.mv, type, DOUBLE);
+			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), operation.name().toLowerCase(), "(D)D", false);
+			return DOUBLE;
+		}
+		
+		private @NotNull Type instrumentPow(@NotNull Annotation annotation, @NotNull Type type, int index) {
+			double value = annotation.getOrDefault("value");
+			instrumentNumberConversion(this.mv, type, DOUBLE);
+			loadNumber(this.mv, value);
+			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "pow", "(DD)D", false);
+			return DOUBLE;
+		}
+		
+		private @NotNull Type instrumentTrig(@NotNull Annotation annotation, @NotNull Type type, int index) {
+			TrigonometricOperation operation = TrigonometricOperation.valueOf(annotation.getOrDefault("value"));
+			instrumentNumberConversion(this.mv, type, DOUBLE);
+			if (annotation.getOrDefault("degrees")) {
+				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "toRadians", "(D)D", false);
+			}
+			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), operation.name().toLowerCase(), "(D)D", false);
+			return DOUBLE;
+		}
+		
+		private @NotNull Type instrumentRound(@NotNull Annotation annotation, @NotNull Type type, int index) {
 			RoundingMode mode = RoundingMode.valueOf(annotation.getOrDefault("mode"));
 			if (mode.requiresFloatingPointInput()) {
-				loadNumberAsDouble(this.mv, type, index);
+				instrumentNumberConversion(this.mv, type, DOUBLE);
 			} else {
-				loadNumberAsLong(this.mv, type, index);
+				instrumentNumberConversion(this.mv, type, LONG);
 			}
 			long value = annotation.getOrDefault("value");
-			Type resultType = DOUBLE;
 			if (mode == RoundingMode.FLOOR || mode == RoundingMode.CEIL) {
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), mode.getMethodName(), "(D)D", false);
+				return DOUBLE;
 			} else if (mode == RoundingMode.ROUND) {
 				loadNumber(this.mv, (int) value);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME_UTILS.getInternalName(), mode.getMethodName(), "(DI)D", false);
+				return DOUBLE;
 			} else {
 				loadNumber(this.mv, value);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), mode.getMethodName(), "(JJ)J", false);
-				resultType = LONG;
+				return LONG;
 			}
-			instrumentNumberConversion(this.mv, resultType, type);
-			this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), index);
 		}
 		
-		private void instrumentTrigonometric(@NotNull Annotation annotation, @NotNull Type type, int index) {
-			TrigonometricOperation operation = TrigonometricOperation.valueOf(annotation.getOrDefault("value"));
-			loadNumberAsDouble(this.mv, type, index);
-			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), operation.name().toLowerCase(), "(D)D", false);
-			instrumentNumberConversion(this.mv, DOUBLE, type);
-			this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), index);
+		private @NotNull Type instrumentAbs(@NotNull Type type, int index) {
+			Type defaultType = this.getDefaultPrimitiveNumberType(type);
+			instrumentNumberConversion(this.mv, type, defaultType);
+			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "abs", "(" + defaultType.getDescriptor() + ")" + defaultType.getDescriptor(), false);
+			return defaultType;
 		}
 		
-		private void instrumentAbs(@NotNull Type type, int index) {
-			Type primitiveType = convertToPrimitive(type);
-			this.instrumentNumberConversionToDefaultPrimitive(type, index);
-			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "abs", "(" + primitiveType.getDescriptor() + ")" + primitiveType.getDescriptor(), false);
-			instrumentNumberConversion(this.mv, primitiveType, type);
-			this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), index);
-		}
-		
-		private void instrumentNegate(@NotNull Type type, int index) {
-			Type primitiveType = convertToPrimitive(type);
-			this.instrumentNumberConversionToDefaultPrimitive(type, index);
-			if (primitiveType.equals(LONG)) {
+		private @NotNull Type instrumentNegate(@NotNull Type type, int index) {
+			Type defaultType = this.getDefaultPrimitiveNumberType(type);
+			instrumentNumberConversion(this.mv, type, defaultType);
+			if (defaultType.equals(LONG)) {
 				this.mv.visitInsn(Opcodes.LNEG);
-			} else if (primitiveType.equals(FLOAT)) {
+			} else if (defaultType.equals(FLOAT)) {
 				this.mv.visitInsn(Opcodes.FNEG);
-			} else if (primitiveType.equals(DOUBLE)) {
+			} else if (defaultType.equals(DOUBLE)) {
 				this.mv.visitInsn(Opcodes.DNEG);
 			} else {
 				this.mv.visitInsn(Opcodes.INEG);
 			}
-			instrumentNumberConversion(this.mv, primitiveType, type);
-			this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), index);
+			return defaultType;
 		}
 		
-		private void instrumentClamp(@NotNull Annotation annotation, @NotNull Type type, int index) {
-			Type primitiveType = convertToPrimitive(type);
-			this.instrumentNumberConversionToDefaultPrimitive(type, index);
-			if (primitiveType.equals(LONG)) {
-				// ToDo: Load the min and max values from annotation
+		private @NotNull Type instrumentClamp(@NotNull Annotation annotation, @NotNull Type type, int index) {
+			double min = annotation.getOrDefault("min");
+			double max = annotation.getOrDefault("max");
+			
+			String value = annotation.get("value");
+			if (value != null) {
+				if (value.isBlank() && min == Double.MIN_VALUE && max == Double.MAX_VALUE) {
+					throw CrashReport.create("Invalid @Clamp annotation found, expected 'min:max'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must not be blank if min and max are not set").addDetail("Value Found", value).exception();
+				}
+				if (!value.contains(":")) {
+					throw CrashReport.create("Invalid @Clamp annotation found, expected 'min:max'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must contain a colon ':' to separate min and max").addDetail("Value Found", value).exception();
+				}
+				String[] parts = value.split(":");
+				if (parts.length != 2) {
+					throw CrashReport.create("Invalid @Clamp annotation found, expected 'min:max'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must contain exactly one colon ':' to separate min and max").addDetail("Value Found", value).exception();
+				}
+				if (parts[0].isBlank() || parts[1].isBlank()) {
+					throw CrashReport.create("Invalid @Clamp annotation found, expected 'min:max'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must not contain blank min or max values").addDetail("Value Found", value).exception();
+				}
+				if ("*".equals(parts[0])) {
+					min = Double.MIN_VALUE;
+				} else {
+					min = Double.parseDouble(parts[0]);
+				}
+				if ("*".equals(parts[1])) {
+					max = Double.MAX_VALUE;
+				} else {
+					max = Double.parseDouble(parts[1]);
+				}
+			}
+			
+			Type defaultType = this.getDefaultPrimitiveNumberType(type);
+			instrumentNumberConversion(this.mv, type, defaultType);
+			if (defaultType.equals(LONG)) {
+				loadNumber(this.mv, (long) min);
+				loadNumber(this.mv, (long) max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "clamp", "(JJJ)J", false);
-			} else if (primitiveType.equals(FLOAT)) {
-				// ToDo: Load the min and max values from annotation
+			} else if (defaultType.equals(FLOAT)) {
+				loadNumber(this.mv, (float) min);
+				loadNumber(this.mv, (float) max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "clamp", "(FFF)F", false);
-			} else if (primitiveType.equals(DOUBLE)) {
-				// ToDo: Load the min and max values from annotation
+			} else if (defaultType.equals(DOUBLE)) {
+				loadNumber(this.mv, min);
+				loadNumber(this.mv, max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "clamp", "(DDD)D", false);
 			} else {
 				this.mv.visitInsn(Opcodes.I2L);
-				// ToDo: Load the min and max values from annotation
+				loadNumber(this.mv, (int) min);
+				loadNumber(this.mv, (int) max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "clamp", "(JII)I", false);
 			}
-			instrumentNumberConversion(this.mv, primitiveType, type);
-			this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), index);
+			return defaultType;
 		}
 		
-		private void instrumentMin(@NotNull Annotation annotation, @NotNull Type type, int index) {
-			double min = annotation.getOrDefault("min");
-			Type primitiveType = convertToPrimitive(type);
-			this.instrumentNumberConversionToDefaultPrimitive(type, index);
-			if (primitiveType.equals(LONG)) {
+		private @NotNull Type instrumentMin(@NotNull Annotation annotation, @NotNull Type type, int index) {
+			Type defaultType = this.getDefaultPrimitiveNumberType(type);
+			double min = annotation.getOrDefault("value");
+			
+			instrumentNumberConversion(this.mv, type, defaultType);
+			if (defaultType.equals(LONG)) {
 				loadNumber(this.mv, (long) min);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "min", "(JJ)J", false);
-			} else if (primitiveType.equals(FLOAT)) {
+			} else if (defaultType.equals(FLOAT)) {
 				loadNumber(this.mv, (float) min);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "min", "(FF)F", false);
-			} else if (primitiveType.equals(DOUBLE)) {
+			} else if (defaultType.equals(DOUBLE)) {
 				loadNumber(this.mv, min);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "min", "(DD)D", false);
 			} else {
@@ -404,21 +499,21 @@ public class MathTransformer extends BaseClassTransformer {
 				loadNumber(this.mv, (int) min);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "min", "(II)I", false);
 			}
-			instrumentNumberConversion(this.mv, primitiveType, type);
-			this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), index);
+			return defaultType;
 		}
 		
-		private void instrumentMax(@NotNull Annotation annotation, @NotNull Type type, int index) {
-			double max = annotation.getOrDefault("max");
-			Type primitiveType = convertToPrimitive(type);
-			this.instrumentNumberConversionToDefaultPrimitive(type, index);
-			if (primitiveType.equals(LONG)) {
+		private @NotNull Type instrumentMax(@NotNull Annotation annotation, @NotNull Type type, int index) {
+			Type defaultType = this.getDefaultPrimitiveNumberType(type);
+			double max = annotation.getOrDefault("value");
+			
+			instrumentNumberConversion(this.mv, type, defaultType);
+			if (defaultType.equals(LONG)) {
 				loadNumber(this.mv, (long) max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "max", "(JJ)J", false);
-			} else if (primitiveType.equals(FLOAT)) {
+			} else if (defaultType.equals(FLOAT)) {
 				loadNumber(this.mv, (float) max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "max", "(FF)F", false);
-			} else if (primitiveType.equals(DOUBLE)) {
+			} else if (defaultType.equals(DOUBLE)) {
 				loadNumber(this.mv, max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "max", "(DD)D", false);
 			} else {
@@ -426,8 +521,7 @@ public class MathTransformer extends BaseClassTransformer {
 				loadNumber(this.mv, (int) max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "max", "(II)I", false);
 			}
-			instrumentNumberConversion(this.mv, primitiveType, type);
-			this.mv.visitVarInsn(type.getOpcode(Opcodes.ISTORE), index);
+			return defaultType;
 		}
 		//endregion
 		
@@ -464,14 +558,12 @@ public class MathTransformer extends BaseClassTransformer {
 			return Utils.indexOf(NUMBERS, convertToPrimitive(type)) == -1;
 		}
 		
-		private void instrumentNumberConversionToDefaultPrimitive(@NotNull Type type, int index) {
-			if (isWrapper(type)) {
-				Type targetPrimitiveType = convertToPrimitive(type);
-				if (targetPrimitiveType.equals(BYTE) || targetPrimitiveType.equals(SHORT)) {
-					targetPrimitiveType = INT;
-				}
-				instrumentNumberConversion(this.mv, type, targetPrimitiveType);
+		private @NotNull Type getDefaultPrimitiveNumberType(@NotNull Type type) {
+			Type targetPrimitiveType = convertToPrimitive(type);
+			if (targetPrimitiveType.equals(BYTE) || targetPrimitiveType.equals(SHORT)) {
+				return INT;
 			}
+			return targetPrimitiveType;
 		}
 		//endregion
 	}
