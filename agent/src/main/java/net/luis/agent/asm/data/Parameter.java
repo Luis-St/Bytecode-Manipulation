@@ -99,7 +99,15 @@ public class Parameter implements ASMData {
 	}
 	
 	public int getLoadIndex() {
-		return this.index + (this.owner.is(TypeModifier.STATIC) ? 0 : 1);
+		int index = this.owner.is(TypeModifier.STATIC) ? 0 : 1;
+		for (int i = 0; i < this.index; i++) {
+			if (this.owner.getParameters().get(i).getType().getSize() == 2) {
+				index += 2;
+			} else {
+				index++;
+			}
+		}
+		return index;
 	}
 	
 	public @NotNull String getMessageName() {
