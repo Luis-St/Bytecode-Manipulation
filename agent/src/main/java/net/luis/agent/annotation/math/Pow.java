@@ -1,8 +1,6 @@
 package net.luis.agent.annotation.math;
 
 import net.luis.agent.annotation.util.ImplicitNotNull;
-import net.luis.agent.util.TrigonometricOperation;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
 
@@ -15,7 +13,7 @@ import java.lang.annotation.*;
 @ImplicitNotNull
 @Retention(RetentionPolicy.CLASS)
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE, ElementType.TYPE_USE /*Local Variable Only*/ })
-public @interface Trigonometric {
+public @interface Pow {
 	
-	@NotNull TrigonometricOperation value();
+	double value() default 2.0;
 }

@@ -59,11 +59,14 @@ public class Types {
 	public static final Type BELOW = Type.getType(Below.class);
 	public static final Type BELOW_EQUAL = Type.getType(BelowEqual.class);
 	public static final Type CLAMP = Type.getType(Clamp.class);
+	public static final Type EXP = Type.getType(Exp.class);
+	public static final Type LOG = Type.getType(Log.class);
 	public static final Type MAX = Type.getType(Max.class);
 	public static final Type MIN = Type.getType(Min.class);
 	public static final Type NEGATE = Type.getType(Negate.class);
+	public static final Type POW = Type.getType(Pow.class);
 	public static final Type ROUND = Type.getType(Round.class);
-	public static final Type TRIGONOMETRIC = Type.getType(Trigonometric.class);
+	public static final Type TRIG = Type.getType(Trig.class);
 	
 	public static final Type CONTAINS = Type.getType(Contains.class);
 	public static final Type ENDS_WITH = Type.getType(EndsWith.class);
@@ -90,6 +93,7 @@ public class Types {
 	
 	public static final Type[] ALL = {
 		ABOVE, ABOVE_EQUAL, BELOW, BELOW_EQUAL,
+		ABS, CLAMP, EXP, LOG, MAX, MIN, NEGATE, POW, ROUND, TRIG,
 		CONTAINS, ENDS_WITH, NOT_BLANK, NOT_EMPTY, STARTS_WITH,
 		LOWER_CASE, REPLACE, STRIP, SUBSTRING, TRIM, UPPER_CASE,
 		ASYNC, SCHEDULED, CAUGHT, DEFAULT, NOT_NULL, PATTERN, RESTRICTED_ACCESS, SUPPORTS,
