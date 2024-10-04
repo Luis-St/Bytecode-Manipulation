@@ -28,6 +28,7 @@ public class RuntimeUtilsGenerator extends Generator {
 		this.generateGetTypeAsString(cv);
 		this.generateGetActualType(cv);
 		this.generateRoundTo(cv);
+		this.generateLog(cv);
 		cv.visitEnd();
 	}
 	
@@ -256,6 +257,31 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitLocalVariable("value", DOUBLE.getDescriptor(), null, start, end, 0);
 		mv.visitLocalVariable("digits", INT.getDescriptor(), null, start, end, 2);
 		mv.visitLocalVariable("factor", DOUBLE.getDescriptor(), null, start, end, 3);
+		mv.visitMaxs(0, 0);
+		mv.visitEnd();
+	}
+	//endregion
+	
+	//region RuntimeUtils#log
+	private void generateLog(@NotNull ClassVisitor cv) {
+		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "log", "(DD)D", null, null);
+		//region Labels
+		Label start = new Label();
+		Label end = new Label();
+		//endregion
+		mv.visitParameter("value", 0);
+		mv.visitParameter("base", 0);
+		mv.visitCode();
+		mv.visitLabel(start);
+		mv.visitVarInsn(Opcodes.DLOAD, 0);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "log", "(D)D", false);
+		mv.visitVarInsn(Opcodes.DLOAD, 2);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "log", "(D)D", false);
+		mv.visitInsn(Opcodes.DDIV);
+		mv.visitInsn(Opcodes.DRETURN);
+		mv.visitLabel(end);
+		mv.visitLocalVariable("value", DOUBLE.getDescriptor(), null, start, end, 0);
+		mv.visitLocalVariable("base", DOUBLE.getDescriptor(), null, start, end, 1);
 		mv.visitMaxs(0, 0);
 		mv.visitEnd();
 	}
