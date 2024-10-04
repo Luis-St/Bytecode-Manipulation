@@ -78,7 +78,7 @@ public class StringTransformer extends BaseClassTransformer {
 	
 	private static class StringMethodVisitor extends LabelTrackingMethodVisitor {
 		
-		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
+		private static final String REPORT_CATEGORY = "Invalid Annotation Configuration";
 		
 		private final List<Parameter> parameters;
 		private final boolean includeLocals;
@@ -272,7 +272,7 @@ public class StringTransformer extends BaseClassTransformer {
 			String value = annotation.getOrDefault("value");
 			if (value.isBlank()) {
 				throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
+					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must not be blank").addDetail("Value Found", value).exception();
 			}
 			
 			int start = 0;
@@ -282,15 +282,15 @@ public class StringTransformer extends BaseClassTransformer {
 				String[] parts = value.split(":");
 				if (parts.length != 2) {
 					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must contain exactly one colon ':' to separate start and end").addDetail("Value Found", value).exception();
 				}
 				if ("*".equals(parts[0]) && "*".equals(parts[1])) {
 					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must contain at least one number to specify the start or end index").addDetail("Value Found", value).exception();
 				}
 				if (parts[0].isBlank() || parts[1].isBlank()) {
 					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value).exception();
+						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must not contain blank start or end values").addDetail("Value Found", value).exception();
 				}
 				if (!"*".equals(parts[0])) {
 					start = Integer.parseInt(parts[0]);
