@@ -17,7 +17,7 @@ import java.util.*;
 
 public class MethodScanner extends MethodVisitor {
 	
-	private final Type superType;
+	private final @Nullable Type superType;
 	private final Method method;
 	private final Map<Integer, Map.Entry<String, Set<TypeModifier>>> parameters = new HashMap<>();
 	private final Map<Integer, Map<Type, Annotation>> parameterAnnotations = new HashMap<>();
@@ -26,7 +26,7 @@ public class MethodScanner extends MethodVisitor {
 	private int parameterIndex;
 	private boolean primary;
 	
-	public MethodScanner(@NotNull Type superType, @NotNull Method method) {
+	public MethodScanner(@Nullable Type superType, @NotNull Method method) {
 		super(Opcodes.ASM9);
 		this.superType = superType;
 		this.method = method;
@@ -79,7 +79,7 @@ public class MethodScanner extends MethodVisitor {
 	
 	@Override
 	public void visitMethodInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor, boolean isInterface) {
-		if (this.method.is(MethodType.CONSTRUCTOR) && opcode == Opcodes.INVOKESPECIAL && this.superType.getInternalName().equals(owner) && "<init>".equals(name)) {
+		if (this.method.is(MethodType.CONSTRUCTOR) && opcode == Opcodes.INVOKESPECIAL && "<init>".equals(name) && this.superType != null && this.superType.getInternalName().equals(owner)) {
 			this.method.makeConstructorPrimary();
 		}
 	}

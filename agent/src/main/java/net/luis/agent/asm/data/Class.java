@@ -32,7 +32,7 @@ public class Class implements ASMData {
 	private final List<InnerClass> innerClasses;
 	
 	private Class(@NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull TypeAccess access, @NotNull ClassType classType, @NotNull Set<TypeModifier> modifiers,
-				  @NotNull Type superType, @NotNull List<Type> permittedSubclasses, @NotNull List<Type> interfaces, @NotNull Map<Type, Annotation> annotations,
+				  @Nullable Type superType, @NotNull List<Type> permittedSubclasses, @NotNull List<Type> interfaces, @NotNull Map<Type, Annotation> annotations,
 				  @NotNull Map<String, RecordComponent> recordComponents, @NotNull Map<String, Field> fields, @NotNull Map<String, Method> methods, @NotNull List<InnerClass> innerClasses) {
 		this.name = Objects.requireNonNull(name);
 		this.type = Objects.requireNonNull(type);
@@ -40,7 +40,7 @@ public class Class implements ASMData {
 		this.access = Objects.requireNonNull(access);
 		this.classType = Objects.requireNonNull(classType);
 		this.modifiers = Objects.requireNonNull(modifiers);
-		this.superType = Objects.requireNonNull(superType);
+		this.superType = superType;
 		this.permittedSubclasses = Objects.requireNonNull(permittedSubclasses);
 		this.interfaces = Objects.requireNonNull(interfaces);
 		this.annotations = Objects.requireNonNull(annotations);
@@ -102,7 +102,7 @@ public class Class implements ASMData {
 		return this.modifiers;
 	}
 	
-	public @NotNull Type getSuperType() {
+	public @Nullable Type getSuperType() {
 		return this.superType;
 	}
 	
@@ -178,7 +178,7 @@ public class Class implements ASMData {
 		if (this.access != data.access) return false;
 		if (this.classType != data.classType) return false;
 		if (!this.modifiers.equals(data.modifiers)) return false;
-		if (!this.superType.equals(data.superType)) return false;
+		if (!Objects.equals(this.superType, data.superType)) return false;
 		if (!this.permittedSubclasses.equals(data.permittedSubclasses)) return false;
 		if (!this.interfaces.equals(data.interfaces)) return false;
 		if (!this.annotations.equals(data.annotations)) return false;
@@ -298,7 +298,7 @@ public class Class implements ASMData {
 		}
 		//endregion
 		
-		public @NotNull Builder superType(@NotNull Type superType) {
+		public @NotNull Builder superType(@Nullable Type superType) {
 			this.superType = superType;
 			return this;
 		}

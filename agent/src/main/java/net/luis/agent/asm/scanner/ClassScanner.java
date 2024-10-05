@@ -31,7 +31,7 @@ public class ClassScanner extends ClassVisitor {
 	private String signature;
 	private TypeAccess access;
 	private ClassType classType;
-	private Type superType;
+	private @Nullable Type superType;
 	
 	public ClassScanner() {
 		super(Opcodes.ASM9);
@@ -58,7 +58,6 @@ public class ClassScanner extends ClassVisitor {
 		if (type == ClassType.MODULE) {
 			return;
 		}
-		Objects.requireNonNull(superClass, "Super class is null");
 		Objects.requireNonNull(interfaces, "Interfaces are null");
 		int index = name.lastIndexOf('/');
 		this.name = index == -1 ? name : name.substring(index + 1);
@@ -67,7 +66,7 @@ public class ClassScanner extends ClassVisitor {
 		this.classType = type;
 		this.signature = genericSignature;
 		this.modifiers.addAll(TypeModifier.fromClassAccess(access));
-		this.superType = Type.getObjectType(superClass);
+		this.superType = superClass != null ? Type.getObjectType(superClass) : null;
 		this.interfaces.addAll(Arrays.stream(interfaces).map(Type::getObjectType).toList());
 	}
 	

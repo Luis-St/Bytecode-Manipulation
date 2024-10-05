@@ -199,7 +199,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 			super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
 			if (this.generated && !this.method.is(TypeModifier.STATIC)) {
 				Type superType = Agent.getClass(this.type).getSuperType();
-				if (superType.getInternalName().equals(owner) && "<init>".equals(name)) {
+				if ("<init>".equals(name) && (superType == null || superType.getInternalName().equals(owner))) {
 					this.instrumentInitialization();
 				}
 			}
