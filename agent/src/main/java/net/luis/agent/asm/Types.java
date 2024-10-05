@@ -89,6 +89,8 @@ public class Types {
 	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
 	public static final Type SUPPORTS = Type.getType(Supports.class);
 	
+	public static final Type IMMUTABLE = Type.getType(Immutable.class);
+	
 	public static final Type IMPLICIT_NON_NULL = Type.getType(ImplicitNotNull.class);
 	
 	public static final Type[] ALL = {
@@ -97,6 +99,7 @@ public class Types {
 		CONTAINS, ENDS_WITH, NOT_BLANK, NOT_EMPTY, STARTS_WITH,
 		LOWER_CASE, REPLACE, STRIP, SUBSTRING, TRIM, UPPER_CASE,
 		ASYNC, SCHEDULED, CAUGHT, DEFAULT, NOT_NULL, PATTERN, RESTRICTED_ACCESS, SUPPORTS,
+		IMMUTABLE,
 		IMPLICIT_NON_NULL
 	};
 	//endregion

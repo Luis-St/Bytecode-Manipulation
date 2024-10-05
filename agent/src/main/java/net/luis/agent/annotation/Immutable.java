@@ -1,4 +1,4 @@
-package net.luis.agent.annotation.unused;
+package net.luis.agent.annotation;
 
 import java.lang.annotation.*;
 
@@ -10,4 +10,7 @@ import java.lang.annotation.*;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface Immutable {}
+public @interface Immutable {
+	
+	boolean inherit() default true;
+}

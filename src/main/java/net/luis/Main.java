@@ -23,19 +23,13 @@ import static org.apache.commons.lang3.StringUtils.*;
  *
  */
 
-public final class Main {
-	
-	/*
-	 * ToDo:
-	 *  - Add transformers for unused annotations
-	 */
+public class Main {
 	
 	@NotEmpty
 	@Pattern("^\\S*$")
 	private static String test = "Hello";
 	
 	public static void main(@Default @NotNull String[] args) {
-		System.out.println(Math.tan(100.00000000000004));
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
 		
