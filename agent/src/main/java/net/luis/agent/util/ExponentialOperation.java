@@ -9,5 +9,5 @@ package net.luis.agent.util;
 public enum ExponentialOperation {
 	
 	EXP,
-	EXPM1,;
+	EXPM1;
 }

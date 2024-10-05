@@ -22,7 +22,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 	
 	private static final List<String> IGNORED_CLASSES = List.of(
 		"java/", "javax/", "sun/", "com/sun/", "jdk/", // Java
-		"org/jetbrains/annotations/", "org/intellij/lang/annotations/", // JetBrains
+		"org/jetbrains/annotations/", "org/intellij/lang/annotations/", "com/intellij/", // JetBrains
 		"org/objectweb/asm/", // ASM
 		"net/luis/agent/" // Agent
 	);

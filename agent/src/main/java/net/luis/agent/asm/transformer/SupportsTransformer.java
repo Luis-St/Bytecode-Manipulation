@@ -12,8 +12,8 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static net.luis.agent.asm.Types.*;
 import static net.luis.agent.asm.Instrumentations.*;
+import static net.luis.agent.asm.Types.*;
 
 /**
  *

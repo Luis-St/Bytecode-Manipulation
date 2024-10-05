@@ -1,6 +1,5 @@
 package net.luis.agent.asm.data;
 
-import net.luis.agent.asm.Types;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;

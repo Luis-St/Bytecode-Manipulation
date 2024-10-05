@@ -3,7 +3,6 @@ package net.luis.agent.util.factory;
 import net.luis.agent.asm.signature.ActualType;
 import net.luis.utils.io.reader.ScopedStringReader;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  *

@@ -47,22 +47,22 @@ public class AsyncTransformer extends BaseClassTransformer {
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
 		private final Map<Method, String> methods = new HashMap<>();
-		private final Class data;
+		private final Class clazz;
 		
 		private AsyncClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
-			this.data = Agent.getClass(type);
+			this.clazz = Agent.getClass(type);
 		}
 		
 		@Override
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-			Method method = this.data.getMethod(name + descriptor);
+			Method method = this.clazz.getMethod(name + descriptor);
 			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(ASYNC)) {
 				return super.visitMethod(access, name, descriptor, signature, exceptions);
 			}
 			//region Validation
 			if (!method.is(MethodType.METHOD)) {
-				throw CrashReport.create("Annotation @Async can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
+				throw CrashReport.create("Annotation @Async must not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}
 			if (!method.returns(VOID)) {
 				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Return Type", method.getType().getReturnType()).exception();

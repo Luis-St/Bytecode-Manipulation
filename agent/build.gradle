@@ -4,9 +4,6 @@ plugins {
 
 repositories {
 	mavenCentral()
-	maven {
-		url "https://maven.luis-st.net/libraries/"
-	}
 }
 
 dependencies {

@@ -2,8 +2,8 @@ package net.luis.agent.asm.transformer;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
-import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.data.Class;
+import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Utils;
@@ -103,7 +103,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
 			Type type = Type.getType(descriptor);
 			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
-				if (!isPrimitive(type))  {
+				if (!isPrimitive(type)) {
 					Field field = Agent.getClass(this.method.getOwner()).getField(name);
 					if (field != null && this.isAnnotated(field)) {
 						this.validateField(field);

@@ -92,7 +92,7 @@ public class MathTransformer extends BaseClassTransformer {
 			String signature = method.getSignature(SignatureType.DEBUG);
 			if (method.isAnnotatedWithAny(ALL)) {
 				if (this.method.is(MethodType.STATIC_INITIALIZER)) {
-					throw CrashReport.create(INVALID_ELEMENT_CATEGORY, "Math annotations can not be applied to static initializers").addDetail("Method", method.getName()).exception();
+					throw CrashReport.create(INVALID_ELEMENT_CATEGORY, "Math annotations must not be applied to static initializers").addDetail("Method", method.getName()).exception();
 				}
 				if (this.isNoNumber(method.getReturnType())) {
 					throw CrashReport.create(INVALID_ELEMENT_CATEGORY, "Method annotated with math annotation must return a number type").addDetail("Method", signature)
