@@ -1,0 +1,157 @@
+package net.luis.bcode.asm.transformer;
+
+import net.luis.bcode.Agent;
+import net.luis.bcode.asm.base.*;
+import net.luis.bcode.asm.data.Annotation;
+import net.luis.bcode.asm.data.Method;
+import net.luis.bcode.asm.type.TypeModifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.*;
+import org.objectweb.asm.commons.LocalVariablesSorter;
+
+import java.util.List;
+import java.util.Objects;
+
+import static net.luis.bcode.asm.Instrumentations.*;
+import static net.luis.bcode.asm.Types.*;
+
+/**
+ *
+ * @author Luis-St
+ *
+ */
+
+public class RestrictedAccessTransformer extends BaseClassTransformer {
+	
+	public RestrictedAccessTransformer() {
+		super(true);
+	}
+	
+	//region Type filtering
+	@Override
+	protected boolean shouldIgnoreClass(@NotNull Type type) {
+		return Agent.getClass(type).getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(RESTRICTED_ACCESS));
+	}
+	//endregion
+	
+	@Override
+	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
+		return new RestrictedAccessClassVisitor(writer, type, () -> this.modified = true);
+	}
+	
+	private static class RestrictedAccessClassVisitor extends ContextBasedClassVisitor {
+		
+		private RestrictedAccessClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
+			super(visitor, type, markModified);
+		}
+		
+		@Override
+		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
+			Method method = Agent.getClass(this.type).getMethod(name + descriptor);
+			MethodVisitor visitor = this.cv.visitMethod(access, name, descriptor, signature, exceptions);
+			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(RESTRICTED_ACCESS)) {
+				return visitor;
+			}
+			
+			return new RestrictedAccessMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), method);
+		}
+		
+		@Override
+		public void visitEnd() {
+			this.markModified();
+			this.cv.visitEnd();
+		}
+	}
+	
+	private static class RestrictedAccessMethodVisitor extends LabelTrackingMethodVisitor {
+		
+		private static final Type STACK_TRACE_ARRAY = Type.getType("[Ljava/lang/StackTraceElement;");
+		private static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
+		
+		private final Type type;
+		private final Method method;
+		private final List<String> values;
+		private final boolean pattern;
+		
+		private RestrictedAccessMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
+			super(visitor);
+			this.method = method;
+			this.type = method.getOwner();
+			Annotation annotation = method.getAnnotation(RESTRICTED_ACCESS);
+			this.values = Objects.requireNonNull(annotation.get("value"));
+			this.pattern = Boolean.TRUE.equals(annotation.get("pattern"));
+		}
+		
+		@Override
+		public void visitCode() {
+			this.mv.visitCode();
+			Label start = new Label();
+			Label clazzVariable = new Label();
+			Label methodVariable = new Label();
+			Label end = new Label();
+			
+			int array = newLocal(this.mv, STACK_TRACE_ARRAY);
+			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
+			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Thread", "getStackTrace", "()[Ljava/lang/StackTraceElement;", false);
+			this.mv.visitVarInsn(Opcodes.ASTORE, array);
+			this.insertLabel(start);
+			
+			this.mv.visitVarInsn(Opcodes.ALOAD, array);
+			this.mv.visitInsn(Opcodes.ARRAYLENGTH);
+			this.mv.visitInsn(Opcodes.ICONST_2);
+			this.mv.visitJumpInsn(Opcodes.IF_ICMPLE, end);
+			
+			if (this.values.isEmpty()) {
+				instrumentThrownException(this.mv, RUNTIME_EXCEPTION, this.getMessage());
+				this.insertLabel(end);
+				return;
+			}
+			
+			int clazz = newLocal(this.mv, STRING);
+			this.mv.visitVarInsn(Opcodes.ALOAD, array);
+			this.mv.visitInsn(Opcodes.ICONST_2);
+			this.mv.visitInsn(Opcodes.AALOAD);
+			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StackTraceElement", "getClassName", "()Ljava/lang/String;", false);
+			this.mv.visitVarInsn(Opcodes.ASTORE, clazz);
+			this.insertLabel(clazzVariable);
+			
+			int method = newLocal(this.mv, STRING);
+			this.mv.visitVarInsn(Opcodes.ALOAD, array);
+			this.mv.visitInsn(Opcodes.ICONST_2);
+			this.mv.visitInsn(Opcodes.AALOAD);
+			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StackTraceElement", "getMethodName", "()Ljava/lang/String;", false);
+			this.mv.visitVarInsn(Opcodes.ASTORE, method);
+			this.insertLabel(methodVariable);
+			
+			for (String value : this.values) {
+				this.mv.visitLdcInsn(value);
+				this.mv.visitInsn(this.pattern ? Opcodes.ICONST_1 : Opcodes.ICONST_0);
+				this.mv.visitVarInsn(Opcodes.ALOAD, clazz);
+				this.mv.visitVarInsn(Opcodes.ALOAD, method);
+				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME_UTILS.getInternalName(), "isAccessAllowed", "(Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Z", false);
+				this.mv.visitJumpInsn(Opcodes.IFNE, end);
+			}
+			
+			instrumentThrownException(this.mv, RUNTIME_EXCEPTION, this.getMessage());
+			
+			this.insertLabel(end);
+			this.visitLocalVariable(array, "generated$RestrictedAccessTransformer$Temp" + array, STACK_TRACE_ARRAY, null, start, end);
+			this.visitLocalVariable(clazz, "generated$RestrictedAccessTransformer$Temp" + clazz, STRING, null, clazzVariable, end);
+			this.visitLocalVariable(method, "generated$RestrictedAccessTransformer$Temp" + method, STRING, null, methodVariable, end);
+		}
+		
+		//region Helper methods
+		private @NotNull String getMessage() {
+			if (this.values.isEmpty()) {
+				return "Method '" + this.type.getClassName() + "#" + this.method.getName() + "' is not callable";
+			}
+			String base = "Method '" + this.type.getClassName() + "#" + this.method.getName() + "' has restricted access, ";
+			if (this.pattern) {
+				return base + "the caller must match one of the following patterns: '" + String.join("', '", this.values) + "'";
+			}
+			return base + "the caller must be one of the following: '" + String.join("', '", this.values) + "'";
+		}
+		//endregion
+	}
+}

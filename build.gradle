@@ -2,29 +2,32 @@ plugins {
 	id "java"
 }
 
-repositories {
-	mavenCentral()
-	maven {
-		url "https://maven.luis-st.net/libraries/"
-	}
+dependencies {
+	implementation project(":base")
+	implementation project(":annotations")
+	
+	implementation "org.ow2.asm:asm-commons:${ASM}"
+	implementation "com.google.guava:guava:${GoogleGuava}"
+	implementation "org.apache.logging.log4j:log4j-api:${Log4jAPI}"
+	implementation "org.apache.logging.log4j:log4j-core:${Log4jCore}"
+	implementation "org.apache.commons:commons-lang3:${ApacheLang}"
 }
 
-dependencies {
-	// Modules
-	compileOnly project(":agent")
-	// Maven
-	implementation "net.luis:LUtils:${LUtils}" // Utility
-	// ASM
-	implementation "org.ow2.asm:asm:${ASM}"
-	implementation "org.ow2.asm:asm-commons:${ASM}"
-	// Google
-	implementation "com.google.guava:guava:${GoogleGuava}" // Utility
-	// Apache
-	implementation "org.apache.logging.log4j:log4j-api:${Log4jAPI}" // Logging
-	implementation "org.apache.logging.log4j:log4j-core:${Log4jCore}" // Logging
-	implementation "org.apache.commons:commons-lang3:${ApacheLang}" // Utility
-	// Other
-	implementation "org.jetbrains:annotations:${JetBrainsAnnotations}" // Annotations
+allprojects {
+	apply plugin: "java"
+	
+	repositories {
+		mavenCentral()
+		maven {
+			url "https://maven.luis-st.net/libraries/"
+		}
+	}
+	
+	dependencies {
+		implementation "net.luis:LUtils:${LUtils}"
+		implementation "org.ow2.asm:asm:${ASM}"
+		implementation "org.jetbrains:annotations:${JetBrainsAnnotations}"
+	}
 }
 
 tasks.register("run", JavaExec) {

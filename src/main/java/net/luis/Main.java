@@ -2,10 +2,10 @@ package net.luis;
 
 import com.google.common.base.Converter;
 import com.google.common.collect.Lists;
-import net.luis.agent.annotation.*;
-import net.luis.agent.annotation.math.*;
-import net.luis.agent.annotation.string.*;
-import net.luis.agent.util.TrigonometricOperation;
+import net.luis.annotations.*;
+import net.luis.annotations.configuration.TrigonometricOperation;
+import net.luis.annotations.math.*;
+import net.luis.annotations.string.*;
 import net.luis.utils.collection.WeightCollection;
 import net.luis.utils.lang.StringUtils;
 import org.intellij.lang.annotations.Pattern;

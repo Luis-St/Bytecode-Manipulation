@@ -1,24 +1,13 @@
-plugins {
-	id "java"
-}
-
-repositories {
-	mavenCentral()
-}
-
 dependencies {
-	// ASM
-	implementation "org.ow2.asm:asm:${ASM}"
+	implementation project(":base")
+	
 	implementation "org.ow2.asm:asm-commons:${ASM}"
-	// Other
-	implementation "org.jetbrains:annotations:${JetBrainsAnnotations}" // Annotations
 }
 
 jar {
-	duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 	manifest {
 		attributes([
-			"Premain-Class": "net.luis.agent.Main",
+			"Premain-Class": "net.luis.agent.PreMain",
 			"Can-Redefine-Classes": "true",
 			"Can-Retransform-Classes": "true"
 		])
