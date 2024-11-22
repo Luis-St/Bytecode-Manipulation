@@ -1,0 +1,4 @@
+rootProject.name = "Bytecode-Manipulation"
+include("agent")
+include("base")
+include("annotations")

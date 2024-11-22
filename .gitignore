@@ -1,5 +1,11 @@
+### Gradle ###
 /.gradle/
 /build/
+
+### Modules ###
+/agent/build/
+/annotations/build/
+/base/build/
 
 ### IntelliJ IDEA ###
 /.idea/
