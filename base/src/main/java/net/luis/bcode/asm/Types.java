@@ -44,6 +44,8 @@ public class Types {
 	//region Java built-in types
 	public static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
 	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType("Ljava/lang/IllegalArgumentException;");
+	public static final Type STACK_TRACE_ELEMENT = Type.getType("Ljava/lang/StackTraceElement;");
+	public static final Type STACK_TRACE_ELEMENT_ARRAY = Type.getType("[" + STACK_TRACE_ELEMENT.getDescriptor());
 	
 	public static final Type MATH = Type.getType("Ljava/lang/Math;");
 	public static final Type MAP = Type.getType("Ljava/util/Map;");
@@ -92,6 +94,7 @@ public class Types {
 	public static final Type PATTERN = Type.getType(Pattern.class);
 	public static final Type RESTRICTED_ACCESS = Type.getType(RestrictedAccess.class);
 	public static final Type SUPPORTS = Type.getType(Supports.class);
+	public static final Type DEFAULT_CONSTRUCTOR = Type.getType(DefaultConstructor.class);
 	
 	public static final Type IMMUTABLE = Type.getType(Immutable.class);
 	
@@ -155,7 +158,7 @@ public class Types {
 		if (array) {
 			String strElement = str;
 			if (str.contains("[")) {
-				strElement = str.substring(0, str.indexOf('['));
+				strElement = str.substring(0, str.lastIndexOf('['));
 			}
 			if (!isSameType(type.getElementType(), strElement)) {
 				return false;

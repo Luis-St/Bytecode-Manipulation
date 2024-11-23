@@ -48,6 +48,7 @@ public class PreMain {
 	// Transformers registered first will be called first, but changes will maybe overwrite by later transformers
 	private static void initializeTransformers(@NotNull Instrumentation inst) {
 		inst.addTransformer(new ValidationTransformer());
+		inst.addTransformer(new DefaultConstructorTransformer());
 		
 		inst.addTransformer(new ScheduledTransformer()); // 3: Schedule
 		inst.addTransformer(new AsyncTransformer()); // 2: Wrap in async
