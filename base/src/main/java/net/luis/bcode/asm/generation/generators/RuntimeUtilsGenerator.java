@@ -167,6 +167,8 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitCode();
 		mv.visitLabel(start);
+		instrumentNonNullCheck(mv, 0, "Type must not be null");
+		mv.visitInsn(Opcodes.POP);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
 		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "org/objectweb/asm/Type", "getSort", "()I", false);
 		mv.visitIntInsn(Opcodes.BIPUSH, 11);
@@ -198,6 +200,10 @@ public class RuntimeUtilsGenerator extends Generator {
 		mv.visitParameter("index", 0);
 		mv.visitCode();
 		mv.visitLabel(start);
+		instrumentNonNullCheck(mv, 0, "Class signature must not be null");
+		mv.visitInsn(Opcodes.POP);
+		instrumentNonNullCheck(mv, 1, "Method signature not be null");
+		mv.visitInsn(Opcodes.POP);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
 		mv.visitMethodInsn(Opcodes.INVOKESTATIC, SIGNATURE_UTILS.getInternalName(), "parseGenericDeclarations", "(Ljava/lang/String;)Ljava/util/Map;", false);
 		mv.visitVarInsn(Opcodes.ALOAD, 1);

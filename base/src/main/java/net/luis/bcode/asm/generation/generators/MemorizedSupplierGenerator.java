@@ -37,12 +37,11 @@ public class MemorizedSupplierGenerator extends Generator {
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitCode();
 		mv.visitLabel(start);
-		instrumentNonNullCheck(mv, 0, "Supplier must not be null");
-		mv.visitInsn(Opcodes.POP);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
 		mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
-		mv.visitVarInsn(Opcodes.ALOAD, 1);
+		instrumentNonNullCheck(mv, 1, "Supplier must not be null");
+		mv.visitTypeInsn(Opcodes.CHECKCAST, "java/util/function/Supplier");
 		mv.visitFieldInsn(Opcodes.PUTFIELD, MEMORIZED_SUPPLIER.getInternalName(), "supplier", "Ljava/util/function/Supplier;");
 		mv.visitInsn(Opcodes.RETURN);
 		mv.visitLabel(end);
