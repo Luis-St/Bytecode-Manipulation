@@ -60,20 +60,23 @@ public class AsyncTransformer extends BaseClassTransformer {
 			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(ASYNC)) {
 				return super.visitMethod(access, name, descriptor, signature, exceptions);
 			}
+			
 			//region Validation
+			CrashReport report = CrashReport.create(REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG));
 			if (!method.is(MethodType.METHOD)) {
-				throw CrashReport.create("Annotation @Async must not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
+				throw report.exception("Annotation @Async must not be applied to constructors and static initializers");
 			}
 			if (!method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @Async must return void", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Return Type", method.getType().getReturnType()).exception();
+				throw report.addDetail("Return Type", method.getType().getReturnType()).exception("Method annotated with @Async must return void");
 			}
 			if (method.getExceptionCount() > 0) {
-				throw CrashReport.create("Method annotated with @Async must not throw exceptions", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).addDetail("Exceptions", method.getExceptions()).exception();
+				throw report.addDetail("Exceptions", method.getExceptions()).exception("Method annotated with @Async must not throw exceptions");
 			}
 			if (method.isAnnotatedWith(SCHEDULED)) {
-				throw CrashReport.create("Method annotated with @Async must not be annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
+				throw report.exception("Method annotated with @Async must not be annotated with @Scheduled");
 			}
 			//endregion
+			
 			access = access & ~method.getAccess().getOpcode();
 			String newName = "generated$" + Utils.capitalize(name) + "$Async";
 			this.methods.put(method, newName);
@@ -104,6 +107,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 				Method method = entry.getKey();
 				MethodVisitor visitor = super.visitMethod(method.getOpcodes(), method.getName(), method.getType().getDescriptor(), method.getSignature(SignatureType.GENERIC), null);
 				visitor.visitCode();
+				
 				instrumentMethodAnnotations(visitor, method);
 				instrumentParameterAnnotations(visitor, method);
 				//region Parameter loading

@@ -50,18 +50,20 @@ public class DefaultConstructorTransformer extends BaseClassTransformer {
 		
 		private DefaultConstructorClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
-			net.luis.agent.asm.data.Class clazz = Agent.getClass(type);
+			Class clazz = Agent.getClass(type);
 			List<Method> constructors = clazz.getMethods("<init>");
+			CrashReport report = CrashReport.create(REPORT_CATEGORY);
+			
 			if (constructors.size() > 1) {
-				throw CrashReport.create("Class annotated with @DefaultConstructor must only have one constructor", REPORT_CATEGORY)
-					.addDetail("Constructors", constructors.stream().map(m -> m.getSignature(SignatureType.DEBUG)).toList()).exception();
+				throw report.addDetail("Constructors", constructors.stream().map(m -> m.getSignature(SignatureType.DEBUG)).toList()).exception("Class annotated with @DefaultConstructor must only have one constructor");
 			}
+			
 			Method constructor = constructors.getFirst();
 			if (constructor.getParameterCount() > 0) {
-				throw CrashReport.create("Constructor annotated with @DefaultConstructor must not have parameters", REPORT_CATEGORY).addDetail("Constructor", constructor.getSignature(SignatureType.DEBUG)).exception();
+				throw report.addDetail("Constructor", constructor.getSignature(SignatureType.DEBUG)).exception("Constructor annotated with @DefaultConstructor must not have parameters");
 			}
-			this.constructor = constructor;
 			
+			this.constructor = constructor;
 			Annotation annotation = clazz.getAnnotation(DEFAULT_CONSTRUCTOR);
 			this.accessModifier = TypeAccess.valueOf(annotation.get("value"));
 			this.instancable = annotation.getOrDefault("instancable");

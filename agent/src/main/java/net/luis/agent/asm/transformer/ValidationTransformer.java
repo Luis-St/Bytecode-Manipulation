@@ -53,12 +53,12 @@ public class ValidationTransformer extends BaseClassTransformer {
 			if (field.is(TypeModifier.FINAL)) {
 				continue;
 			}
+			
+			CrashReport report = CrashReport.create(REPORT_CATEGORY).addDetail("Immutable Class", immutableClass.getType()).addDetail("Field", field.getSignature(SignatureType.DEBUG));
 			if (immutableClass.equals(clazz)) {
-				throw CrashReport.create("Class annotated with @Immutable must only contain final fields", REPORT_CATEGORY).addDetail("Immutable Class", immutableClass.getType())
-					.addDetail("Field", field.getSignature(SignatureType.DEBUG)).exception();
+				throw report.exception("Class annotated with @Immutable must only contain final fields");
 			} else {
-				throw CrashReport.create("A class which inherits a class annotated with @Immutable must only contain final fields", REPORT_CATEGORY).addDetail("Immutable Class", immutableClass.getType())
-					.addDetail("Field", field.getSignature(SignatureType.DEBUG)).exception();
+				throw report.exception("A class which inherits a class annotated with @Immutable must only contain final fields");
 			}
 		}
 	}

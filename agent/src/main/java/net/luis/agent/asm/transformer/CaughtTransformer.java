@@ -62,11 +62,13 @@ public class CaughtTransformer extends BaseClassTransformer {
 		
 		private CaughtVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
+			
 			this.method = method;
 			Annotation annotation = method.getAnnotation(CAUGHT);
 			this.action = CaughtAction.valueOf(annotation.getOrDefault("value"));
 			this.exceptionType = annotation.getOrDefault("exceptionType");
 			this.returnType = method.getReturnType();
+			
 			if (this.action == CaughtAction.NOTHING && !method.returns(VOID)) {
 				throw CrashReport.create("Method annotated with @Caught(NOTHING) must return void", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
 			}

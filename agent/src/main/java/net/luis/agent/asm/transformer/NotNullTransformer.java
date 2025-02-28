@@ -2,8 +2,8 @@ package net.luis.agent.asm.transformer;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.base.*;
-import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Utils;
@@ -50,12 +50,14 @@ public class NotNullTransformer extends BaseClassTransformer {
 				if (method.isAnnotatedWith(NOT_NULL) || implicitNotNull(method.getAnnotations().values())) {
 					return true;
 				}
+				
 				Class clazz = Agent.getClass(method.getOwner());
 				if (clazz.getFields().values().stream().anyMatch(field -> {
 					return field.isAnnotatedWith(NOT_NULL) || implicitNotNull(field.getAnnotations().values());
 				})) {
 					return true;
 				}
+				
 				if (method.getParameters().values().stream().anyMatch(parameter -> {
 					return parameter.isAnnotatedWith(NOT_NULL) || implicitNotNull(parameter.getAnnotations().values());
 				})) {
@@ -165,37 +167,45 @@ public class NotNullTransformer extends BaseClassTransformer {
 			return messageName + " must not be null";
 		}
 		
+		private @NotNull CrashReport createBaseReport(@NotNull String message, @Nullable ASMData element) {
+			CrashReport report = CrashReport.create(message, REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG));
+			switch (element) {
+				case Parameter parameter -> report.addParameterDetails(parameter);
+				case Field field -> report.addFieldDetails(field);
+				case LocalVariable local -> report.addLocalDetails(local);
+				case null -> {}
+				default -> {break;}
+			}
+			return report;
+		}
+		
 		private void validateParameter(@NotNull Parameter parameter) {
 			if (isPrimitive(parameter.getType()) && parameter.isAnnotatedWith(NOT_NULL)) {
-				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
+				throw this.createBaseReport("Parameter annotated with @NotNull must not be a primitive type", parameter).exception();
 			}
 		}
 		
 		private void validateField(@NotNull Field field) {
 			if (isPrimitive(field.getType()) && field.isAnnotatedWith(NOT_NULL)) {
-				throw CrashReport.create("Field annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).exception();
+				throw this.createBaseReport("Field annotated with @NotNull must not be a primitive type", field).exception();
 			}
 		}
 		
 		private void validateLocal(@NotNull LocalVariable local) {
 			if (isPrimitive(local.getType()) && local.isAnnotatedWith(NOT_NULL)) {
-				throw CrashReport.create("Parameter annotated with @NotNull must not be a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Local Variable Index", local.getIndex()).addDetail("Local Variable  Type", local.getType()).addDetail("Local Variable Name", local.getName()).exception();
+				throw this.createBaseReport("Parameter annotated with @NotNull must not be a primitive type", local).exception();
 			}
 		}
 		
 		private void validateMethod() {
 			if (!this.method.is(MethodType.METHOD)) {
-				throw CrashReport.create("Annotation @NotNull can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).exception();
+				throw this.createBaseReport("Annotation @NotNull can not be applied to constructors and static initializers", null).exception();
 			}
 			if (this.method.returns(VOID)) {
-				throw CrashReport.create("Method annotated with @NotNull must not return void", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).exception();
+				throw this.createBaseReport("Method annotated with @NotNull must not return void", null).exception();
 			}
 			if (isPrimitive(this.method.getReturnType()) && this.method.isAnnotatedWith(NOT_NULL)) {
-				throw CrashReport.create("Method annotated with @NotNull must not return a primitive type", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Return Type", this.method.getReturnType()).exception();
+				throw this.createBaseReport("Method annotated with @NotNull must not return a primitive type", null).addDetail("Return Type", this.method.getReturnType()).exception();
 			}
 		}
 		//endregion

@@ -57,11 +57,13 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			if (this.shouldIgnoreClass(type) || this.isInternalClass(type)) {
 				return null;
 			}
+			
 			ClassReader reader = new ClassReader(buffer);
 			ClassWriter writer = new ClassWriter(reader, this.computeFrames ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
 			ClassVisitor visitor = this.visit(type, writer);
 			reader.accept(visitor, ClassReader.EXPAND_FRAMES);
 			byte[] bytes = writer.toByteArray();
+			
 			if (this.modified) {
 				System.out.println("Transformed Class: " + type.getClassName());
 				ASMUtils.saveClass(new File("transformed/" + className + ".class"), bytes);
@@ -70,15 +72,13 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			return bytes;
 		} catch (Throwable throwable) {
 			System.out.println("Error occurred while transforming class '" + type + "'");
-			CrashReport report;
+			CrashReport report = CrashReport.create("Error occurred while transforming class '" + type + "'", throwable);
+			
 			if (throwable instanceof ReportedException ex) {
 				report = ex.getReport();
-			} else {
-				report = CrashReport.create("Error occurred while transforming class '" + type + "'", throwable);
 			}
-			report.addDetailFirst("Transformed Class", type);
-			report.addDetailFirst("Class Transformer", this.getClass().getSimpleName());
-			report.addDetailFirst("Class Loader", loader.getName());
+			
+			report.addDetailFirst("Transformed Class", type).addDetailFirst("Class Transformer", this.getClass().getSimpleName()).addDetailFirst("Class Loader", loader.getName());
 			report.print();
 			if (!report.canContinue()) {
 				System.exit(report.getExitCode());

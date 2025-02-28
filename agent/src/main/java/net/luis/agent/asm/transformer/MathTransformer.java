@@ -88,121 +88,120 @@ public class MathTransformer extends BaseClassTransformer {
 			super(visitor);
 			this.method = method;
 			this.includeLocals = method.getLocals().stream().anyMatch(local -> local.isAnnotatedWithAny(ALL));
+			
 			//region Method validation
 			String signature = method.getSignature(SignatureType.DEBUG);
+			CrashReport report = CrashReport.create(UNSUPPORTED_CATEGORY).addDetail("Method", signature);
+			
 			if (method.isAnnotatedWithAny(ALL)) {
 				if (this.method.is(MethodType.STATIC_INITIALIZER)) {
 					throw CrashReport.create(INVALID_ELEMENT_CATEGORY, "Math annotations must not be applied to static initializers").addDetail("Method", method.getName()).exception();
 				}
 				if (this.isNoNumber(method.getReturnType())) {
-					throw CrashReport.create(INVALID_ELEMENT_CATEGORY, "Method annotated with math annotation must return a number type").addDetail("Method", signature)
-						.addDetail("Return Type", method.getReturnType()).exception();
+					throw CrashReport.create(INVALID_ELEMENT_CATEGORY, "Method annotated with math annotation must return a number type").addDetail("Method", signature).addDetail("Return Type", method.getReturnType()).exception();
 				}
+				
 				Collection<Annotation> annotations = method.getAnnotations().values();
+				report.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList());
+				
 				if (annotations.stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature)
-						.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).exception();
+					throw report.exception("Method must not be annotated with @Above and @AboveEqual at the same time");
 				}
 				if (annotations.stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature)
-						.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).exception();
+					throw report.exception("Method must not be annotated with @Below and @BelowEqual at the same time");
 				}
 				if (annotations.stream().filter(annotation -> annotation.isAny(MIN, MAX)).count() > 1) {
-					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Min and @Max at the same time").addDetail("Method", signature)
-						.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).addDetail("Suggestion", "Use @Clamp instead of @Min and @Max in combination").exception();
+					throw report.addDetail("Suggestion", "Use @Clamp instead of @Min and @Max in combination").exception("Method must not be annotated with @Min and @Max at the same time");
 				}
 				if (annotations.stream().filter(annotation -> annotation.isAny(CLAMP, MIN, MAX)).count() > 1) {
-					throw CrashReport.create(UNSUPPORTED_CATEGORY, "Method must not be annotated with @Clamp and @Min or @Max at the same time").addDetail("Method", signature)
-						.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).addDetail("Suggestion", "Reconfigure the @Clamp annotation").exception();
+					throw report.addDetail("Suggestion", "Reconfigure the @Clamp annotation").exception("Method must not be annotated with @Clamp and @Min or @Max at the same time");
 				}
 			}
 			//endregion
+			
 			//region Parameter validation
+			report.removeDetail("Annotations");
 			for (Parameter parameter : method.getParameters().values()) {
 				if (parameter.isAnnotatedWithAny(ALL)) {
+					report.addParameterDetails(parameter);
+					
 					if (this.isNoNumber(parameter.getType())) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter annotated with math annotation must be a number type").addDetail("Method", signature)
-							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
+						throw report.exception("Parameter annotated with math annotation must be a number type");
 					}
+					
 					Collection<Annotation> annotations = parameter.getAnnotations().values();
+					report.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList());
+					
 					if (annotations.stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature)
-							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-							.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).exception();
+						throw report.exception("Parameter must not be annotated with @Above and @AboveEqual at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature)
-							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-							.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).exception();
+						throw report.exception("Parameter must not be annotated with @Below and @BelowEqual at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(MIN, MAX)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Min and @Max at the same time").addDetail("Method", signature)
-							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-							.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).addDetail("Suggestion", "Use @Clamp instead of @Min and @Max in combination").exception();
+						throw report.addDetail("Suggestion", "Use @Clamp instead of @Min and @Max in combination").exception("Parameter must not be annotated with @Min and @Max at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(CLAMP, MIN, MAX)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Parameter must not be annotated with @Clamp and @Min or @Max at the same time").addDetail("Method", signature)
-							.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName())
-							.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).addDetail("Suggestion", "Reconfigure the @Clamp annotation").exception();
+						throw report.addDetail("Suggestion", "Reconfigure the @Clamp annotation").exception("Parameter must not be annotated with @Clamp and @Min or @Max at the same time");
 					}
 					this.lookup.add(parameter);
 				}
 			}
 			//endregion
+			
 			//region Field validation
+			report.removeParameterDetails().removeDetail("Annotations");
 			for (Field field : Agent.getClass(method.getOwner()).getFields().values()) {
 				if (field.isAnnotatedWithAny(ALL)) {
+					report.addFieldDetails(field);
+					
 					if (this.isNoNumber(field.getType())) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Field annotated with math annotation must be a number type").addDetail("Method", signature)
-							.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).exception();
+						throw report.exception("Field annotated with math annotation must be a number type");
 					}
+					
 					Collection<Annotation> annotations = field.getAnnotations().values();
+					report.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList());
+					
 					if (annotations.stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Field must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature)
-							.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).exception();
+						throw report.exception("Field must not be annotated with @Above and @AboveEqual at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Field must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature)
-							.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).exception();
+						throw report.exception("Field must not be annotated with @Below and @BelowEqual at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(MIN, MAX)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Field must not be annotated with @Min and @Max at the same time").addDetail("Method", signature)
-							.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).addDetail("Annotations", annotations.stream().map(Annotation::getType).toList())
-							.addDetail("Suggestion", "Use @Clamp instead of @Min and @Max in combination").exception();
+						throw report.addDetail("Suggestion", "Use @Clamp instead of @Min and @Max in combination").exception("Field must not be annotated with @Min and @Max at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(CLAMP, MIN, MAX)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Field must not be annotated with @Clamp and @Min or @Max at the same time").addDetail("Method", signature)
-							.addDetail("Field Name", field.getName()).addDetail("Field Type", field.getType()).addDetail("Annotations", annotations.stream().map(Annotation::getType).toList())
-							.addDetail("Suggestion", "Reconfigure the @Clamp annotation").exception();
+						throw report.addDetail("Suggestion", "Reconfigure the @Clamp annotation").exception("Field must not be annotated with @Clamp and @Min or @Max at the same time");
 					}
 				}
 			}
 			//endregion
+			
 			//region Local variable validation
+			report.removeFieldDetails().removeDetail("Annotations");
 			for (LocalVariable local : method.getLocals()) {
 				if (local.isAnnotatedWithAny(ALL)) {
+					report.addLocalDetails(local);
+					
 					if (this.isNoNumber(local.getType())) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Local variable annotated with math annotation must be a number type").addDetail("Method", signature)
-							.addDetail("Local Index", local.getIndex()).addDetail("Local Name", local.getName()).addDetail("Local Type", local.getType()).exception();
+						throw report.exception("Local variable annotated with math annotation must be a number type");
 					}
+					
 					Collection<Annotation> annotations = local.getAnnotations().values();
+					report.addDetail("Annotations", annotations.stream().map(Annotation::getType).toList());
+					
 					if (annotations.stream().filter(annotation -> annotation.isAny(ABOVE, ABOVE_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Local variable must not be annotated with @Above and @AboveEqual at the same time").addDetail("Method", signature).addDetail("Local Index", local.getIndex())
-							.addDetail("Local Name", local.getName()).addDetail("Local Type", local.getType()).addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).exception();
+						throw report.exception("Local variable must not be annotated with @Above and @AboveEqual at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(BELOW, BELOW_EQUAL)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Local variable must not be annotated with @Below and @BelowEqual at the same time").addDetail("Method", signature).addDetail("Local Index", local.getIndex())
-							.addDetail("Local Name", local.getName()).addDetail("Local Type", local.getType()).addDetail("Annotations", annotations.stream().map(Annotation::getType).toList()).exception();
+						throw report.exception("Local variable must not be annotated with @Below and @BelowEqual at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(MIN, MAX)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Local variable must not be annotated with @Min and @Max at the same time").addDetail("Method", signature).addDetail("Local Index", local.getIndex())
-							.addDetail("Local Name", local.getName()).addDetail("Local Type", local.getType()).addDetail("Annotations", annotations.stream().map(Annotation::getType).toList())
-							.addDetail("Suggestion", "Use @Clamp instead of @Min and @Max in combination").exception();
+						throw report.addDetail("Suggestion", "Use @Clamp instead of @Min and @Max in combination").exception("Local variable must not be annotated with @Min and @Max at the same time");
 					}
 					if (annotations.stream().filter(annotation -> annotation.isAny(CLAMP, MIN, MAX)).count() > 1) {
-						throw CrashReport.create(UNSUPPORTED_CATEGORY, "Local variable must not be annotated with @Clamp and @Min or @Max at the same time").addDetail("Method", signature).addDetail("Local Index", local.getIndex())
-							.addDetail("Local Name", local.getName()).addDetail("Local Type", local.getType()).addDetail("Annotations", annotations.stream().map(Annotation::getType).toList())
-							.addDetail("Suggestion", "Reconfigure the @Clamp annotation").exception();
+						throw report.addDetail("Suggestion", "Reconfigure the @Clamp annotation").exception("Local variable must not be annotated with @Clamp and @Min or @Max at the same time");
 					}
 				}
 			}
@@ -278,8 +277,10 @@ public class MathTransformer extends BaseClassTransformer {
 			if (Arrays.stream(MODIFICATIONS).noneMatch(annotations::containsKey)) {
 				return;
 			}
+			
 			this.mv.visitVarInsn(orginalType.getOpcode(Opcodes.ILOAD), index);
 			Type resultType = orginalType;
+			
 			if (annotations.containsKey(LOG)) {
 				resultType = this.instrumentLog(annotations.get(LOG), resultType, index);
 			}
@@ -332,15 +333,18 @@ public class MathTransformer extends BaseClassTransformer {
 		//region Instrumentation modifications
 		private @NotNull Type instrumentLog(@NotNull Annotation annotation, @NotNull Type type, int index) {
 			double base = annotation.getOrDefault("value");
-			if (base <= 1) {
-				throw CrashReport.create("Invalid @Log annotation found, expected 'base > 1'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", base).exception();
-			}
 			boolean natural = annotation.getOrDefault("natural");
-			if (natural && Math.abs(base - Math.E) > 0.0001) {
-				throw CrashReport.create("Invalid @Log annotation found, expected 'natural = true' for base 'E'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", base).exception();
+			CrashReport report = CrashReport.create(INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+				.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", base);
+			
+			if (base <= 1) {
+				throw report.exception("Invalid @Log annotation found, expected 'base > 1'");
 			}
+			
+			if (natural && Math.abs(base - Math.E) > 0.0001) {
+				throw report.exception("Invalid @Log annotation found, expected 'natural = true' for base 'E'");
+			}
+			
 			instrumentNumberConversion(this.mv, type, DOUBLE);
 			if (Math.abs(base - Math.E) < 0.0001) {
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), natural ? "log1p" : "log", "(D)D", false);
@@ -371,6 +375,7 @@ public class MathTransformer extends BaseClassTransformer {
 		private @NotNull Type instrumentTrig(@NotNull Annotation annotation, @NotNull Type type, int index) {
 			TrigonometricOperation operation = TrigonometricOperation.valueOf(annotation.getOrDefault("value"));
 			instrumentNumberConversion(this.mv, type, DOUBLE);
+			
 			if (annotation.getOrDefault("degrees")) {
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "toRadians", "(D)D", false);
 			}
@@ -385,6 +390,7 @@ public class MathTransformer extends BaseClassTransformer {
 			} else {
 				instrumentNumberConversion(this.mv, type, LONG);
 			}
+			
 			long value = annotation.getOrDefault("value");
 			if (mode == RoundingMode.FLOOR || mode == RoundingMode.CEIL) {
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), mode.getMethodName(), "(D)D", false);
@@ -410,6 +416,7 @@ public class MathTransformer extends BaseClassTransformer {
 		private @NotNull Type instrumentNegate(@NotNull Type type, int index) {
 			Type defaultType = this.getDefaultPrimitiveNumberType(type);
 			instrumentNumberConversion(this.mv, type, defaultType);
+			
 			if (defaultType.equals(LONG)) {
 				this.mv.visitInsn(Opcodes.LNEG);
 			} else if (defaultType.equals(FLOAT)) {
@@ -428,22 +435,22 @@ public class MathTransformer extends BaseClassTransformer {
 			
 			String value = annotation.get("value");
 			if (value != null) {
+				CrashReport report = CrashReport.create(INVALID_CONFIGURATION_CATEGORY).setMessage("Invalid @Clamp annotation found, expected 'min:max'")
+					.addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE))
+					.addDetail("Message Details", "Value must be blank if min and max are set").addDetail("Value Found", value);
+				
 				if (value.isBlank() && min == Double.MIN_VALUE && max == Double.MAX_VALUE) {
-					throw CrashReport.create("Invalid @Clamp annotation found, expected 'min:max'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must not be blank if min and max are not set").addDetail("Value Found", value).exception();
+					throw report.addDetailBefore("Value Found", "Message Details", "Value must not be blank if min and max are not set").exception();
 				}
 				if (!value.contains(":")) {
-					throw CrashReport.create("Invalid @Clamp annotation found, expected 'min:max'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must contain a colon ':' to separate min and max").addDetail("Value Found", value).exception();
+					throw report.addDetailBefore("Value Found", "Message Details", "Value must contain a colon ':' to separate min and max").exception();
 				}
 				String[] parts = value.split(":");
 				if (parts.length != 2) {
-					throw CrashReport.create("Invalid @Clamp annotation found, expected 'min:max'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must contain exactly one colon ':' to separate min and max").addDetail("Value Found", value).exception();
+					throw report.addDetailBefore("Value Found", "Message Details", "Value must contain exactly one colon ':' to separate min and max").exception();
 				}
 				if (parts[0].isBlank() || parts[1].isBlank()) {
-					throw CrashReport.create("Invalid @Clamp annotation found, expected 'min:max'", INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must not contain blank min or max values").addDetail("Value Found", value).exception();
+					throw report.addDetailBefore("Value Found", "Message Details", "Value must not contain blank min or max values").exception();
 				}
 				if ("*".equals(parts[0])) {
 					min = Double.MIN_VALUE;
@@ -483,8 +490,8 @@ public class MathTransformer extends BaseClassTransformer {
 		private @NotNull Type instrumentMin(@NotNull Annotation annotation, @NotNull Type type, int index) {
 			Type defaultType = this.getDefaultPrimitiveNumberType(type);
 			double min = annotation.getOrDefault("value");
-			
 			instrumentNumberConversion(this.mv, type, defaultType);
+			
 			if (defaultType.equals(LONG)) {
 				loadNumber(this.mv, (long) min);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "min", "(JJ)J", false);
@@ -505,8 +512,8 @@ public class MathTransformer extends BaseClassTransformer {
 		private @NotNull Type instrumentMax(@NotNull Annotation annotation, @NotNull Type type, int index) {
 			Type defaultType = this.getDefaultPrimitiveNumberType(type);
 			double max = annotation.getOrDefault("value");
-			
 			instrumentNumberConversion(this.mv, type, defaultType);
+			
 			if (defaultType.equals(LONG)) {
 				loadNumber(this.mv, (long) max);
 				this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "max", "(JJ)J", false);
@@ -529,6 +536,7 @@ public class MathTransformer extends BaseClassTransformer {
 		private void instrumentRange(@NotNull Annotation annotation, @NotNull Type type, int index, boolean above, int compare, @NotNull String message) {
 			Label label = new Label();
 			Double value = annotation.get("value");
+			
 			if (value == null) {
 				return;
 			}
@@ -539,6 +547,7 @@ public class MathTransformer extends BaseClassTransformer {
 				loadNumber(this.mv, value);
 				loadNumberAsDouble(this.mv, type, index);
 			}
+			
 			this.mv.visitInsn(Opcodes.DCMPL);
 			this.mv.visitJumpInsn(compare, label);
 			instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, () -> this.instrumentRangeMessage(index, type, message, value));

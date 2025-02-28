@@ -66,7 +66,6 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 	
 	private static class RestrictedAccessMethodVisitor extends LabelTrackingMethodVisitor {
 		
-
 		private final Type type;
 		private final Method method;
 		private final List<String> values;

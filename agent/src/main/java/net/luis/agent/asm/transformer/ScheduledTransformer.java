@@ -57,42 +57,42 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				if (method.isAnnotatedWith(SCHEDULED)) {
 					//region Validation
 					String signature = method.getSignature(SignatureType.DEBUG);
+					CrashReport report = CrashReport.create("Invalid method annotated with @Scheduled", REPORT_CATEGORY).addDetail("Method", signature);
+					
 					if (!method.is(MethodType.METHOD)) {
-						throw CrashReport.create("Annotation @Scheduled must not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", signature).exception();
+						throw report.exception("Annotation @Scheduled must not be applied to constructors and static initializers");
 					}
 					if (!method.returns(VOID)) {
-						throw CrashReport.create("Method annotated with @Scheduled must return void", REPORT_CATEGORY).addDetail("Method", signature).addDetail("Return Type", method.getReturnType()).exception();
+						throw report.addDetail("Return Type", method.getReturnType()).exception("Method annotated with @Scheduled must return void");
 					}
 					if (method.getExceptionCount() > 0) {
-						throw CrashReport.create("Method annotated with @Scheduled must not throw exceptions", REPORT_CATEGORY).addDetail("Method", signature).addDetail("Exceptions", method.getExceptions()).exception();
+						throw report.addDetail("Method", signature).addDetail("Exceptions", method.getExceptions()).exception("Method annotated with @Scheduled must not throw exceptions");
 					}
 					if (method.isAnnotatedWith(ASYNC)) {
-						throw CrashReport.create("Method annotated with @Scheduled must not be annotated with @Async", REPORT_CATEGORY).addDetail("Method", signature).exception();
+						throw report.addDetail("Method", signature).exception("Method annotated with @Scheduled must not be annotated with @Async");
 					}
 					if (method.getParameterCount() > 0) {
 						if (method.getParameterCount() == 1) {
 							if (!method.getParameter(0).is(SCHEDULED_FUTURE) && !method.getParameter(0).is(INT)) {
-								throw CrashReport.create("Unsupported parameter type for method annotated with @Scheduled, must be 'int' or 'ScheduledFuture<?>'", REPORT_CATEGORY).addDetail("Method", signature)
-									.addDetail("Parameter Index", method.getParameter(0).getIndex()).addDetail("Parameter Type", method.getParameter(0).getType()).addDetail("Parameter Name", method.getParameter(0).getName()).exception();
+								throw report.addParameterDetails(method.getParameter(0)).exception("Unsupported parameter type for method annotated with @Scheduled, must be 'int' or 'ScheduledFuture<?>'");
 							}
 						} else if (method.getParameterCount() == 2) {
 							if (!method.getParameter(0).is(INT) || !method.getParameter(1).is(SCHEDULED_FUTURE)) {
-								throw CrashReport.create("Unsupported parameter types for method annotated with @Scheduled, must be 'int' and then 'ScheduledFuture<?>'", REPORT_CATEGORY).addDetail("Method", signature)
-									.addDetail("Parameter Index", method.getParameter(0).getIndex()).addDetail("Parameter Type", method.getParameter(0).getType()).addDetail("Parameter Name", method.getParameter(0).getName())
-									.addDetail("Parameter Index", method.getParameter(1).getIndex()).addDetail("Parameter Type", method.getParameter(1).getType()).addDetail("Parameter Name", method.getParameter(1).getName()).exception();
+								throw report.addParameterDetails(method.getParameter(0)).addParameterDetails(method.getParameter(1))
+									.exception("Unsupported parameter types for method annotated with @Scheduled, must be 'int' and then 'ScheduledFuture<?>'");
 							}
 						} else {
-							throw CrashReport.create("Method annotated with @Scheduled must have 0 or 1 parameters", REPORT_CATEGORY).addDetail("Method", signature)
-								.addDetail("Parameter Count", method.getParameterCount()).exception();
+							throw report.addDetail("Parameter Count", method.getParameterCount()).exception("Method annotated with @Scheduled must have 0 or 1 parameters");
 						}
 					}
 					//endregion
+					
 					if (method.is(TypeModifier.STATIC)) {
 						this.staticLookup.add(method);
 						this.staticScheduler.setRequired(true);
 					} else {
 						if (data.is(ClassType.INTERFACE)) {
-							throw CrashReport.create("Method annotated with @Scheduled declared as non-static must be in a class, enum or record type", REPORT_CATEGORY).addDetail("Method", signature).exception();
+							throw report.addDetail("Method", signature).exception("Method annotated with @Scheduled declared as non-static must be in a class, enum or record type");
 						}
 						this.instanceScheduler.setRequired(true);
 						this.instanceLookup.add(method);
@@ -116,6 +116,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		@Override
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
+			
 			if (this.staticScheduler.isRequired() && this.staticScheduler.getScheduler() == null) {
 				this.staticScheduler.setGenerated(true);
 				this.cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, "GENERATED$SCHEDULED_EXECUTOR", SCHEDULED_EXECUTOR.getDescriptor(), null, null).visitEnd();
@@ -123,6 +124,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				Agent.getClass(this.type).getFields().put(scheduler.getName(), scheduler);
 				this.staticScheduler.setScheduler(scheduler);
 			}
+			
 			if (this.instanceScheduler.isRequired() && this.instanceScheduler.getScheduler() == null) {
 				this.instanceScheduler.setGenerated(true);
 				this.cv.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "generated$ScheduledExecutor", SCHEDULED_EXECUTOR.getDescriptor(), null, null).visitEnd();
@@ -136,10 +138,12 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			Method method = Agent.getClass(this.type).getMethod(name + descriptor);
+			
 			if (this.staticScheduler.isRequired() && "<clinit>".equals(name) && method != null) {
 				this.staticScheduler.setInitialized(true);
 				return new ScheduledMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.type, method, this.staticLookup, this.staticScheduler);
 			}
+			
 			if (this.instanceScheduler.isRequired() && "<init>".equals(name) && method != null && method.is(MethodType.PRIMARY_CONSTRUCTOR)) {
 				this.instanceScheduler.setInitialized(true);
 				return new ScheduledMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.type, method, this.instanceLookup, this.instanceScheduler);
@@ -158,6 +162,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				visitor.visitMaxs(0, 0);
 				visitor.visitEnd();
 			}
+			
 			if (this.instanceScheduler.isRequired() && !this.instanceScheduler.isInitialized()) {
 				throw CrashReport.create("No primary constructor found, class was either compiled or modified incorrectly", "Invalid Class File").addDetail("Class", this.type).exception();
 			}

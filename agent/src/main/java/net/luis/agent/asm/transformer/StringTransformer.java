@@ -59,6 +59,7 @@ public class StringTransformer extends BaseClassTransformer {
 				if (method.isAnnotatedWithAny(ALL) && method.returns(STRING)) {
 					return true;
 				}
+				
 				Class clazz = Agent.getClass(method.getOwner());
 				if (clazz.getFields().values().stream().anyMatch(field -> field.isAnnotatedWithAny(ALL))) {
 					return true;
@@ -226,18 +227,17 @@ public class StringTransformer extends BaseClassTransformer {
 			String replacement = annotation.getOrDefault("replacement");
 			boolean all = annotation.getOrDefault("all");
 			
+			CrashReport report = CrashReport.create(REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE));
 			if (value.isEmpty() && regex.isEmpty()) {
-				throw CrashReport.create("Invalid @Replace annotation found, expected at least one of 'value' or 'regex' to be set", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).exception();
+				throw report.exception("Invalid @Replace annotation found, expected at least one of 'value' or 'regex' to be set");
 			}
 			if (!value.isEmpty() && !regex.isEmpty()) {
-				throw CrashReport.create("Invalid @Replace annotation found, expected only one of 'value' or 'regex' to be set", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).exception();
+				throw report.exception("Invalid @Replace annotation found, expected only one of 'value' or 'regex' to be set");
 			}
 			if (!value.contains(" -> ") && replacement.isEmpty()) {
-				throw CrashReport.create("Invalid @Replace annotation found, expected 'replacement' to be set", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).exception();
+				throw report.exception("Invalid @Replace annotation found, expected 'replacement' to be set");
 			}
+			
 			if (regex.isEmpty()) {
 				if (value.contains(" -> ")) {
 					String[] parts = value.split(" -> ");
@@ -270,9 +270,11 @@ public class StringTransformer extends BaseClassTransformer {
 		
 		private void instrumentSubstring(int index, @NotNull Annotation annotation) {
 			String value = annotation.getOrDefault("value");
+			CrashReport report = CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
+				.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Value Found", value);
+			
 			if (value.isBlank()) {
-				throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-					.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must not be blank").addDetail("Value Found", value).exception();
+				throw report.addDetailBefore("Value Found", "Message Details", "Value must not be blank").exception();
 			}
 			
 			int start = 0;
@@ -280,22 +282,20 @@ public class StringTransformer extends BaseClassTransformer {
 			boolean dynamic = false;
 			if (value.contains(":")) {
 				String[] parts = value.split(":");
+				
 				if (parts.length != 2) {
-					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must contain exactly one colon ':' to separate start and end").addDetail("Value Found", value).exception();
+					throw report.addDetailBefore("Value Found", "Message Details", "Value must contain exactly one colon ':' to separate start and end").exception();
 				}
 				if ("*".equals(parts[0]) && "*".equals(parts[1])) {
-					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must contain at least one number to specify the start or end index").addDetail("Value Found", value).exception();
+					throw report.addDetailBefore("Value Found", "Message Details", "Value must contain at least one number to specify the start or end index").exception();
 				}
 				if (parts[0].isBlank() || parts[1].isBlank()) {
-					throw CrashReport.create("Invalid @Substring annotation found, expected 'start:end'", REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
-						.addDetail("Annotation", annotation.getSignature(SignatureType.SOURCE)).addDetail("Message Details", "Value must not contain blank start or end values").addDetail("Value Found", value).exception();
+					throw report.addDetailBefore("Value Found", "Message Details", "Value must not contain blank start or end values").exception();
 				}
+				
 				if (!"*".equals(parts[0])) {
 					start = Integer.parseInt(parts[0]);
 				}
-				
 				if (!"*".equals(parts[1])) {
 					if (Pattern.matches("^\\*\\s*-\\s*\\d+$", parts[1])) {
 						dynamic = true;

@@ -1,5 +1,6 @@
 package net.luis.agent.asm.report;
 
+import net.luis.agent.asm.data.*;
 import net.luis.agent.util.SortedHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,30 +21,32 @@ public class CrashReport {
 	private static final String DEFAULT_CATEGORY = "Class Transformation Error";
 	
 	private final SortedHashMap<String, Object> details = new SortedHashMap<>();
-	private final String message;
 	private final String category;
-	private final Throwable exception;
+	private String message = DEFAULT_MESSAGE;
+	private @Nullable Throwable exception;
 	private boolean removeNullValues;
 	private boolean canContinue;
 	private int exitCode = 1;
 	
-	private CrashReport(@Nullable String message, @Nullable String category, @Nullable Throwable exception) {
-		this.message = message == null ? DEFAULT_MESSAGE : message;
-		this.category = category == null ? DEFAULT_CATEGORY : category;
-		this.exception = exception;
+	private CrashReport() {
+		this(DEFAULT_CATEGORY);
+	}
+	
+	private CrashReport(@NotNull String category) {
+		this.category = category;
 	}
 	
 	//region Factory methods
+	public static @NotNull CrashReport create(@NotNull String category) {
+		return new CrashReport(category);
+	}
+	
 	public static @NotNull CrashReport create(@NotNull String message, @Nullable Throwable exception) {
-		return new CrashReport(message, null, exception);
+		return new CrashReport().setMessage(message).setException(exception);
 	}
 	
 	public static @NotNull CrashReport create(@NotNull String message, @NotNull String category) {
-		return new CrashReport(message, category, null);
-	}
-	
-	public static @NotNull CrashReport create(@NotNull String message, @NotNull String category, @Nullable Throwable exception) {
-		return new CrashReport(message, category, exception);
+		return new CrashReport(category).setMessage(message);
 	}
 	//endregion
 	
@@ -74,18 +77,18 @@ public class CrashReport {
 	//endregion
 	
 	//region Builder methods
+	public @NotNull CrashReport setMessage(@Nullable String message) {
+		this.message = message == null ? DEFAULT_MESSAGE : message;
+		return this;
+	}
+	
+	public @NotNull CrashReport setException(@Nullable Throwable exception) {
+		this.exception = exception;
+		return this;
+	}
+	
 	public @NotNull CrashReport setExitCode(int exitCode) {
 		this.exitCode = exitCode;
-		return this;
-	}
-	
-	public @NotNull CrashReport removeNullValues(boolean removeNullValues) {
-		this.removeNullValues = removeNullValues;
-		return this;
-	}
-	
-	public @NotNull CrashReport setCanContinue(boolean canContinue) {
-		this.canContinue = canContinue;
 		return this;
 	}
 	
@@ -99,11 +102,6 @@ public class CrashReport {
 		return this;
 	}
 	
-	public @NotNull CrashReport addDetailLast(@NotNull String key, @Nullable Object value) {
-		this.details.putLast(key, value);
-		return this;
-	}
-	
 	public @NotNull CrashReport addDetailBefore(@NotNull String target, @NotNull String key, @Nullable Object value) {
 		this.details.putBefore(target, key, value);
 		return this;
@@ -114,14 +112,63 @@ public class CrashReport {
 		return this;
 	}
 	
+	public @NotNull CrashReport addParameterDetails(@NotNull Parameter parameter) {
+		this.details.put("Parameter Index", parameter.getIndex());
+		this.details.put("Parameter Type", parameter.getType());
+		this.details.put("Parameter Name", parameter.getName());
+		return this;
+	}
+	
+	public @NotNull CrashReport addFieldDetails(@NotNull Field field) {
+		this.details.put("Field Name", field.getName());
+		this.details.put("Field Type", field.getType());
+		return this;
+	}
+	
+	public @NotNull CrashReport addLocalDetails(@NotNull LocalVariable local) {
+		this.details.put("Local Index", local.getIndex());
+		this.details.put("Local Name", local.getName());
+		this.details.put("Local Type", local.getType());
+		return this;
+	}
+	
 	public @NotNull CrashReport replaceDetail(@NotNull String key, @Nullable Object value) {
 		this.details.replace(key, value);
 		return this;
 	}
+	
+	public @NotNull CrashReport removeParameterDetails() {
+		this.details.remove("Parameter Index");
+		this.details.remove("Parameter Type");
+		this.details.remove("Parameter Name");
+		return this;
+	}
+	
+	public @NotNull CrashReport removeFieldDetails() {
+		this.details.remove("Field Name");
+		this.details.remove("Field Type");
+		return this;
+	}
+	
+	public @NotNull CrashReport removeLocalDetails() {
+		this.details.remove("Local Index");
+		this.details.remove("Local Name");
+		this.details.remove("Local Type");
+		return this;
+	}
+	
+	public @NotNull CrashReport removeDetail(@NotNull String key) {
+		this.details.remove(key);
+		return this;
+	}
 	//endregion
 	
-	public ReportedException exception() {
+	public @NotNull ReportedException exception() {
 		return new ReportedException(this);
+	}
+	
+	public ReportedException exception(@Nullable String message) {
+		return new ReportedException(this.setMessage(message));
 	}
 	
 	public void print() {

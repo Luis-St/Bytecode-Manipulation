@@ -60,7 +60,7 @@ public class SupportsTransformer extends BaseClassTransformer {
 				}
 				if (isPrimitive(parameter.getType())) {
 					throw CrashReport.create("Parameter annotated with @Supports must not be a primitive type", REPORT_CATEGORY).addDetail("Method", method.getSignature(SignatureType.DEBUG))
-						.addDetail("Parameter Index", parameter.getIndex()).addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).exception();
+						.addParameterDetails(parameter).exception();
 				}
 				this.lookup.put(parameter.getIndex(), parameter.getAnnotation(SUPPORTS));
 			}

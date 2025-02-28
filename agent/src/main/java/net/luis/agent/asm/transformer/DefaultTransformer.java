@@ -89,15 +89,16 @@ public class DefaultTransformer extends BaseClassTransformer {
 			Annotation annotation = parameter.getAnnotation(DEFAULT);
 			Type factory = annotation.getOrDefault("factory");
 			Field field = Agent.getClass(factory).getField("INSTANCE");
+			CrashReport report = CrashReport.create(REPORT_CATEGORY).addDetail("Factory", factory).addParameterDetails(parameter);
+			
 			if (field == null) {
-				throw CrashReport.create("Missing INSTANCE field in string factory class", REPORT_CATEGORY).addDetail("Factory", factory).exception();
+				throw report.exception("Missing INSTANCE field in string factory class");
 			}
 			if (!field.is(TypeAccess.PUBLIC, TypeModifier.STATIC, TypeModifier.FINAL)) {
-				throw CrashReport.create("INSTANCE field in string factory class is not public static final", REPORT_CATEGORY).addDetail("Factory", factory).exception();
+				throw report.exception("INSTANCE field in string factory class is not public static final");
 			}
 			if (!field.is(factory)) {
-				throw CrashReport.create("INSTANCE field in string factory class has invalid type", REPORT_CATEGORY).addDetail("Factory", factory)
-					.addDetail("Expected Type", factory).addDetail("Actual Type", field.getType()).exception();
+				throw report.addDetail("Expected Type", factory).addDetail("Actual Type", field.getType()).exception("INSTANCE field in string factory class has invalid type");
 			}
 			return factory;
 		}
