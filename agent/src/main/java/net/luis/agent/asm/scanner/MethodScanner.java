@@ -1,8 +1,7 @@
 package net.luis.agent.asm.scanner;
 
 import net.luis.agent.asm.data.*;
-import net.luis.agent.asm.type.MethodType;
-import net.luis.agent.asm.type.TypeModifier;
+import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
@@ -24,7 +23,6 @@ public class MethodScanner extends MethodVisitor {
 	private final Map</*Size: 3*/int[], Map<Type, Annotation>> localAnnotations = new HashMap<>();
 	private final List<Label> labels = new LinkedList<>();
 	private int parameterIndex;
-	private boolean primary;
 	
 	public MethodScanner(@Nullable Type superType, @NotNull Method method) {
 		super(Opcodes.ASM9);
@@ -116,10 +114,15 @@ public class MethodScanner extends MethodVisitor {
 	@Override
 	public void visitEnd() {
 		Type[] types = this.method.getType().getArgumentTypes();
+		int syntheticParameterShift = 0;
 		for (int i = 0; i < types.length; i++) {
-			Parameter.Builder builder = Parameter.builder(this.method).index(i).type(types[i]).annotations(this.parameterAnnotations.getOrDefault(i, new HashMap<>()));
 			Map.Entry<String, Set<TypeModifier>> entry = this.parameters.getOrDefault(i, Map.entry("arg" + i, EnumSet.noneOf(TypeModifier.class)));
-			
+			Parameter.Builder builder = Parameter.builder(this.method).index(i).type(types[i]);
+			if (entry.getValue().contains(TypeModifier.SYNTHETIC)) {
+				syntheticParameterShift++; // Ignore synthetic parameters
+			} else {
+				builder.annotations(this.parameterAnnotations.getOrDefault(i - syntheticParameterShift, new HashMap<>()));
+			}
 			this.method.getParameters().put(i, builder.name(entry.getKey()).modifiers(entry.getValue()).build());
 		}
 		

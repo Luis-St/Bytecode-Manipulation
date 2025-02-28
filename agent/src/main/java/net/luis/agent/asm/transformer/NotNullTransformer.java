@@ -92,7 +92,6 @@ public class NotNullTransformer extends BaseClassTransformer {
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
-			System.out.println(this.parameters);
 			for (Parameter parameter : this.parameters) {
 				this.validateParameter(parameter);
 				
