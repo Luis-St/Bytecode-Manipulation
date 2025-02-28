@@ -43,7 +43,7 @@ public class CountingRunnableGenerator extends Generator {
 		mv.visitCode();
 		mv.visitLabel(start);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
-		mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);;
+		mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
 		instrumentNonNullCheck(mv, 1, "Action must not be null");
 		mv.visitTypeInsn(Opcodes.CHECKCAST, CONSUMER.getInternalName());

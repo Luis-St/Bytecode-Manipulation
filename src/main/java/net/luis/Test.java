@@ -1,4 +1,5 @@
 package net.luis;
+
 import net.luis.agent.annotation.DefaultConstructor;
 import net.luis.agent.util.AccessModifier;
 

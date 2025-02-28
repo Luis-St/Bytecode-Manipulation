@@ -133,7 +133,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			instrumentThrownException(this.mv, RUNTIME_EXCEPTION, this.getMessage());
 			
 			this.insertLabel(end);
-			this.visitLocalVariable(array, "generated$RestrictedAccessTransformer$Temp" + array,  STACK_TRACE_ELEMENT_ARRAY, null, start, end);
+			this.visitLocalVariable(array, "generated$RestrictedAccessTransformer$Temp" + array, STACK_TRACE_ELEMENT_ARRAY, null, start, end);
 			this.visitLocalVariable(clazz, "generated$RestrictedAccessTransformer$Temp" + clazz, STRING, null, clazzVariable, end);
 			this.visitLocalVariable(method, "generated$RestrictedAccessTransformer$Temp" + method, STRING, null, methodVariable, end);
 		}

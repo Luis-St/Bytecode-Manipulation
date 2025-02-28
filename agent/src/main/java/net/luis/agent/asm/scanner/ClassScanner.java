@@ -1,7 +1,7 @@
 package net.luis.agent.asm.scanner;
 
-import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
+import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.type.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
