@@ -115,7 +115,18 @@ public class ClassScanner extends ClassVisitor {
 	}
 	
 	public @NotNull Class get() {
-		return Class.builder(this.name, this.type, this.classType).genericSignature(this.signature).access(this.access).modifiers(this.modifiers).superType(this.superType).permittedSubclasses(this.permittedSubclasses)
-			.interfaces(this.interfaces).annotations(this.annotations).recordComponents(this.recordComponents).fields(this.fields).methods(this.methods).innerClasses(this.innerClasses).build();
+		return Class.builder(this.name, this.type, this.classType)
+			.genericSignature(this.signature)
+			.access(this.access)
+			.modifiers(this.modifiers)
+			.superType(this.superType)
+			.permittedSubclasses(this.permittedSubclasses)
+			.interfaces(this.interfaces)
+			.annotations(this.annotations)
+			.recordComponents(this.recordComponents)
+			.fields(this.fields)
+			.methods(this.methods)
+			.innerClasses(this.innerClasses)
+			.build();
 	}
 }

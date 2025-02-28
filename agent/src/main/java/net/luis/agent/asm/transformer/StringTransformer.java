@@ -107,6 +107,7 @@ public class StringTransformer extends BaseClassTransformer {
 			super.visitVarInsn(opcode, index);
 			if (this.includeLocals && isStore(opcode) && this.method.isLocal(index)) {
 				LocalVariable local = this.method.getLocals(index).stream().filter(l -> l.isAnnotatedWithAny(ALL)).filter(l -> l.isInScope(this.getScopeIndex())).findFirst().orElse(null);
+				
 				if (local != null && local.is(STRING)) {
 					this.mv.visitVarInsn(Opcodes.ALOAD, index);
 					if (local.isAnnotatedWithAny(MODIFICATIONS)) {
@@ -122,6 +123,7 @@ public class StringTransformer extends BaseClassTransformer {
 		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
 			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
 				Field field = Agent.getClass(this.method.getOwner()).getField(name);
+				
 				if (field != null && field.is(STRING)) {
 					int local = newLocal(this.mv, STRING);
 					Label start = new Label();

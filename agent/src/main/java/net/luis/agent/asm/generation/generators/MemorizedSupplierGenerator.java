@@ -33,6 +33,7 @@ public class MemorizedSupplierGenerator extends Generator {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/util/function/Supplier;)V", CONSTRUCTOR_SIGNATURE, null);
 		Label start = new Label();
 		Label end = new Label();
+		
 		mv.visitParameter("supplier", 0);
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitCode();
@@ -56,6 +57,7 @@ public class MemorizedSupplierGenerator extends Generator {
 		Label start = new Label();
 		Label jump = new Label();
 		Label end = new Label();
+		
 		mv.visitCode();
 		mv.visitLabel(start);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);

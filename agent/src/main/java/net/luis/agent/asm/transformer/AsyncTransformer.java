@@ -133,12 +133,14 @@ public class AsyncTransformer extends BaseClassTransformer {
 		private @NotNull String makeDescriptor(@NotNull Method method) {
 			StringBuilder builder = new StringBuilder();
 			builder.append("(");
+			
 			if (!method.is(TypeModifier.STATIC)) {
 				builder.append(this.type.getDescriptor());
 			}
 			for (Parameter parameter : method.getParameters().values()) {
 				builder.append(parameter.getType().getDescriptor());
 			}
+			
 			builder.append(")Ljava/lang/Runnable;");
 			return builder.toString();
 		}

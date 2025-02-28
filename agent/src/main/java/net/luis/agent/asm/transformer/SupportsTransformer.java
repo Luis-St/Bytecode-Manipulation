@@ -53,6 +53,7 @@ public class SupportsTransformer extends BaseClassTransformer {
 		private SupportsMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
 			super(visitor);
 			this.method = method;
+			
 			//region Validation
 			for (Parameter parameter : method.getParameters().values()) {
 				if (!parameter.isAnnotatedWith(SUPPORTS)) {
@@ -79,6 +80,7 @@ public class SupportsTransformer extends BaseClassTransformer {
 		//region Instrumentation
 		private void instrument(int index, boolean inherit, @NotNull List<Type> types) {
 			Label label = new Label();
+			
 			for (Type type : types) {
 				this.mv.visitVarInsn(Opcodes.ALOAD, index);
 				if (inherit) {
@@ -90,6 +92,7 @@ public class SupportsTransformer extends BaseClassTransformer {
 					this.mv.visitJumpInsn(Opcodes.IF_ACMPEQ, label);
 				}
 			}
+			
 			this.mv.visitTypeInsn(Opcodes.NEW, ILLEGAL_ARGUMENT_EXCEPTION.getInternalName());
 			this.mv.visitInsn(Opcodes.DUP);
 			this.mv.visitVarInsn(Opcodes.ALOAD, index);

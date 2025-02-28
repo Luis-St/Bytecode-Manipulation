@@ -37,6 +37,7 @@ public class CountingRunnableGenerator extends Generator {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "(Ljava/util/function/Consumer;)V", CONSTRUCTOR_SIGNATURE, null);
 		Label start = new Label();
 		Label end = new Label();
+		
 		mv.visitParameter("action", 0);
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitCode();
@@ -58,6 +59,7 @@ public class CountingRunnableGenerator extends Generator {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "run", "()V", null, null);
 		Label start = new Label();
 		Label end = new Label();
+		
 		mv.visitCode();
 		mv.visitLabel(start);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);

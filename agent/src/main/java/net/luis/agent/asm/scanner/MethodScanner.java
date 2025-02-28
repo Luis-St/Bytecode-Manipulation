@@ -54,6 +54,7 @@ public class MethodScanner extends MethodVisitor {
 		if (name == null) {
 			name = "arg" + this.parameterIndex;
 		}
+		
 		this.parameters.put(this.parameterIndex++, Map.entry(name, TypeModifier.fromParameterAccess(access)));
 	}
 	
@@ -70,6 +71,7 @@ public class MethodScanner extends MethodVisitor {
 		if (reference.getSort() == TypeReference.METHOD_FORMAL_PARAMETER) {
 			int index = reference.getFormalParameterIndex();
 			Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
+			
 			if (!this.parameterAnnotations.getOrDefault(index, new HashMap<>()).containsKey(annotation.getType())) {
 				this.parameterAnnotations.computeIfAbsent(index, i -> new HashMap<>()).put(annotation.getType(), annotation);
 			}
@@ -90,6 +92,7 @@ public class MethodScanner extends MethodVisitor {
 		if (index < offset) {
 			return;
 		}
+		
 		int s = Math.max(0, this.labels.indexOf(start) - 1); // Start label is the next label after the declaration
 		int e = this.labels.indexOf(end);
 		this.method.getLocals().add(LocalVariable.builder(this.method, index, name, Type.getType(descriptor)).genericSignature(genericSignature).bounds(s, e).build());
@@ -103,6 +106,7 @@ public class MethodScanner extends MethodVisitor {
 		if (!this.allSame(index)) {
 			return null;
 		}
+		
 		Annotation annotation = Annotation.builder(Type.getType(descriptor)).visible(visible).build();
 		int[] key = { index[0], Math.max(0, this.labels.indexOf(start[0]) - 1), this.labels.indexOf(end[0]) };  // Revert the offset added above
 		this.localAnnotations.computeIfAbsent(key, p -> new HashMap<>()).put(annotation.getType(), annotation);
@@ -115,8 +119,10 @@ public class MethodScanner extends MethodVisitor {
 		for (int i = 0; i < types.length; i++) {
 			Parameter.Builder builder = Parameter.builder(this.method).index(i).type(types[i]).annotations(this.parameterAnnotations.getOrDefault(i, new HashMap<>()));
 			Map.Entry<String, Set<TypeModifier>> entry = this.parameters.getOrDefault(i, Map.entry("arg" + i, EnumSet.noneOf(TypeModifier.class)));
+			
 			this.method.getParameters().put(i, builder.name(entry.getKey()).modifiers(entry.getValue()).build());
 		}
+		
 		for (Map.Entry<int[], Map<Type, Annotation>> entry : this.localAnnotations.entrySet()) {
 			int[] key = entry.getKey();
 			LocalVariable local = this.method.getLocal(key[0], key[1], key[2]);

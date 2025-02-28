@@ -28,12 +28,14 @@ class DefaultStringFactories {
 		if (value.isEmpty()) {
 			return "";
 		}
+		
 		if (value.length() == 1) {
 			if (Character.isDigit(value.charAt(0))) {
 				return Integer.parseInt(value);
 			}
 			return value.charAt(0);
 		}
+		
 		char first = value.charAt(0);
 		char last = value.charAt(value.length() - 1);
 		if (first == '[' && last == ']') {
@@ -43,6 +45,7 @@ class DefaultStringFactories {
 		} else if (first == '{' && last == '}') {
 			return reader.readMap(r -> StringFactoryRegistry.INSTANCE.create(type, actual, r), r -> StringFactoryRegistry.INSTANCE.create(type, actual, r));
 		}
+		
 		try {
 			return reader.readBoolean();
 		} catch (Exception ignored) {}
@@ -57,6 +60,7 @@ class DefaultStringFactories {
 		if (dimensions > 1) {
 			throw new IllegalArgumentException("Multi-dimensional arrays are currently not supported");
 		}
+		
 		String innerType = type.substring(0, type.indexOf("[]"));
 		List<T> list = reader.readList(r -> (T) StringFactoryRegistry.INSTANCE.create(innerType, ActualType.of(actual.type().getElementType()), r));
 		try {
@@ -81,9 +85,11 @@ class DefaultStringFactories {
 				throw new IllegalArgumentException("Unable to create list of type: " + type, e);
 			}
 		}
+		
 		if (actual.nested().size() != 1) {
 			throw new IllegalArgumentException("List must have exactly one nested type, but found: " + actual);
 		}
+		
 		ActualType element = actual.nested().getFirst();
 		list.addAll(reader.readList(r -> (T) StringFactoryRegistry.INSTANCE.create(element.type().getClassName(), element, r)));
 		return list;
@@ -100,9 +106,11 @@ class DefaultStringFactories {
 				throw new IllegalArgumentException("Unable to create set of type: " + type, e);
 			}
 		}
+		
 		if (actual.nested().size() != 1) {
 			throw new IllegalArgumentException("Set must have exactly one nested type, but found: " + actual);
 		}
+		
 		ActualType element = actual.nested().getFirst();
 		set.addAll(reader.readSet(r -> (T) StringFactoryRegistry.INSTANCE.create(element.type().getClassName(), element, r)));
 		return set;
@@ -119,9 +127,11 @@ class DefaultStringFactories {
 				throw new IllegalArgumentException("Unable to create map of type: " + type, e);
 			}
 		}
+		
 		if (actual.nested().size() != 2) {
 			throw new IllegalArgumentException("Map must have exactly two nested types, but found: " + actual);
 		}
+		
 		ActualType key = actual.nested().getFirst();
 		ActualType value = actual.nested().getLast();
 		map.putAll(reader.readMap(r -> (K) StringFactoryRegistry.INSTANCE.create(key.type().getClassName(), key, r), r -> (V) StringFactoryRegistry.INSTANCE.create(value.type().getClassName(), value, r)));
@@ -139,6 +149,7 @@ class DefaultStringFactories {
 			exception.initCause(new IllegalArgumentException("Cannot create instance of class '" + clazz + "' because it is an interface or abstract class"));
 			throw exception;
 		}
+		
 		try {
 			return type.getDeclaredConstructor().newInstance();
 		} catch (Exception e) {

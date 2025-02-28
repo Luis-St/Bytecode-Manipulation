@@ -232,6 +232,7 @@ public class MathTransformer extends BaseClassTransformer {
 		public void visitFieldInsn(int opcode, @NotNull String owner, @NotNull String name, @NotNull String descriptor) {
 			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
 				Field field = Agent.getClass(this.method.getOwner()).getField(name);
+				
 				if (field != null && field.isAnnotatedWithAny(ALL)) {
 					int local = newLocal(this.mv, field.getType());
 					Label start = new Label();
@@ -429,6 +430,7 @@ public class MathTransformer extends BaseClassTransformer {
 			return defaultType;
 		}
 		
+		@SuppressWarnings("FloatingPointEquality")
 		private @NotNull Type instrumentClamp(@NotNull Annotation annotation, @NotNull Type type, int index) {
 			double min = annotation.getOrDefault("min");
 			double max = annotation.getOrDefault("max");

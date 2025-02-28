@@ -19,6 +19,7 @@ public class SignatureUtils {
 		Map<String, GenericDeclaration> generics = new HashMap<>(classGenerics);
 		generics.putAll(parseGenericDeclarations(signature));
 		List<ActualType> types = new LinkedList<>();
+		
 		for (String parameter : parseSignatureParameters(signature)) {
 			types.add(parseSignatureParameter(generics, parameter));
 		}
@@ -30,10 +31,12 @@ public class SignatureUtils {
 		if (signature.isBlank()) {
 			return parameters;
 		}
+		
 		ScopedStringReader reader = new ScopedStringReader(signature);
 		while (reader.canRead() && reader.peek() != '(') {
 			reader.skip();
 		}
+		
 		ScopedStringReader inner = new ScopedStringReader(reader.readScope(ScopedStringReader.PARENTHESES).replace("[", "\\["));
 		inner.skip();
 		while (inner.canRead() && inner.peek() != ')') {
@@ -53,12 +56,14 @@ public class SignatureUtils {
 				while (parameter.charAt(dimensions) == '[') {
 					dimensions++;
 				}
+				
 				return ActualType.flatDown("[".repeat(dimensions), parseSignatureParameter(generics, parameter.substring(dimensions), false));
 			} else if (parameter.charAt(0) == '-' || parameter.charAt(0) == '+') {
 				return ActualType.flatDown(parseSignatureParameter(generics, parameter.substring(1), false));
 			} else if (parameter.charAt(0) == 'T') {
 				String name = parameter.substring(1, parameter.length() - 1);
 				GenericDeclaration generic = generics.get(name);
+				
 				if (generic == null) {
 					throw new IllegalArgumentException("Found generic parameter which was not previously declared: '" + name + "'");
 				}
@@ -68,6 +73,7 @@ public class SignatureUtils {
 			}
 			throw new IllegalArgumentException("Unknown parameter declaration: '" + parameter + "'");
 		}
+		
 		String type = new ScopedStringReader(parameter).readUntil('<') + ";";
 		String signature = parameter.substring(type.length(), parameter.length() - 2);
 		
@@ -83,6 +89,7 @@ public class SignatureUtils {
 		if (generic.nested().isEmpty()) {
 			return ActualType.of(generic.type());
 		}
+		
 		Type type = generic.type();
 		List<ActualType> nested = new LinkedList<>();
 		for (GenericDeclaration declaration : generic.nested()) {
@@ -98,6 +105,7 @@ public class SignatureUtils {
 		if (signature.isBlank() || signature.charAt(0) != '<') {
 			return generics;
 		}
+		
 		String declaration = new ScopedStringReader(signature).readScope(ScopedStringReader.ANGLE_BRACKETS);
 		ScopedStringReader reader = new ScopedStringReader(declaration.replace("[", "\\["));
 		reader.skip();
@@ -121,6 +129,7 @@ public class SignatureUtils {
 		if (!signature.contains("<") && !signature.contains(">")) {
 			return GenericDeclaration.of(Type.getType(signature));
 		}
+		
 		ScopedStringReader reader = new ScopedStringReader(signature.substring(0, signature.length() - 2).replace("[", "\\["));
 		Type type = Type.getType(reader.readUntil('<') + ";");
 		List<GenericDeclaration> nested = new LinkedList<>();
@@ -138,6 +147,7 @@ public class SignatureUtils {
 			while (part.charAt(dimensions) == '[') {
 				dimensions++;
 			}
+			
 			Type inner = parseGenericDeclarationPart(generics, part.substring(dimensions)).type();
 			return GenericDeclaration.of(Type.getType("[".repeat(dimensions) + inner.getDescriptor()));
 		} else if (part.charAt(0) == 'T') {
@@ -146,6 +156,7 @@ public class SignatureUtils {
 			if (generic == null) {
 				throw new IllegalArgumentException("Found generic parameter which was not previously declared: '" + name + "'");
 			}
+			
 			return GenericDeclaration.of(generic.type());
 		} else if (part.charAt(0) == 'L') {
 			if (!part.contains("<") && !part.contains(">")) {

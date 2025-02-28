@@ -52,6 +52,7 @@ public class StringFactoryRegistry implements StringFactory {
 				}
 			}
 		} catch (Exception ignored) {}
+		
 		for (RegistryEntry entry : this.entries) {
 			if (entry.matches(type)) {
 				return entry.factory().create(type, actual, reader);

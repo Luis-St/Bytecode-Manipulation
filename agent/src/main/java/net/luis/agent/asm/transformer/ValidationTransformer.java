@@ -25,6 +25,7 @@ public class ValidationTransformer extends BaseClassTransformer {
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		Class clazz = Agent.getClass(type);
 		Class immutableClass = this.findImmutableClass(clazz);
+		
 		if (immutableClass != null) {
 			this.checkClassImmutability(immutableClass, clazz);
 		}
@@ -36,6 +37,7 @@ public class ValidationTransformer extends BaseClassTransformer {
 		if (clazz.isAnnotatedWith(IMMUTABLE)) {
 			return clazz;
 		}
+		
 		while (clazz.getSuperType() != null) {
 			clazz = Agent.getClass(clazz.getSuperType());
 			if (clazz.isAnnotatedWith(IMMUTABLE)) {

@@ -53,6 +53,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		private ScheduledClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
 			Class data = Agent.getClass(type);
+			
 			for (Method method : data.getMethods().values()) {
 				if (method.isAnnotatedWith(SCHEDULED)) {
 					//region Validation
@@ -103,6 +104,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 				if (!field.is(TypeModifier.FINAL)) {
 					continue;
 				}
+				
 				if (field.is(SCHEDULED_EXECUTOR) || field.is(SCHEDULED_EXECUTOR_POOL)) {
 					if (this.staticScheduler.isRequired() && field.is(TypeModifier.STATIC)) {
 						this.staticScheduler.setScheduler(field);

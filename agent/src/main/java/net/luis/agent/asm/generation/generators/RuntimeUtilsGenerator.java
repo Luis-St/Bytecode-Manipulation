@@ -157,11 +157,10 @@ public class RuntimeUtilsGenerator extends Generator {
 	//region RuntimeUtils#getTypeAsString
 	private void generateGetTypeAsString(@NotNull ClassVisitor cv) {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "getTypeAsString", "(Lorg/objectweb/asm/Type;)Ljava/lang/String;", null, null);
-		//region Labels
 		Label start = new Label();
 		Label jump = new Label();
 		Label end = new Label();
-		//endregion
+		
 		mv.visitAnnotation(NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitParameter("type", 0);
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
@@ -188,10 +187,9 @@ public class RuntimeUtilsGenerator extends Generator {
 	//region RuntimeUtils#getActualType
 	private void generateGetActualType(@NotNull ClassVisitor cv) {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "getActualType", "(Ljava/lang/String;Ljava/lang/String;I)Lnet/luis/agent/asm/signature/ActualType;", null, null);
-		//region Labels
 		Label start = new Label();
 		Label end = new Label();
-		//endregion
+		
 		mv.visitAnnotation(NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitParameter("classSignature", 0);
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();
@@ -224,11 +222,10 @@ public class RuntimeUtilsGenerator extends Generator {
 	//region RuntimeUtils#roundTo
 	private void generateRoundTo(@NotNull ClassVisitor cv) {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "roundTo", "(DI)D", null, null);
-		//region Labels
 		Label start = new Label();
 		Label jump = new Label();
 		Label end = new Label();
-		//endregion
+		
 		mv.visitParameter("value", 0);
 		mv.visitParameter("digits", 0);
 		mv.visitCode();
@@ -271,10 +268,9 @@ public class RuntimeUtilsGenerator extends Generator {
 	//region RuntimeUtils#log
 	private void generateLog(@NotNull ClassVisitor cv) {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "log", "(DD)D", null, null);
-		//region Labels
 		Label start = new Label();
 		Label end = new Label();
-		//endregion
+		
 		mv.visitParameter("value", 0);
 		mv.visitParameter("base", 0);
 		mv.visitCode();

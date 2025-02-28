@@ -22,6 +22,7 @@ public class SortedHashMap<K, V> extends LinkedHashMap<K, V> {
 			}
 			temp.put(entry.getKey(), entry.getValue());
 		}
+		
 		this.clear();
 		this.putAll(temp);
 	}
@@ -34,6 +35,7 @@ public class SortedHashMap<K, V> extends LinkedHashMap<K, V> {
 				temp.put(key, value);
 			}
 		}
+		
 		this.clear();
 		this.putAll(temp);
 	}

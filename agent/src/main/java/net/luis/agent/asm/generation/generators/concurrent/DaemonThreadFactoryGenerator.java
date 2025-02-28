@@ -32,6 +32,7 @@ public class DaemonThreadFactoryGenerator extends Generator {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
 		Label start = new Label();
 		Label end = new Label();
+		
 		mv.visitCode();
 		mv.visitLabel(start);
 		mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -50,6 +51,7 @@ public class DaemonThreadFactoryGenerator extends Generator {
 		MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC, "newThread", "(Ljava/lang/Runnable;)Ljava/lang/Thread;", null, null);
 		Label start = new Label();
 		Label end = new Label();
+		
 		mv.visitAnnotation(NOT_NULL.getDescriptor(), false).visitEnd();
 		mv.visitParameter("runnable", 0);
 		mv.visitParameterAnnotation(0, NOT_NULL.getDescriptor(), false).visitEnd();

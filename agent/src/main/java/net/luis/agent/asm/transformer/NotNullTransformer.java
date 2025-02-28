@@ -92,8 +92,10 @@ public class NotNullTransformer extends BaseClassTransformer {
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
+			System.out.println(this.parameters);
 			for (Parameter parameter : this.parameters) {
 				this.validateParameter(parameter);
+				
 				if (!isPrimitive(parameter.getType())) {
 					instrumentNonNullCheck(this.mv, parameter.getLoadIndex(), this.getMessage(parameter.getAnnotation(NOT_NULL), parameter.getMessageName()));
 					this.mv.visitInsn(Opcodes.POP);
@@ -123,6 +125,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		public void visitVarInsn(int opcode, int index) {
 			if (this.includeLocals && isStore(opcode) && this.method.isLocal(index)) {
 				LocalVariable local = this.method.getLocals(index).stream().filter(this::isAnnotated).filter(l -> l.isInScope(this.getScopeIndex())).findFirst().orElse(null);
+				
 				if (local != null && this.isAnnotated(local)) {
 					this.validateLocal(local);
 					if (!isPrimitive(local.getType())) {
@@ -138,6 +141,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		public void visitInsn(int opcode) {
 			if (opcode == Opcodes.ARETURN && this.isAnnotated(this.method)) {
 				this.validateMethod();
+				
 				if (!isPrimitive(this.method.getReturnType())) {
 					instrumentNonNullCheck(this.mv, -1, "Method must not return null");
 					this.mv.visitTypeInsn(Opcodes.CHECKCAST, this.method.getReturnType().getInternalName());
@@ -193,7 +197,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		
 		private void validateLocal(@NotNull LocalVariable local) {
 			if (isPrimitive(local.getType()) && local.isAnnotatedWith(NOT_NULL)) {
-				throw this.createBaseReport("Parameter annotated with @NotNull must not be a primitive type", local).exception();
+				throw this.createBaseReport("Local variable annotated with @NotNull must not be a primitive type", local).exception();
 			}
 		}
 		

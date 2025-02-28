@@ -66,10 +66,12 @@ public class PatternTransformer extends BaseClassTransformer {
 			if (method.isAnnotatedWith(PATTERN) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN))) {
 				return true;
 			}
+			
 			Class clazz = Agent.getClass(method.getOwner());
 			if (clazz.getFields().values().stream().anyMatch(field -> field.isAnnotatedWith(PATTERN))) {
 				return true;
 			}
+			
 			Type[] annotations = this.lookup.keySet().toArray(Type[]::new);
 			return method.isAnnotatedWithAny(annotations) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(annotations)) ||
 				clazz.getFields().values().stream().anyMatch(field -> field.isAnnotatedWithAny(annotations));
@@ -103,6 +105,7 @@ public class PatternTransformer extends BaseClassTransformer {
 				if (annotation == null) {
 					continue;
 				}
+				
 				Label label = new Label();
 				String value = this.getPattern(annotation);
 				
@@ -118,6 +121,7 @@ public class PatternTransformer extends BaseClassTransformer {
 			if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
 				Field field = Agent.getClass(this.method.getOwner()).getField(name);
 				Annotation annotation = this.getAnnotation(field);
+				
 				if (field != null && annotation != null) {
 					String value = this.getPattern(annotation);
 					int local = newLocal(this.mv, STRING);

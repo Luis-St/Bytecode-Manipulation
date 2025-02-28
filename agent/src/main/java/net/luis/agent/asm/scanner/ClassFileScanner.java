@@ -45,6 +45,7 @@ public class ClassFileScanner {
 	private static byte @NotNull [] readClass(@NotNull Type type) {
 		String path = type.getInternalName() + ".class";
 		InputStream stream = ClassLoader.getSystemResourceAsStream(path);
+		
 		if (stream == null) {
 			throw new IllegalStateException("Class not found in classpath: " + type.getClassName());
 		}

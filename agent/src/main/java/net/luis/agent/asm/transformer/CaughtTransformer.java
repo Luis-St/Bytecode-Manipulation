@@ -100,6 +100,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 				loadDefaultConst(this.mv, this.returnType);
 				this.mv.visitInsn(this.returnType.getOpcode(Opcodes.IRETURN));
 			}
+			
 			this.visitLocalVariable(local, "e", this.exceptionType, null, this.start, this.end);
 			this.mv.visitMaxs(0, 0);
 			super.visitEnd();
