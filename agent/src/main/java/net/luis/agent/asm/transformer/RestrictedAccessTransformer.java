@@ -66,9 +66,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 	
 	private static class RestrictedAccessMethodVisitor extends LabelTrackingMethodVisitor {
 		
-		private static final Type STACK_TRACE_ARRAY = Type.getType("[Ljava/lang/StackTraceElement;");
-		private static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
-		
+
 		private final Type type;
 		private final Method method;
 		private final List<String> values;
@@ -91,7 +89,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			Label methodVariable = new Label();
 			Label end = new Label();
 			
-			int array = newLocal(this.mv, STACK_TRACE_ARRAY);
+			int array = newLocal(this.mv, STACK_TRACE_ELEMENT_ARRAY);
 			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 			this.mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Thread", "getStackTrace", "()[Ljava/lang/StackTraceElement;", false);
 			this.mv.visitVarInsn(Opcodes.ASTORE, array);
@@ -136,7 +134,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 			instrumentThrownException(this.mv, RUNTIME_EXCEPTION, this.getMessage());
 			
 			this.insertLabel(end);
-			this.visitLocalVariable(array, "generated$RestrictedAccessTransformer$Temp" + array, STACK_TRACE_ARRAY, null, start, end);
+			this.visitLocalVariable(array, "generated$RestrictedAccessTransformer$Temp" + array,  STACK_TRACE_ELEMENT_ARRAY, null, start, end);
 			this.visitLocalVariable(clazz, "generated$RestrictedAccessTransformer$Temp" + clazz, STRING, null, clazzVariable, end);
 			this.visitLocalVariable(method, "generated$RestrictedAccessTransformer$Temp" + method, STRING, null, methodVariable, end);
 		}

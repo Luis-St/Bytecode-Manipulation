@@ -17,7 +17,7 @@ import java.util.*;
  *
  */
 
-public class Main {
+public class PreMain {
 	
 	public static void premain(@NotNull String agentArgs, @NotNull Instrumentation inst) {
 		System.out.println("Loading agent");
@@ -28,7 +28,7 @@ public class Main {
 	
 	//region Initialization
 	private static void initialize(@NotNull Instrumentation inst) {
-		inst.redefineModule(ModuleLayer.boot().findModule("java.base").orElseThrow(), Set.of(), Map.of(), Map.of("java.lang", Set.of(Main.class.getModule())), Set.of(), Map.of());
+		inst.redefineModule(ModuleLayer.boot().findModule("java.base").orElseThrow(), Set.of(), Map.of(), Map.of("java.lang", Set.of(PreMain.class.getModule())), Set.of(), Map.of());
 		Agent.initialize(generateRuntimeClasses());
 	}
 	
@@ -47,6 +47,7 @@ public class Main {
 	// Transformers registered first will be called first, but changes will maybe overwrite by later transformers
 	private static void initializeTransformers(@NotNull Instrumentation inst) {
 		inst.addTransformer(new ValidationTransformer());
+		inst.addTransformer(new DefaultConstructorTransformer());
 		
 		inst.addTransformer(new ScheduledTransformer()); // 3: Schedule
 		inst.addTransformer(new AsyncTransformer()); // 2: Wrap in async

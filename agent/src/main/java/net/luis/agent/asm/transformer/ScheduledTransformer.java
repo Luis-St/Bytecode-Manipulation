@@ -58,7 +58,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 					//region Validation
 					String signature = method.getSignature(SignatureType.DEBUG);
 					if (!method.is(MethodType.METHOD)) {
-						throw CrashReport.create("Annotation @Scheduled can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", signature).exception();
+						throw CrashReport.create("Annotation @Scheduled must not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", signature).exception();
 					}
 					if (!method.returns(VOID)) {
 						throw CrashReport.create("Method annotated with @Scheduled must return void", REPORT_CATEGORY).addDetail("Method", signature).addDetail("Return Type", method.getReturnType()).exception();

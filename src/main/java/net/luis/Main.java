@@ -30,6 +30,13 @@ public class Main {
 	private static String test = "Hello";
 	
 	public static void main(@Default @NotNull String[] args) {
+		Test testInstance = Test.INSTANCE;
+		try {
+			testInstance = new Test();
+		} catch (Throwable e) {
+			System.out.println(e.getMessage());
+		}
+		System.out.println(testInstance);
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
 		
