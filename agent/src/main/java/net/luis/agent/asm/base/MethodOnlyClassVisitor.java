@@ -17,10 +17,6 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 
 public class MethodOnlyClassVisitor extends ContextBasedClassVisitor {
 	
-	public MethodOnlyClassVisitor(@NotNull Type type, @NotNull Runnable markModified) {
-		super(type, markModified);
-	}
-	
 	public MethodOnlyClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 		super(visitor, type, markModified);
 	}

@@ -44,7 +44,7 @@ public class SupportsTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class SupportsMethodVisitor extends LabelTrackingMethodVisitor {
+	private static final class SupportsMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		

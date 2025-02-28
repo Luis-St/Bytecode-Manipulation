@@ -14,7 +14,7 @@ import java.util.*;
  *
  */
 
-public class InnerClass implements ASMData {
+public final class InnerClass implements ASMData {
 	
 	private final Type owner;
 	private final String name;
@@ -119,7 +119,7 @@ public class InnerClass implements ASMData {
 	//endregion
 	
 	//region Builder
-	public static class Builder {
+	public static final class Builder {
 		
 		private final Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
 		private Type owner;

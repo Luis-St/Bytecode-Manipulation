@@ -8,5 +8,8 @@ package net.luis.agent.util;
 
 public enum StripMode {
 	
-	BOTH, LEADING, TRAILING, INDENT;
+	BOTH,
+	LEADING,
+	TRAILING,
+	INDENT
 }

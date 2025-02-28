@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  *
  */
 
-public class Method implements ASMData {
+public final class Method implements ASMData {
 	
 	private final Type owner;
 	private final String name;
@@ -238,7 +238,7 @@ public class Method implements ASMData {
 	//endregion
 	
 	//region Builder
-	public static class Builder {
+	public static final class Builder {
 		
 		private final Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
 		private final Map<Type, Annotation> annotations = new HashMap<>();

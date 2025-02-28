@@ -75,7 +75,7 @@ public class MathTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class MathVisitor extends LabelTrackingMethodVisitor {
+	private static final class MathVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String INVALID_ELEMENT_CATEGORY = "Invalid Annotated Element";
 		private static final String INVALID_CONFIGURATION_CATEGORY = "Invalid Annotation Configuration";
@@ -283,34 +283,34 @@ public class MathTransformer extends BaseClassTransformer {
 			Type resultType = orginalType;
 			
 			if (annotations.containsKey(LOG)) {
-				resultType = this.instrumentLog(annotations.get(LOG), resultType, index);
+				resultType = this.instrumentLog(annotations.get(LOG), resultType);
 			}
 			if (annotations.containsKey(EXP)) {
-				resultType = this.instrumentExp(annotations.get(EXP), resultType, index);
+				resultType = this.instrumentExp(annotations.get(EXP), resultType);
 			}
 			if (annotations.containsKey(POW)) {
-				resultType = this.instrumentPow(annotations.get(POW), resultType, index);
+				resultType = this.instrumentPow(annotations.get(POW), resultType);
 			}
 			if (annotations.containsKey(TRIG)) {
-				resultType = this.instrumentTrig(annotations.get(TRIG), resultType, index);
+				resultType = this.instrumentTrig(annotations.get(TRIG), resultType);
 			}
 			if (annotations.containsKey(ROUND)) {
-				resultType = this.instrumentRound(annotations.get(ROUND), resultType, index);
+				resultType = this.instrumentRound(annotations.get(ROUND), resultType);
 			}
 			if (annotations.containsKey(ABS)) {
-				resultType = this.instrumentAbs(resultType, index);
+				resultType = this.instrumentAbs(resultType);
 			}
 			if (annotations.containsKey(NEGATE)) {
-				resultType = this.instrumentNegate(resultType, index);
+				resultType = this.instrumentNegate(resultType);
 			}
 			if (annotations.containsKey(CLAMP)) {
-				resultType = this.instrumentClamp(annotations.get(CLAMP), resultType, index);
+				resultType = this.instrumentClamp(annotations.get(CLAMP), resultType);
 			}
 			if (annotations.containsKey(MIN)) {
-				resultType = this.instrumentMin(annotations.get(MIN), resultType, index);
+				resultType = this.instrumentMin(annotations.get(MIN), resultType);
 			}
 			if (annotations.containsKey(MAX)) {
-				resultType = this.instrumentMax(annotations.get(MAX), resultType, index);
+				resultType = this.instrumentMax(annotations.get(MAX), resultType);
 			}
 			this.mv.visitVarInsn(resultType.getOpcode(Opcodes.ISTORE), index);
 		}
@@ -332,7 +332,7 @@ public class MathTransformer extends BaseClassTransformer {
 		//endregion
 		
 		//region Instrumentation modifications
-		private @NotNull Type instrumentLog(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentLog(@NotNull Annotation annotation, @NotNull Type type) {
 			double base = annotation.getOrDefault("value");
 			boolean natural = annotation.getOrDefault("natural");
 			CrashReport report = CrashReport.create(INVALID_CONFIGURATION_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG))
@@ -358,14 +358,14 @@ public class MathTransformer extends BaseClassTransformer {
 			return DOUBLE;
 		}
 		
-		private @NotNull Type instrumentExp(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentExp(@NotNull Annotation annotation, @NotNull Type type) {
 			ExponentialOperation operation = ExponentialOperation.valueOf(annotation.getOrDefault("value"));
 			instrumentNumberConversion(this.mv, type, DOUBLE);
 			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), operation.name().toLowerCase(), "(D)D", false);
 			return DOUBLE;
 		}
 		
-		private @NotNull Type instrumentPow(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentPow(@NotNull Annotation annotation, @NotNull Type type) {
 			double value = annotation.getOrDefault("value");
 			instrumentNumberConversion(this.mv, type, DOUBLE);
 			loadNumber(this.mv, value);
@@ -373,7 +373,7 @@ public class MathTransformer extends BaseClassTransformer {
 			return DOUBLE;
 		}
 		
-		private @NotNull Type instrumentTrig(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentTrig(@NotNull Annotation annotation, @NotNull Type type) {
 			TrigonometricOperation operation = TrigonometricOperation.valueOf(annotation.getOrDefault("value"));
 			instrumentNumberConversion(this.mv, type, DOUBLE);
 			
@@ -384,7 +384,7 @@ public class MathTransformer extends BaseClassTransformer {
 			return DOUBLE;
 		}
 		
-		private @NotNull Type instrumentRound(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentRound(@NotNull Annotation annotation, @NotNull Type type) {
 			RoundingMode mode = RoundingMode.valueOf(annotation.getOrDefault("mode"));
 			if (mode.requiresFloatingPointInput()) {
 				instrumentNumberConversion(this.mv, type, DOUBLE);
@@ -407,14 +407,14 @@ public class MathTransformer extends BaseClassTransformer {
 			}
 		}
 		
-		private @NotNull Type instrumentAbs(@NotNull Type type, int index) {
+		private @NotNull Type instrumentAbs(@NotNull Type type) {
 			Type defaultType = this.getDefaultPrimitiveNumberType(type);
 			instrumentNumberConversion(this.mv, type, defaultType);
 			this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, MATH.getInternalName(), "abs", "(" + defaultType.getDescriptor() + ")" + defaultType.getDescriptor(), false);
 			return defaultType;
 		}
 		
-		private @NotNull Type instrumentNegate(@NotNull Type type, int index) {
+		private @NotNull Type instrumentNegate(@NotNull Type type) {
 			Type defaultType = this.getDefaultPrimitiveNumberType(type);
 			instrumentNumberConversion(this.mv, type, defaultType);
 			
@@ -431,7 +431,7 @@ public class MathTransformer extends BaseClassTransformer {
 		}
 		
 		@SuppressWarnings("FloatingPointEquality")
-		private @NotNull Type instrumentClamp(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentClamp(@NotNull Annotation annotation, @NotNull Type type) {
 			double min = annotation.getOrDefault("min");
 			double max = annotation.getOrDefault("max");
 			
@@ -489,7 +489,7 @@ public class MathTransformer extends BaseClassTransformer {
 			return defaultType;
 		}
 		
-		private @NotNull Type instrumentMin(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentMin(@NotNull Annotation annotation, @NotNull Type type) {
 			Type defaultType = this.getDefaultPrimitiveNumberType(type);
 			double min = annotation.getOrDefault("value");
 			instrumentNumberConversion(this.mv, type, defaultType);
@@ -511,7 +511,7 @@ public class MathTransformer extends BaseClassTransformer {
 			return defaultType;
 		}
 		
-		private @NotNull Type instrumentMax(@NotNull Annotation annotation, @NotNull Type type, int index) {
+		private @NotNull Type instrumentMax(@NotNull Annotation annotation, @NotNull Type type) {
 			Type defaultType = this.getDefaultPrimitiveNumberType(type);
 			double max = annotation.getOrDefault("value");
 			instrumentNumberConversion(this.mv, type, defaultType);

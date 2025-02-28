@@ -20,10 +20,6 @@ public class LabelTrackingMethodVisitor extends MethodVisitor {
 	private final List<Local> locals = new ArrayList<>();
 	protected Method method;
 	
-	public LabelTrackingMethodVisitor() {
-		super(Opcodes.ASM9);
-	}
-	
 	public LabelTrackingMethodVisitor(@NotNull MethodVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
 	}
@@ -73,7 +69,5 @@ public class LabelTrackingMethodVisitor extends MethodVisitor {
 		}
 	}
 	
-	//region Internal
-	private static record Local(int index, @NotNull String name, @NotNull Type type, @Nullable String signature, int start, int end) {}
-	//endregion
+	private record Local(int index, @NotNull String name, @NotNull Type type, @Nullable String signature, int start, int end) {}
 }

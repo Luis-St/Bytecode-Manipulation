@@ -41,7 +41,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		return new ScheduledClassVisitor(writer, type, () -> this.modified = true);
 	}
 	
-	private static class ScheduledClassVisitor extends ContextBasedClassVisitor {
+	private static final class ScheduledClassVisitor extends ContextBasedClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
@@ -173,7 +173,7 @@ public class ScheduledTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class ScheduledMethodVisitor extends LabelTrackingMethodVisitor {
+	private static final class ScheduledMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private final Type type;
 		private final List<Method> lookup;

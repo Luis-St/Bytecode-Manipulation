@@ -41,10 +41,6 @@ public interface ASMData {
 		return this.getType().equals(type);
 	}
 	
-	default boolean isAny(Type @NotNull ... type) {
-		return Arrays.stream(type).anyMatch(this::is);
-	}
-	
 	default boolean is(@NotNull TypeAccess access) {
 		return this.getAccess() == access;
 	}

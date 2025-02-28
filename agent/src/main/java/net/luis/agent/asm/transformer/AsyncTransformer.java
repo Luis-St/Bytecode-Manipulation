@@ -42,7 +42,7 @@ public class AsyncTransformer extends BaseClassTransformer {
 		return new AsyncClassVisitor(writer, type, () -> this.modified = true);
 	}
 	
-	private static class AsyncClassVisitor extends ContextBasedClassVisitor {
+	private static final class AsyncClassVisitor extends ContextBasedClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		

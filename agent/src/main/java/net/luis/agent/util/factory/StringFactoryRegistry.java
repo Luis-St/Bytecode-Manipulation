@@ -16,7 +16,7 @@ import static net.luis.agent.util.factory.DefaultStringFactories.*;
  *
  */
 
-public class StringFactoryRegistry implements StringFactory {
+public final class StringFactoryRegistry implements StringFactory {
 	
 	public static final StringFactoryRegistry INSTANCE = new StringFactoryRegistry();
 	

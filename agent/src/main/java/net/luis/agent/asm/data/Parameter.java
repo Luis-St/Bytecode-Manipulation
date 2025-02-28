@@ -14,7 +14,7 @@ import java.util.*;
  *
  */
 
-public class Parameter implements ASMData {
+public final class Parameter implements ASMData {
 	
 	private final Method owner;
 	private final String name;
@@ -148,7 +148,7 @@ public class Parameter implements ASMData {
 	//endregion
 	
 	//region Builder
-	public static class Builder {
+	public static final class Builder {
 		
 		private final Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
 		private final Map<Type, Annotation> annotations = new HashMap<>();

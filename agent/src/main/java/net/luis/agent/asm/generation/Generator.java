@@ -11,7 +11,6 @@ import org.objectweb.asm.ClassVisitor;
 
 public abstract class Generator {
 	
-	protected static final String PACKAGE = "net/luis/agent/generated/";
 	protected static final int CLASS_VERSION = 65; // Java 21
 	
 	protected final String name;

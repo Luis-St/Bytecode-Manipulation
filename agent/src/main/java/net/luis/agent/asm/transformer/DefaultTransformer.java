@@ -50,7 +50,7 @@ public class DefaultTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class DefaultVisitor extends LabelTrackingMethodVisitor {
+	private static final class DefaultVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid String Factory";
 		

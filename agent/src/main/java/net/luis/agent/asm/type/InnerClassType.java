@@ -11,7 +11,9 @@ import org.jetbrains.annotations.Nullable;
 
 public enum InnerClassType {
 	
-	INNER, LOCAL, ANONYMOUS;
+	INNER,
+	LOCAL,
+	ANONYMOUS;
 	
 	public static @NotNull InnerClassType fromNames(@Nullable String outerName, @Nullable String innerName) {
 		if (outerName == null && innerName == null) {

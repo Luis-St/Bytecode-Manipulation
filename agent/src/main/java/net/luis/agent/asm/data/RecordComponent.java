@@ -14,7 +14,7 @@ import java.util.*;
  *
  */
 
-public class RecordComponent implements ASMData {
+public final class RecordComponent implements ASMData {
 	
 	private final Type owner;
 	private final String name;
@@ -109,7 +109,7 @@ public class RecordComponent implements ASMData {
 	//endregion
 	
 	//region Builder
-	public static class Builder {
+	public static final class Builder {
 		
 		private final Map<Type, Annotation> annotations = new HashMap<>();
 		private Type owner;

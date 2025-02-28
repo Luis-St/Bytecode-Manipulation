@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  */
 
 @SuppressWarnings("unchecked")
-public class Annotation {
+public final class Annotation {
 	
 	private final Type type;
 	private final boolean visible;
@@ -62,7 +62,7 @@ public class Annotation {
 	public @NotNull String getSignature(@NotNull SignatureType type) {
 		String base = "@" + this.type.getClassName();
 		return switch (type) {
-			case DEBUG -> base + this.values.entrySet().stream().map(entry -> entry.getKey() + " = " + String.valueOf(entry.getValue())).collect(Collectors.joining(", ", "(", ")"));
+			case DEBUG -> base + this.values.entrySet().stream().map(entry -> entry.getKey() + " = " + entry.getValue()).collect(Collectors.joining(", ", "(", ")"));
 			case SOURCE -> base;
 			default -> "";
 		};
@@ -120,7 +120,7 @@ public class Annotation {
 	//endregion
 	
 	//region Builder
-	public static class Builder {
+	public static final class Builder {
 		
 		private final Map<String, Object> values = new HashMap<>();
 		private Type type;

@@ -435,12 +435,12 @@ public class Instrumentations {
 	//region Internal
 	private static @NotNull Type getNumberType(@NotNull Number number) {
 		return switch (number) {
-			case Byte b -> BYTE;
-			case Short i -> SHORT;
-			case Integer i -> INT;
-			case Long l -> LONG;
-			case Float v -> FLOAT;
-			case Double v -> DOUBLE;
+			case Byte ignored -> BYTE;
+			case Short ignored -> SHORT;
+			case Integer ignored -> INT;
+			case Long ignored -> LONG;
+			case Float ignored -> FLOAT;
+			case Double ignored -> DOUBLE;
 			default -> throw new IllegalArgumentException("Unsupported number type: " + number.getClass().getName());
 		};
 	}

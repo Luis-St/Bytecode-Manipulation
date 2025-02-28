@@ -39,7 +39,7 @@ public class DefaultConstructorTransformer extends BaseClassTransformer {
 		return new DefaultConstructorClassVisitor(writer, type, () -> this.modified = true);
 	}
 	
-	private static class DefaultConstructorClassVisitor extends ContextBasedClassVisitor {
+	private static final class DefaultConstructorClassVisitor extends ContextBasedClassVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
@@ -88,7 +88,7 @@ public class DefaultConstructorTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class DefaultConstructorMethodVisitor extends MethodVisitor {
+	private static final class DefaultConstructorMethodVisitor extends MethodVisitor {
 		
 		private DefaultConstructorMethodVisitor(@NotNull MethodVisitor methodVisitor) {
 			super(Opcodes.ASM9, methodVisitor);

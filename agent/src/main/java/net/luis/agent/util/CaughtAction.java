@@ -8,5 +8,7 @@ package net.luis.agent.util;
 
 public enum CaughtAction {
 	
-	NOTHING, DEFAULT, THROW
+	NOTHING,
+	DEFAULT,
+	THROW
 }

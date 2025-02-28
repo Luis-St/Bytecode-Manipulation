@@ -77,7 +77,7 @@ public class StringTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class StringMethodVisitor extends LabelTrackingMethodVisitor {
+	private static final class StringMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotation Configuration";
 		

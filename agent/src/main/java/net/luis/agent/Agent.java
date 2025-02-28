@@ -34,10 +34,6 @@ public class Agent {
 		System.out.println("Initialized agent in " + (System.currentTimeMillis() - start) + "ms");
 	}
 	
-	public static @NotNull List<Type> getGenerated() {
-		return generated;
-	}
-	
 	public static @NotNull Class getClass(@NotNull Type type) {
 		Class clazz = ClassFileScanner.scanClass(type);
 		if (cache.containsKey(type)) {

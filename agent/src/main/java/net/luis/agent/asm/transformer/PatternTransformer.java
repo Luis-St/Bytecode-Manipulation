@@ -49,7 +49,7 @@ public class PatternTransformer extends BaseClassTransformer {
 		return new PatternClassVisitor(writer, type, LOOKUP, () -> this.modified = true);
 	}
 	
-	private static class PatternClassVisitor extends MethodOnlyClassVisitor {
+	private static final class PatternClassVisitor extends MethodOnlyClassVisitor {
 		
 		private final Map<Type, String> lookup;
 		
@@ -83,7 +83,7 @@ public class PatternTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class PatternMethodVisitor extends LabelTrackingMethodVisitor {
+	private static final class PatternMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		

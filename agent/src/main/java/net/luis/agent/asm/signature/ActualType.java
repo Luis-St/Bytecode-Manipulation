@@ -13,7 +13,7 @@ import java.util.List;
  *
  */
 
-public class ActualType {
+public final class ActualType {
 	
 	private final Type type;
 	private final List<ActualType> nested;

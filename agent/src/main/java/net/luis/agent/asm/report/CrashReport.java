@@ -15,7 +15,7 @@ import java.util.Map;
  *
  */
 
-public class CrashReport {
+public final class CrashReport {
 	
 	private static final String DEFAULT_MESSAGE = "An error occurred during the class transformation process";
 	private static final String DEFAULT_CATEGORY = "Class Transformation Error";
@@ -24,8 +24,6 @@ public class CrashReport {
 	private final String category;
 	private String message = DEFAULT_MESSAGE;
 	private @Nullable Throwable exception;
-	private boolean removeNullValues;
-	private boolean canContinue;
 	private int exitCode = 1;
 	
 	private CrashReport() {
@@ -65,10 +63,6 @@ public class CrashReport {
 	
 	public @NotNull Map<String, Object> getDetails() {
 		return this.details;
-	}
-	
-	public boolean canContinue() {
-		return this.canContinue;
 	}
 	
 	public int getExitCode() {
@@ -201,9 +195,6 @@ public class CrashReport {
 	}
 	
 	private @NotNull String getDetailString(@NotNull String key, @Nullable Object value) {
-		if (this.removeNullValues && value == null) {
-			return "";
-		}
 		return switch (value) {
 			case List<?> list -> key + ": " + this.getListString(list);
 			case Map<?, ?> map -> key + ": " + this.getMapString(map);

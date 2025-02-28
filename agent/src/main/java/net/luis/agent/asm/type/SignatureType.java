@@ -11,5 +11,5 @@ public enum SignatureType {
 	GENERIC,
 	FULL,
 	DEBUG,
-	SOURCE;
+	SOURCE
 }

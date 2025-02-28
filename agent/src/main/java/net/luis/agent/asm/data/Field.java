@@ -15,7 +15,7 @@ import java.util.*;
  *
  */
 
-public class Field implements ASMData {
+public final class Field implements ASMData {
 	
 	private final Type owner;
 	private final String name;
@@ -63,10 +63,12 @@ public class Field implements ASMData {
 		return this.owner;
 	}
 	
+	@Override
 	public @NotNull String getName() {
 		return this.name;
 	}
 	
+	@Override
 	public @NotNull Type getType() {
 		return this.type;
 	}
@@ -82,10 +84,12 @@ public class Field implements ASMData {
 		};
 	}
 	
+	@Override
 	public @NotNull TypeAccess getAccess() {
 		return this.access;
 	}
 	
+	@Override
 	public @NotNull Set<TypeModifier> getModifiers() {
 		return this.modifiers;
 	}
@@ -138,7 +142,7 @@ public class Field implements ASMData {
 	//endregion
 	
 	//region Builder
-	public static class Builder {
+	public static final class Builder {
 		
 		private final Set<TypeModifier> modifiers = EnumSet.noneOf(TypeModifier.class);
 		private final Map<Type, Annotation> annotations = new HashMap<>();

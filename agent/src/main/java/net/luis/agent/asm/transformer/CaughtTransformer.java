@@ -49,7 +49,7 @@ public class CaughtTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class CaughtVisitor extends LabelTrackingMethodVisitor {
+	private static final class CaughtVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		

@@ -16,5 +16,5 @@ public enum TrigonometricOperation {
 	ATAN,
 	SINH,
 	COSH,
-	TANH;
+	TANH
 }

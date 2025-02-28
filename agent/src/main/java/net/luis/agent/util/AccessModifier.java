@@ -11,5 +11,5 @@ public enum AccessModifier {
 	PUBLIC,
 	PROTECTED,
 	PACKAGE,
-	PRIVATE;
+	PRIVATE
 }

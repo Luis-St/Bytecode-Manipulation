@@ -21,10 +21,6 @@ public class ClassFileScanner {
 		return scanClass(type, new ClassScanner(), ClassScanner::get);
 	}
 	
-	public static <T extends ClassVisitor> void scanClass(@NotNull Type type, @NotNull T visitor) {
-		scanClass(readClass(type), visitor, Function.identity());
-	}
-	
 	@RestrictedAccess("net.luis.agent.AgentContext#initialize")
 	public static @NotNull Class scanGeneratedClass(byte @NotNull [] bytes) {
 		return scanClass(bytes, new ClassScanner(), ClassScanner::get);

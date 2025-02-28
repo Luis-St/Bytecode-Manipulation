@@ -15,37 +15,35 @@ import java.util.stream.Collectors;
 
 public enum TypeModifier {
 	
-	STATIC(Opcodes.ACC_STATIC, true, true, true, false, false),
-	FINAL(Opcodes.ACC_FINAL, true, true, true, true, false),
-	SYNCHRONIZED(Opcodes.ACC_SYNCHRONIZED, false, false, true, false, false),
-	OPEN(Opcodes.ACC_OPEN, false, false, false, false, true),
-	TRANSITIVE(Opcodes.ACC_TRANSITIVE, false, false, false, false, true),
-	VOLATILE(Opcodes.ACC_VOLATILE, false, true, false, false, false),
-	BRIDGE(Opcodes.ACC_BRIDGE, false, false, true, false, false),
-	STATIC_PHASE(Opcodes.ACC_STATIC_PHASE, false, false, false, false, true),
-	VARARGS(Opcodes.ACC_VARARGS, false, false, true, false, false),
-	TRANSIENT(Opcodes.ACC_TRANSIENT, false, true, false, false, false),
-	NATIVE(Opcodes.ACC_NATIVE, false, false, true, false, false),
-	ABSTRACT(Opcodes.ACC_ABSTRACT, true, false, true, false, false),
-	STRICT(Opcodes.ACC_STRICT, false, false, true, false, false),
-	SYNTHETIC(Opcodes.ACC_SYNTHETIC, true, true, true, true, true),
-	MANDATED(Opcodes.ACC_MANDATED, false, false, false, true, false),
-	DEPRECATED(Opcodes.ACC_DEPRECATED, true, true, true, true, true);
+	STATIC(Opcodes.ACC_STATIC, true, true, true, false),
+	FINAL(Opcodes.ACC_FINAL, true, true, true, true),
+	SYNCHRONIZED(Opcodes.ACC_SYNCHRONIZED, false, false, true, false),
+	OPEN(Opcodes.ACC_OPEN, false, false, false, false),
+	TRANSITIVE(Opcodes.ACC_TRANSITIVE, false, false, false, false),
+	VOLATILE(Opcodes.ACC_VOLATILE, false, true, false, false),
+	BRIDGE(Opcodes.ACC_BRIDGE, false, false, true, false),
+	STATIC_PHASE(Opcodes.ACC_STATIC_PHASE, false, false, false, false),
+	VARARGS(Opcodes.ACC_VARARGS, false, false, true, false),
+	TRANSIENT(Opcodes.ACC_TRANSIENT, false, true, false, false),
+	NATIVE(Opcodes.ACC_NATIVE, false, false, true, false),
+	ABSTRACT(Opcodes.ACC_ABSTRACT, true, false, true, false),
+	STRICT(Opcodes.ACC_STRICT, false, false, true, false),
+	SYNTHETIC(Opcodes.ACC_SYNTHETIC, true, true, true, true),
+	MANDATED(Opcodes.ACC_MANDATED, false, false, false, true),
+	DEPRECATED(Opcodes.ACC_DEPRECATED, true, true, true, true);
 	
 	private final int opcode;
 	private final boolean clazz;
 	private final boolean field;
 	private final boolean method;
 	private final boolean parameter;
-	private final boolean module;
 	
-	TypeModifier(int opcode, boolean clazz, boolean field, boolean method, boolean parameter, boolean module) {
+	TypeModifier(int opcode, boolean clazz, boolean field, boolean method, boolean parameter) {
 		this.opcode = opcode;
 		this.clazz = clazz;
 		this.field = field;
 		this.method = method;
 		this.parameter = parameter;
-		this.module = module;
 	}
 	
 	//region Static methods
@@ -63,10 +61,6 @@ public enum TypeModifier {
 	
 	public static @NotNull Set<TypeModifier> fromParameterAccess(int access) {
 		return fromAccess(access).stream().filter(TypeModifier::allowedOnParameter).collect(Collectors.toSet());
-	}
-	
-	public static @NotNull Set<TypeModifier> fromModuleAccess(int access) {
-		return fromAccess(access).stream().filter(TypeModifier::allowedOnModule).collect(Collectors.toSet());
 	}
 	
 	public static @NotNull Set<TypeModifier> fromAccess(int access) {
@@ -102,9 +96,5 @@ public enum TypeModifier {
 	
 	public boolean allowedOnParameter() {
 		return this.parameter;
-	}
-	
-	public boolean allowedOnModule() {
-		return this.module;
 	}
 }

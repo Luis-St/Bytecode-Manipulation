@@ -75,7 +75,7 @@ public class NotNullTransformer extends BaseClassTransformer {
 		};
 	}
 	
-	private static class NotNullVisitor extends LabelTrackingMethodVisitor {
+	private static final class NotNullVisitor extends LabelTrackingMethodVisitor {
 		
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
 		
@@ -177,7 +177,9 @@ public class NotNullTransformer extends BaseClassTransformer {
 				case Field field -> report.addFieldDetails(field);
 				case LocalVariable local -> report.addLocalDetails(local);
 				case null -> {}
-				default -> {break;}
+				default -> {
+					return report;
+				}
 			}
 			return report;
 		}

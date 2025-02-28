@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
  *
  */
 
+@FunctionalInterface
 public interface StringFactory {
 	
 	@NotNull Object create(@NotNull String type, @NotNull ActualType actual, @NotNull ScopedStringReader reader);

@@ -14,7 +14,7 @@ import java.util.*;
  *
  */
 
-public class LocalVariable implements ASMData {
+public final class LocalVariable implements ASMData {
 	
 	private final Method owner;
 	private final int index;
@@ -24,7 +24,7 @@ public class LocalVariable implements ASMData {
 	private final Map<Type, Annotation> annotations;
 	private Scope scope;
 	
-	private LocalVariable(@NotNull Method owner, int index, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull LocalVariable.Scope scope, @NotNull Map<Type, Annotation> annotations) {
+	private LocalVariable(@NotNull Method owner, int index, @NotNull String name, @NotNull Type type, @Nullable String genericSignature, @NotNull Scope scope, @NotNull Map<Type, Annotation> annotations) {
 		this.owner = Objects.requireNonNull(owner);
 		this.index = index;
 		this.name = Objects.requireNonNull(name);
@@ -59,10 +59,12 @@ public class LocalVariable implements ASMData {
 		return this.index;
 	}
 	
+	@Override
 	public @NotNull String getName() {
 		return this.name;
 	}
 	
+	@Override
 	public @NotNull Type getType() {
 		return this.type;
 	}
@@ -95,6 +97,7 @@ public class LocalVariable implements ASMData {
 		return this.scope.end;
 	}
 	
+	@Override
 	public @NotNull Map<Type, Annotation> getAnnotations() {
 		return this.annotations;
 	}
@@ -146,7 +149,7 @@ public class LocalVariable implements ASMData {
 	//endregion
 	
 	//region Builder
-	public static class Builder {
+	public static final class Builder {
 		
 		private final Map<Type, Annotation> annotations = new HashMap<>();
 		private Method owner;

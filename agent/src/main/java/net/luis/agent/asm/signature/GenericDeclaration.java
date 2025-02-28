@@ -13,7 +13,7 @@ import java.util.List;
  *
  */
 
-public class GenericDeclaration {
+public final class GenericDeclaration {
 	
 	private final Type type;
 	private final List<GenericDeclaration> nested;

@@ -40,7 +40,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		return new RestrictedAccessClassVisitor(writer, type, () -> this.modified = true);
 	}
 	
-	private static class RestrictedAccessClassVisitor extends ContextBasedClassVisitor {
+	private static final class RestrictedAccessClassVisitor extends ContextBasedClassVisitor {
 		
 		private RestrictedAccessClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
@@ -64,7 +64,7 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		}
 	}
 	
-	private static class RestrictedAccessMethodVisitor extends LabelTrackingMethodVisitor {
+	private static final class RestrictedAccessMethodVisitor extends LabelTrackingMethodVisitor {
 		
 		private final Type type;
 		private final Method method;
