@@ -1,13 +1,16 @@
 package net.luis.agent.asm;
 
 import net.luis.agent.annotation.*;
+import net.luis.agent.annotation.instrumentation.*;
 import net.luis.agent.annotation.math.*;
 import net.luis.agent.annotation.string.*;
-import net.luis.agent.annotation.util.ImplicitNotNull;
+import net.luis.agent.annotation.util.*;
 import net.luis.agent.util.Utils;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
+
+import java.util.Set;
 
 /**
  *
@@ -38,6 +41,8 @@ public class Types {
 	//endregion
 	
 	//region Java built-in types
+	public static final Type OBJECT = Type.getType("Ljava/lang/Object;");
+	public static final Type CLASS = Type.getType("Ljava/lang/Class;");
 	public static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
 	public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType("Ljava/lang/IllegalArgumentException;");
 	public static final Type STACK_TRACE_ELEMENT = Type.getType("Ljava/lang/StackTraceElement;");
@@ -52,6 +57,25 @@ public class Types {
 	public static final Type BI_CONSUMER = Type.getType("Ljava/util/function/BiConsumer;");
 	public static final Type THREAD_FACTORY = Type.getType("Ljava/util/concurrent/ThreadFactory;");
 	public static final Type SCHEDULED_FUTURE = Type.getType("Ljava/util/concurrent/ScheduledFuture;");
+	//endregion
+	
+	//region Implementation annotations
+	public static final Type INJECT_INTERFACE = Type.getType(InjectInterface.class);
+	
+	public static final Type IMPLEMENTED = Type.getType(Implemented.class);
+	public static final Type ACCESSOR = Type.getType(Accessor.class);
+	public static final Type ASSIGNOR = Type.getType(Assignor.class);
+	public static final Type INVOKER = Type.getType(Invoker.class);
+	public static final Type INJECTOR = Type.getType(Injector.class);
+	public static final Type REDIRECTOR = Type.getType(Redirector.class);
+	public static final Type MODIFICATOR = Type.getType(Modificator.class);
+	public static final Set<Type> IMPLEMENTATION_ANNOTATIONS = Set.of(IMPLEMENTED, ACCESSOR, ASSIGNOR, INVOKER, INJECTOR, REDIRECTOR, MODIFICATOR);
+	//endregion
+	
+	//region Parameter annotations
+	public static final Type THIS = Type.getType(This.class);
+	public static final Type LOCAL = Type.getType(Local.class);
+	public static final Type ORIGINAL = Type.getType(Original.class);
 	//endregion
 	
 	//region Annotation types

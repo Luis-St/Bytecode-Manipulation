@@ -5,6 +5,7 @@ import net.luis.agent.asm.generation.generators.MemorizedSupplierGenerator;
 import net.luis.agent.asm.generation.generators.RuntimeUtilsGenerator;
 import net.luis.agent.asm.generation.generators.concurrent.*;
 import net.luis.agent.asm.transformer.*;
+import net.luis.agent.asm.transformer.instrumentation.*;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
@@ -46,6 +47,16 @@ public class PreMain {
 	
 	// Transformers registered first will be called first, but changes will maybe overwrite by later transformers
 	private static void initializeTransformers(@NotNull Instrumentation inst) {
+		inst.addTransformer(new InterfaceInjectionTransformer());
+		inst.addTransformer(new ImplementedTransformer());
+		inst.addTransformer(new AccessorTransformer());
+		inst.addTransformer(new AssignorTransformer());
+		inst.addTransformer(new InvokerTransformer());
+		inst.addTransformer(new InjectorTransformer());
+		inst.addTransformer(new RedirectorTransformer());
+		inst.addTransformer(new ModificatorTransformer());
+		inst.addTransformer(new InterfaceTransformer());
+		
 		inst.addTransformer(new ValidationTransformer());
 		inst.addTransformer(new DefaultConstructorTransformer());
 		

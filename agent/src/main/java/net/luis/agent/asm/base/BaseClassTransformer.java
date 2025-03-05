@@ -54,7 +54,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 	public final byte @Nullable [] transform(@NotNull ClassLoader loader, @NotNull String className, @Nullable Class<?> clazz, @NotNull ProtectionDomain domain, byte @NotNull [] buffer) {
 		Type type = Type.getObjectType(className);
 		try {
-			if (this.shouldIgnoreClass(type) || this.isInternalClass(type)) {
+			if (this.isInternalClass(type) || this.shouldIgnoreClass(type)) {
 				return null;
 			}
 			
@@ -80,9 +80,7 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			
 			report.addDetailFirst("Transformed Class", type).addDetailFirst("Class Transformer", this.getClass().getSimpleName()).addDetailFirst("Class Loader", loader.getName());
 			report.print();
-			if (!report.canContinue()) {
-				System.exit(report.getExitCode());
-			}
+			System.exit(report.getExitCode());
 		}
 		return null;
 	}

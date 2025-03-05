@@ -1,0 +1,22 @@
+package net.luis.agent.annotation.instrumentation;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.lang.annotation.*;
+
+/**
+ *
+ * @author Luis-St
+ *
+ */
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.CLASS)
+public @interface Injector {
+	
+	@NotNull String method() default "";
+	
+	@NotNull net.luis.agent.annotation.util.Target target();
+	
+	boolean restricted() default true;
+}

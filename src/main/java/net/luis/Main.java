@@ -6,8 +6,12 @@ import net.luis.agent.annotation.*;
 import net.luis.agent.annotation.math.*;
 import net.luis.agent.annotation.string.*;
 import net.luis.agent.util.TrigonometricOperation;
+import net.luis.test.*;
 import net.luis.utils.collection.WeightCollection;
 import net.luis.utils.lang.StringUtils;
+import net.luis.utils.logging.LoggerConfiguration;
+import net.luis.utils.logging.LoggingType;
+import org.apache.logging.log4j.Level;
 import org.intellij.lang.annotations.Pattern;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,17 +29,24 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class Main {
 	
+	// ToDo:
+	//  - NotNull on array brackets are not processed
+	//  - Add support for redirect only the call and keep the parameters (all parameters are passed to the redirector, parameters must be annotated with @Original, no additional parameters)
+	//    Potentially problematic: Redirector is static, but method is not (pop the this reference)
+	
 	@NotEmpty
 	@Pattern("^\\S*$")
 	private static String test = "Hello";
 	
 	public static void main(@Default @NotNull String[] args) {
+		Class<?> clazz = Main.class;
+		System.out.println(clazz.getName());
+		
 		Test testInstance = Test.INSTANCE;
 		try {
 			testInstance = new Test();
-		} catch (Throwable e) {
-			System.out.println(e.getMessage());
-		}
+		} catch (Throwable ignored) {}
+		
 		System.out.println(testInstance);
 		WeightCollection<String> collection = new WeightCollection<>();
 		collection.add(10, "Hello");
@@ -68,6 +79,25 @@ public class Main {
 		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
 		test += "World";
 		System.out.println(test);
+		
+		new InjectTest().test(10, new int[] { 1 });
+		
+		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
+		LoggerConfiguration logger = new LoggerConfiguration("*");
+		if (logger instanceof ILoggerConfiguration iLogger) {
+			System.out.println("LoggerConfiguration is an instance of ILoggerConfiguration!");
+			System.out.println(iLogger.build().getName());
+			List<String> loggers = iLogger.getLoggers();
+			Set<LoggingType> types = iLogger.getTypes();
+			System.out.println(loggers);
+			System.out.println(types);
+			iLogger.setLoggers(loggers);
+			iLogger.setTypes(types);
+			System.out.println(iLogger.invokeGetPattern(LoggingType.CONSOLE, Level.TRACE));
+			System.out.println(iLogger.getLoggingPattern(LoggingType.FILE, Level.ERROR));
+		} else {
+			System.out.println("LoggerConfiguration is not an instance of ILoggerConfiguration!");
+		}
 	}
 	
 	public static void autoSin(@Trig(TrigonometricOperation.SIN) double value) {

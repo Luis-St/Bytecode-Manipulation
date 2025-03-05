@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.*;
 
 /**
@@ -14,12 +15,21 @@ import java.util.stream.*;
 
 public class Utils {
 	
+	public static <T> @NotNull T make(@NotNull T object, @NotNull Consumer<T> consumer) {
+		consumer.accept(object);
+		return object;
+	}
+	
 	public static <T> @NotNull Stream<T> stream(T @Nullable [] array) {
 		return array == null ? Stream.empty() : Arrays.stream(array).filter(Objects::nonNull);
 	}
 	
 	public static @NotNull String capitalize(@NotNull String string) {
 		return string.isEmpty() ? string : Character.toUpperCase(string.charAt(0)) + string.substring(1);
+	}
+	
+	public static @NotNull String uncapitalize(@NotNull String string) {
+		return string.isEmpty() ? string : Character.toLowerCase(string.charAt(0)) + string.substring(1);
 	}
 	
 	public static boolean isSingleWord(@NotNull String string) {
@@ -38,6 +48,10 @@ public class Utils {
 		return builder.toString().toLowerCase();
 	}
 	
+	public static @NotNull String deleteWhitespace(@NotNull String string) {
+		return string.chars().filter(c -> !Character.isWhitespace(c)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
+	}
+	
 	public static <T> int indexOf(@NotNull T[] array, @NotNull T element) {
 		for (int i = 0; i < array.length; i++) {
 			if (Objects.equals(array[i], element)) {
@@ -45,6 +59,15 @@ public class Utils {
 			}
 		}
 		return -1;
+	}
+	
+	public static <T> @NotNull T[] reverse(@NotNull T[] array) {
+		for (int i = 0; i < array.length / 2; i++) {
+			T temp = array[i];
+			array[i] = array[array.length - i - 1];
+			array[array.length - i - 1] = temp;
+		}
+		return array;
 	}
 	
 	//region Array to list

@@ -24,6 +24,7 @@ public final class CrashReport {
 	private final String category;
 	private String message = DEFAULT_MESSAGE;
 	private @Nullable Throwable exception;
+	private boolean removeNullValues;
 	private int exitCode = 1;
 	
 	private CrashReport() {
@@ -78,6 +79,11 @@ public final class CrashReport {
 	
 	public @NotNull CrashReport setException(@Nullable Throwable exception) {
 		this.exception = exception;
+		return this;
+	}
+	
+	public @NotNull CrashReport removeNullValues(boolean removeNullValues) {
+		this.removeNullValues = removeNullValues;
 		return this;
 	}
 	
@@ -195,6 +201,9 @@ public final class CrashReport {
 	}
 	
 	private @NotNull String getDetailString(@NotNull String key, @Nullable Object value) {
+		if (this.removeNullValues && value == null) {
+			return "";
+		}
 		return switch (value) {
 			case List<?> list -> key + ": " + this.getListString(list);
 			case Map<?, ?> map -> key + ": " + this.getMapString(map);

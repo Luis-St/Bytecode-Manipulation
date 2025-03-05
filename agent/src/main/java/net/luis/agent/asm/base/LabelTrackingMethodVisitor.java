@@ -20,6 +20,10 @@ public class LabelTrackingMethodVisitor extends MethodVisitor {
 	private final List<Local> locals = new ArrayList<>();
 	protected Method method;
 	
+	public LabelTrackingMethodVisitor() {
+		super(Opcodes.ASM9);
+	}
+	
 	public LabelTrackingMethodVisitor(@NotNull MethodVisitor visitor) {
 		super(Opcodes.ASM9, visitor);
 	}

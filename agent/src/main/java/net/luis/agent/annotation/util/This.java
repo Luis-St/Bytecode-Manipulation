@@ -1,7 +1,7 @@
 package net.luis.agent.annotation.util;
 
-import java.lang.annotation.*;
 import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  *
@@ -9,7 +9,6 @@ import java.lang.annotation.Target;
  *
  */
 
-@Documented
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.CLASS)
-@Target(ElementType.ANNOTATION_TYPE)
-public @interface ImplicitNotNull {}
+public @interface This {}

@@ -4,12 +4,9 @@ import java.lang.annotation.*;
 import java.lang.annotation.Target;
 
 /**
- *
  * @author Luis-St
- *
  */
 
-@Documented
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.CLASS)
-@Target(ElementType.ANNOTATION_TYPE)
-public @interface ImplicitNotNull {}
+public @interface Original {}
