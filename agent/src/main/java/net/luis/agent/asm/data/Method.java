@@ -136,6 +136,17 @@ public final class Method implements ASMData {
 		return this.parameters.get(index);
 	}
 	
+	public @Nullable Parameter getParameterWithLoadIndex(int loadIndex) {
+		return this.parameters.values().stream().filter(parameter -> parameter.getLoadIndex() == loadIndex).findFirst().orElse(null);
+	}
+	
+	public int getLastParameterIndex() {
+		if (this.parameters.isEmpty()) {
+			return -1;
+		}
+		return this.parameters.get(this.parameters.size() - 1).getLoadIndex();
+	}
+	
 	public @NotNull List<LocalVariable> getLocals(int localIndex) {
 		return this.locals.stream().filter(local -> local.getIndex() == localIndex).collect(Collectors.toList());
 	}

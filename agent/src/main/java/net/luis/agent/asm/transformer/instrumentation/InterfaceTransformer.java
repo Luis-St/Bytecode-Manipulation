@@ -59,7 +59,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
 		Class clazz = Agent.getClass(type);
-		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(INJECTOR));
+		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(INJECTOR) || method.isAnnotatedWith(REDIRECTOR) || method.isAnnotatedWith(MODIFICATOR));
 	}
 	//endregion
 	
@@ -86,7 +86,7 @@ public class InterfaceTransformer extends BaseClassTransformer {
 		
 		@Override
 		protected boolean isMethodValid(@NotNull Method method) {
-			return this.target != null && (this.isMethodValid(method, INJECTOR) || this.isMethodValid(method, REDIRECTOR));
+			return this.target != null && (this.isMethodValid(method, INJECTOR) || this.isMethodValid(method, REDIRECTOR) || this.isMethodValid(method, MODIFICATOR));
 		}
 		
 		@Override
@@ -97,6 +97,9 @@ public class InterfaceTransformer extends BaseClassTransformer {
 			}
 			if (this.isMethodValid(method, REDIRECTOR)) {
 				restrictedValues.add(this.getRestrictedValues(method, REDIRECTOR));
+			}
+			if (this.isMethodValid(method, MODIFICATOR)) {
+				restrictedValues.add(this.getRestrictedValues(method, MODIFICATOR));
 			}
 			
 			AnnotationVisitor av = mv.visitAnnotation(RESTRICTED_ACCESS.getDescriptor(), true);

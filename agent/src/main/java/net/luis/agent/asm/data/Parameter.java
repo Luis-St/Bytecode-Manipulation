@@ -65,10 +65,11 @@ public final class Parameter implements ASMData {
 	
 	@Override
 	public @NotNull String getSignature(@NotNull SignatureType type) {
+		int index = this.getLoadIndex();
 		return switch (type) {
-			case FULL -> this.isNamed() ? this.name : String.valueOf(this.index);
-			case DEBUG -> this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " (" + this.index + ") : " + this.type.getClassName();
-			case SOURCE -> this.owner.getSignature(SignatureType.SOURCE) + "#" + this.name + " (" + this.index + ")";
+			case FULL -> this.isNamed() ? this.name : String.valueOf(index);
+			case DEBUG -> this.owner.getOwner().getClassName() + "#" + this.owner.getName() + "#" + this.name + " (" + index + ") : " + this.type.getClassName();
+			case SOURCE -> this.owner.getSignature(SignatureType.SOURCE) + "#" + this.name + " (" + index + ")";
 			default -> "";
 		};
 	}

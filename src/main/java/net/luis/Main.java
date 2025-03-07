@@ -29,16 +29,11 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 public class Main {
 	
-	// ToDo:
-	//  - NotNull on array brackets are not processed
-	//  - Add support for redirect only the call and keep the parameters (all parameters are passed to the redirector, parameters must be annotated with @Original, no additional parameters)
-	//    Potentially problematic: Redirector is static, but method is not (pop the this reference)
-	
 	@NotEmpty
 	@Pattern("^\\S*$")
 	private static String test = "Hello";
 	
-	public static void main(@Default @NotNull String[] args) {
+	public static void main(@Default String @NotNull [] args) {
 		Class<?> clazz = Main.class;
 		System.out.println(clazz.getName());
 		
@@ -81,6 +76,7 @@ public class Main {
 		System.out.println(test);
 		
 		new InjectTest().test(10, new int[] { 1 });
+		new ModifyTest().calculate(10, "9", List.of(10, 9, 8, 6, 2, 0));
 		
 		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
 		LoggerConfiguration logger = new LoggerConfiguration("*");
