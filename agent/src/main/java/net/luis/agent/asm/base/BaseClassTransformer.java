@@ -65,6 +65,8 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			if (this.modified) {
 				System.out.println("Transformed Class: " + type.getClassName());
 				ASMUtils.saveClass(new File("transformed/" + className + ".class"), bytes);
+				// Reload the transformed ClassNode and update the cache
+				this.updateCache(type, bytes);
 				this.modified = false;
 			}
 			return bytes;
@@ -84,6 +86,13 @@ public abstract class BaseClassTransformer implements ClassFileTransformer {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Updates the Agent cache with the transformed ClassNode
+	 */
+	protected void updateCache(@NotNull Type type, byte @NotNull [] transformedBytes) {
+		net.luis.agent.Agent.updateCache(type, transformedBytes);
 	}
 	
 	protected abstract @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer);

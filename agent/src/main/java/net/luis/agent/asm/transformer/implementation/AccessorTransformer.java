@@ -136,7 +136,8 @@ public class AccessorTransformer extends BaseClassTransformer {
 			visitor.visitLocalVariable("this", targetField.getOwner().getDescriptor(), targetField.getSignature(SignatureType.GENERIC), start, end, 0);
 			visitor.visitMaxs(0, 0);
 			visitor.visitEnd();
-			this.updateClass(ifaceMethod, targetField.getOwner());
+			// Note: Cache will be automatically updated with the transformed ClassNode
+			// by BaseClassTransformer after the bytecode is written
 			this.markModified();
 		}
 		
@@ -163,10 +164,6 @@ public class AccessorTransformer extends BaseClassTransformer {
 			}
 			int index = signature.indexOf(')');
 			return signature.substring(index + 1);
-		}
-		
-		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target) {
-			Agent.getClass(target).getMethods().put(ifaceMethod.getSignature(SignatureType.FULL), Method.builder(ifaceMethod).modifiers(EnumSet.of(TypeModifier.ABSTRACT)).build());
 		}
 		//endregion
 	}

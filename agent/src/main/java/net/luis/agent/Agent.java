@@ -45,6 +45,18 @@ public class Agent {
 		}
 	}
 
+	/**
+	 * Updates the cache with a transformed ClassNode loaded from bytecode.
+	 * This ensures the cached ClassNode reflects any transformations applied.
+	 *
+	 * @param type The type of the class
+	 * @param transformedBytes The transformed bytecode
+	 */
+	public static void updateCache(@NotNull Type type, byte @NotNull [] transformedBytes) {
+		ClassNode classNode = ClassFileScanner.scanGeneratedClass(transformedBytes);
+		cache.put(type, classNode);
+	}
+
 	public static @NotNull Stream<ClassNode> stream() {
 		return classes.stream().map(Agent::getClass);
 	}
