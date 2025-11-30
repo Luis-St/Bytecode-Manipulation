@@ -2,6 +2,8 @@ package net.luis.agent.asm.data;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.Types;
+import net.luis.agent.asm.scanner.ClassFileScanner;
+import net.luis.agent.asm.scanner.ClassScanner;
 import net.luis.agent.asm.type.SignatureType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,7 +79,9 @@ public class Annotation {
 	}
 	
 	public <X> @Nullable X getDefault(@Nullable String key) {
-		Class data = Agent.getClass(this.type);
+		ClassScanner scanner = new ClassScanner();
+		ClassFileScanner.scanClass(this.type, scanner);
+		Class data = scanner.get();
 		List<Method> methods = data.getMethods(key);
 		if (methods.size() != 1) {
 			return null;

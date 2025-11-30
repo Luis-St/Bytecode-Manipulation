@@ -179,7 +179,10 @@ public class TargetClassScanner extends ClassVisitor {
 					if (argument instanceof Handle targetHandle) {
 						Type owner = Type.getObjectType(targetHandle.getOwner());
 						if (this.method.getOwner().equals(owner)) {
-							Method method = Agent.getClass(owner).getMethod(targetHandle.getName() + targetHandle.getDesc());
+							ClassScanner scanner = new ClassScanner();
+							ClassFileScanner.scanClass(owner, scanner);
+							net.luis.agent.asm.data.Class clazz = scanner.get();
+							Method method = clazz.getMethod(targetHandle.getName() + targetHandle.getDesc());
 							if (method != null) {
 								this.recursive.add(method);
 							}
