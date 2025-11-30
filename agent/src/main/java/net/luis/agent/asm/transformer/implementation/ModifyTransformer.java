@@ -6,6 +6,8 @@ import net.luis.agent.asm.base.*;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.report.CrashReport;
+import net.luis.agent.asm.scanner.ClassFileScanner;
+import net.luis.agent.asm.scanner.ClassScanner;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.ModifyTarget;
 import net.luis.agent.util.Utils;
@@ -13,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.*;
 
@@ -66,9 +69,13 @@ public class ModifyTransformer extends BaseClassTransformer {
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
-				Class targetClass = Agent.getClass(Type.getObjectType(name));
+				ClassScanner targetScanner = new ClassScanner();
+				ClassFileScanner.scanClass(Type.getObjectType(name), targetScanner);
+				Class targetClass = targetScanner.get();
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = Agent.getClass(iface);
+					ClassScanner ifaceScanner = new ClassScanner();
+					ClassFileScanner.scanClass(iface, ifaceScanner);
+					Class ifaceClass = ifaceScanner.get();
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(MODIFY)) {
 							this.validateMethod(method, targetClass);
@@ -105,7 +112,8 @@ public class ModifyTransformer extends BaseClassTransformer {
 					.addDetail("Existing Method", existingMethod.getSignature(SignatureType.DEBUG)).exception();
 			}
 			String modifyName = this.getModifyName(ifaceMethod);
-			List<Method> possibleMethod = ASMUtils.getBySignature(modifyName, targetClass);
+			List<MethodNode> possibleMethodNodes = ASMUtils.getBySignature(modifyName, Agent.getClass(targetClass.getType()));
+			List<Method> possibleMethod = possibleMethodNodes.stream().map(mn -> targetClass.getMethod(mn.name + mn.desc)).toList();
 			if (possibleMethod.isEmpty()) {
 				throw CrashReport.create("Could not find method specified in modify", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Modify", signature).addDetail("Method", modifyName)
 					.addDetail("Possible Methods", targetClass.getMethods(this.getRawModifyName(modifyName)).stream().map(Method::toString).toList()).exception();
@@ -151,10 +159,14 @@ public class ModifyTransformer extends BaseClassTransformer {
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			String fullSignature = name + descriptor;
-			Method method = Agent.getClass(this.type).getMethod(fullSignature);
-			if (this.modifiers.containsKey(fullSignature) && method != null) {
-				this.markModified();
-				return new ModifyMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), method, this.modifiers.get(fullSignature));
+			if (this.modifiers.containsKey(fullSignature)) {
+				ClassScanner scanner = new ClassScanner();
+				ClassFileScanner.scanClass(this.type, scanner);
+				Method method = scanner.get().getMethod(fullSignature);
+				if (method != null) {
+					this.markModified();
+					return new ModifyMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), method, this.modifiers.get(fullSignature));
+				}
 			}
 			return visitor;
 		}

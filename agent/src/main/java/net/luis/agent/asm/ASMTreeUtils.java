@@ -126,6 +126,27 @@ public class ASMTreeUtils {
 		return null;
 	}
 
+	/**
+	 * Check if ClassNode has a specific annotation
+	 */
+	public static boolean hasAnnotation(@NotNull ClassNode classNode, @NotNull Type annotationType) {
+		if (classNode.visibleAnnotations != null) {
+			for (AnnotationNode annotation : classNode.visibleAnnotations) {
+				if (Type.getType(annotation.desc).equals(annotationType)) {
+					return true;
+				}
+			}
+		}
+		if (classNode.invisibleAnnotations != null) {
+			for (AnnotationNode annotation : classNode.invisibleAnnotations) {
+				if (Type.getType(annotation.desc).equals(annotationType)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	//endregion
 
 	//region MethodNode utilities
@@ -248,6 +269,119 @@ public class ASMTreeUtils {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Get the number of parameters in a MethodNode
+	 */
+	public static int getParameterCount(@NotNull MethodNode methodNode) {
+		return getParameterTypes(methodNode).length;
+	}
+
+	/**
+	 * Get the number of exceptions in a MethodNode
+	 */
+	public static int getExceptionCount(@NotNull MethodNode methodNode) {
+		return methodNode.exceptions == null ? 0 : methodNode.exceptions.size();
+	}
+
+	/**
+	 * Check if a parameter has a specific annotation
+	 */
+	public static boolean hasParameterAnnotation(@NotNull MethodNode methodNode, int parameterIndex, @NotNull Type annotationType) {
+		return getParameterAnnotation(methodNode, parameterIndex, annotationType) != null;
+	}
+
+	/**
+	 * Get a parameter annotation
+	 */
+	public static @Nullable AnnotationNode getParameterAnnotation(@NotNull MethodNode methodNode, int parameterIndex, @NotNull Type annotationType) {
+		if (methodNode.visibleParameterAnnotations != null && parameterIndex < methodNode.visibleParameterAnnotations.length) {
+			List<AnnotationNode> annotations = methodNode.visibleParameterAnnotations[parameterIndex];
+			if (annotations != null) {
+				for (AnnotationNode annotation : annotations) {
+					if (Type.getType(annotation.desc).equals(annotationType)) {
+						return annotation;
+					}
+				}
+			}
+		}
+		if (methodNode.invisibleParameterAnnotations != null && parameterIndex < methodNode.invisibleParameterAnnotations.length) {
+			List<AnnotationNode> annotations = methodNode.invisibleParameterAnnotations[parameterIndex];
+			if (annotations != null) {
+				for (AnnotationNode annotation : annotations) {
+					if (Type.getType(annotation.desc).equals(annotationType)) {
+						return annotation;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Check if any parameter has a specific annotation
+	 */
+	public static boolean hasAnyParameterWithAnnotation(@NotNull MethodNode methodNode, @NotNull Type annotationType) {
+		if (methodNode.visibleParameterAnnotations != null) {
+			for (List<AnnotationNode> annotations : methodNode.visibleParameterAnnotations) {
+				if (annotations != null) {
+					for (AnnotationNode annotation : annotations) {
+						if (Type.getType(annotation.desc).equals(annotationType)) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		if (methodNode.invisibleParameterAnnotations != null) {
+			for (List<AnnotationNode> annotations : methodNode.invisibleParameterAnnotations) {
+				if (annotations != null) {
+					for (AnnotationNode annotation : annotations) {
+						if (Type.getType(annotation.desc).equals(annotationType)) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+
+	/**
+	 * Get the load index for a parameter (accounting for 'this' in non-static methods)
+	 */
+	public static int getParameterLoadIndex(@NotNull MethodNode methodNode, int parameterIndex) {
+		boolean isStatic = is(methodNode, TypeModifier.STATIC);
+		if (isStatic) {
+			Type[] paramTypes = getParameterTypes(methodNode);
+			int loadIndex = 0;
+			for (int i = 0; i < parameterIndex; i++) {
+				loadIndex += paramTypes[i].getSize();
+			}
+			return loadIndex;
+		} else {
+			Type[] paramTypes = getParameterTypes(methodNode);
+			int loadIndex = 1; // 'this' is at index 0
+			for (int i = 0; i < parameterIndex; i++) {
+				loadIndex += paramTypes[i].getSize();
+			}
+			return loadIndex;
+		}
+	}
+
+	/**
+	 * Check if a variable index is a local variable (not a parameter)
+	 */
+	public static boolean isLocalVariable(@NotNull MethodNode methodNode, int varIndex) {
+		Type[] paramTypes = getParameterTypes(methodNode);
+		boolean isStatic = is(methodNode, TypeModifier.STATIC);
+		int paramSlots = isStatic ? 0 : 1; // 'this' takes slot 0 in non-static methods
+		for (Type paramType : paramTypes) {
+			paramSlots += paramType.getSize();
+		}
+		return varIndex >= paramSlots;
 	}
 
 	//endregion

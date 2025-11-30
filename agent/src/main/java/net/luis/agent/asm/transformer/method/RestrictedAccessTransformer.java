@@ -79,12 +79,12 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		private final List<String> values;
 		private final boolean pattern;
 
-		private RestrictedAccessMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Type ownerType, @NotNull MethodNode method) {
+		private RestrictedAccessMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Type ownerType, @NotNull MethodNode methodNode) {
 			super(visitor);
-			this.method = method;
+			this.method = methodNode;
 			this.type = ownerType;
-			this.methodName = method.name;
-			AnnotationNode annotation = ASMTreeUtils.getAnnotation(method, RESTRICTED_ACCESS);
+			this.methodName = methodNode.name;
+			AnnotationNode annotation = ASMTreeUtils.getAnnotation(methodNode, RESTRICTED_ACCESS);
 			this.values = Objects.requireNonNull(ASMTreeUtils.getAnnotationValue(annotation, "value", Collections.<String>emptyList()));
 			this.pattern = ASMTreeUtils.getAnnotationValue(annotation, "pattern", Boolean.FALSE);
 		}

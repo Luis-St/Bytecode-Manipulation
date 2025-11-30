@@ -7,6 +7,8 @@ import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
+import net.luis.agent.asm.scanner.ClassFileScanner;
+import net.luis.agent.asm.scanner.ClassScanner;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -53,9 +55,13 @@ public class AssignorTransformer extends BaseClassTransformer {
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
-				Class targetClass = Agent.getClass(Type.getObjectType(name));
+				ClassScanner targetScanner = new ClassScanner();
+				ClassFileScanner.scanClass(Type.getObjectType(name), targetScanner);
+				Class targetClass = targetScanner.get();
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = Agent.getClass(iface);
+					ClassScanner ifaceScanner = new ClassScanner();
+					ClassFileScanner.scanClass(iface, ifaceScanner);
+					Class ifaceClass = ifaceScanner.get();
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(ASSIGNOR)) {
 							this.validateMethod(method, targetClass);
@@ -182,7 +188,8 @@ public class AssignorTransformer extends BaseClassTransformer {
 		}
 		
 		private void updateClass(@NotNull Method ifaceMethod, @NotNull Type target, @NotNull Field targetField) {
-			Agent.getClass(target).getMethods().put(ifaceMethod.getSignature(SignatureType.FULL), Method.builder(ifaceMethod).modifiers(EnumSet.noneOf(TypeModifier.class)).build());
+			// Cache mutation is no longer needed - cache is automatically reloaded after transformation via Agent.updateCache()
+			// The method will be added to the ClassNode during bytecode generation in visitEnd()
 			targetField.getModifiers().remove(TypeModifier.FINAL);
 		}
 		//endregion
