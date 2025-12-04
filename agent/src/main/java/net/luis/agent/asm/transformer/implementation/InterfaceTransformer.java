@@ -4,6 +4,7 @@ import net.luis.agent.Agent;
 import net.luis.agent.asm.ASMTreeUtils;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.MethodOnlyClassVisitor;
+import net.luis.agent.asm.type.TypeModifier;
 import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,11 +45,13 @@ public class InterfaceTransformer extends BaseClassTransformer {
 			return null;
 		}
 
-		org.objectweb.asm.Type value = ASMTreeUtils.getAnnotationValue(annotation, "value");
+		Object valueObj = ASMTreeUtils.getAnnotationValue(annotation, "value");
+		org.objectweb.asm.Type value = valueObj instanceof org.objectweb.asm.Type ? (org.objectweb.asm.Type) valueObj : null;
 		if (value != null && !VOID.equals(value)) {
 			return value;
 		}
-		String target = ASMTreeUtils.getAnnotationValue(annotation, "target");
+		Object targetObj = ASMTreeUtils.getAnnotationValue(annotation, "target");
+		String target = targetObj instanceof String ? (String) targetObj : null;
 		if (target == null || target.isEmpty()) {
 			return null;
 		}
@@ -166,7 +169,8 @@ public class InterfaceTransformer extends BaseClassTransformer {
 
 		private @NotNull String getTarget(@NotNull MethodNode methodNode, @NotNull Type annotation) {
 			AnnotationNode annotationNode = ASMTreeUtils.getAnnotation(methodNode, annotation);
-			String target = ASMTreeUtils.getAnnotationValue(annotationNode, "method");
+			Object targetObj = ASMTreeUtils.getAnnotationValue(annotationNode, "method");
+			String target = targetObj instanceof String ? (String) targetObj : null;
 			if (target != null) {
 				return target;
 			}

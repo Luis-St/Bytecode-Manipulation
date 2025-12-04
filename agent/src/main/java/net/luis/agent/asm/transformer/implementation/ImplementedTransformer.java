@@ -2,10 +2,13 @@ package net.luis.agent.asm.transformer.implementation;
 
 import net.luis.agent.Agent;
 import net.luis.agent.asm.ASMTreeUtils;
+import net.luis.agent.asm.Types;
 import net.luis.agent.asm.base.BaseClassTransformer;
 import net.luis.agent.asm.base.ContextBasedClassVisitor;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.transformer.implementation.InterfaceTransformer.InterfaceInfo;
+import net.luis.agent.asm.type.TypeAccess;
+import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;

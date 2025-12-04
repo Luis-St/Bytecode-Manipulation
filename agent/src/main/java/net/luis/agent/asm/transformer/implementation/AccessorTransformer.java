@@ -19,7 +19,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class AccessorTransformer extends BaseClassTransformer {
 
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<InterfaceTransformer.InterfaceInfo>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
 
 	//region Type filtering
 	@Override
@@ -37,9 +37,9 @@ public class AccessorTransformer extends BaseClassTransformer {
 
 		private static final String REPORT_CATEGORY = "Accessor Implementation Error";
 
-		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
+		private final Map</*Target Class*/String, /*Interfaces*/List<InterfaceTransformer.InterfaceInfo>> lookup;
 
-		private AccessorVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<String>> lookup) {
+		private AccessorVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<InterfaceTransformer.InterfaceInfo>> lookup) {
 			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
@@ -56,11 +56,9 @@ public class AccessorTransformer extends BaseClassTransformer {
 				if (targetClass == null) {
 					return;
 				}
-				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassNode ifaceClass = Agent.getClass(iface);
-					if (ifaceClass == null) {
-						continue;
-					}
+				for (InterfaceTransformer.InterfaceInfo ifaceInfo : this.lookup.get(name)) {
+					ClassNode ifaceClass = ifaceInfo.classNode;
+					Type iface = ifaceInfo.type;
 					for (MethodNode method : ifaceClass.methods) {
 						if (ASMTreeUtils.hasAnnotation(method, ACCESSOR)) {
 							this.validateMethod(method, targetClass, iface);
@@ -165,7 +163,8 @@ public class AccessorTransformer extends BaseClassTransformer {
 		//region Helper methods
 		private @NotNull String getAccessorName(@NotNull MethodNode ifaceMethod, @NotNull Type ifaceType) {
 			AnnotationNode annotation = ASMTreeUtils.getAnnotation(ifaceMethod, ACCESSOR);
-			String target = ASMTreeUtils.getAnnotationValue(annotation, "target");
+			Object targetValue = ASMTreeUtils.getAnnotationValue(annotation, "target");
+			String target = targetValue instanceof String ? (String) targetValue : null;
 			if (target != null) {
 				return target;
 			}

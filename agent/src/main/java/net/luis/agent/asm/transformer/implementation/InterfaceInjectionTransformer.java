@@ -25,7 +25,7 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 	
 	private static final String REPORT_CATEGORY = "Interface Injection Error";
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<InterfaceTransformer.InterfaceInfo>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override
@@ -43,14 +43,15 @@ public class InterfaceInjectionTransformer extends BaseClassTransformer {
 			public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 				if (lookup.containsKey(name)) {
 					ClassType classType = ClassType.fromAccess(access);
-					List<String> injects = lookup.getOrDefault(name, new ArrayList<>());
+					List<InterfaceTransformer.InterfaceInfo> injectsInfo = lookup.getOrDefault(name, new ArrayList<>());
+					List<String> injects = injectsInfo.stream().map(info -> info.type.getInternalName()).toList();
 					if (classType == ClassType.ANNOTATION) {
 						throw CrashReport.create("Cannot inject interfaces into an annotation class", REPORT_CATEGORY).addDetail("Interfaces", injects).exception();
 					} else if (classType == ClassType.INTERFACE) {
 						throw CrashReport.create("Cannot inject interfaces into an interface class", REPORT_CATEGORY).addDetail("Interfaces", injects).exception();
 					}
 					interfaces = Stream.concat(Utils.stream(interfaces), injects.stream()).distinct().toArray(String[]::new);
-					this.updateClass(injects.stream().map(Type::getObjectType).toList());
+					this.updateClass(injectsInfo.stream().map(info -> info.type).toList());
 					this.markModified();
 				}
 				super.visit(version, access, name, signature, superClass, interfaces);

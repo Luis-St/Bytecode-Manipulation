@@ -9,7 +9,10 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
+
+import java.util.List;
 
 import static net.luis.agent.asm.Instrumentations.*;
 import static net.luis.agent.asm.Types.*;
@@ -81,14 +84,14 @@ public class CaughtTransformer extends BaseClassTransformer {
 			this.methodNode = methodNode;
 			AnnotationNode annotation = ASMTreeUtils.getAnnotation(methodNode, CAUGHT);
 			// Enum values are stored as [descriptor, value] arrays in ASM
-			String[] valueEnum = ASMTreeUtils.getAnnotationValue(annotation, "value");
-			if (valueEnum != null && valueEnum.length >= 2) {
-				this.action = CaughtAction.valueOf(valueEnum[1]);
+			Object valueEnum = ASMTreeUtils.getAnnotationValue(annotation, "value");
+			if (valueEnum instanceof String[] && ((String[]) valueEnum).length >= 2) {
+				this.action = CaughtAction.valueOf(((String[]) valueEnum)[1]);
 			} else {
-				this.action = CaughtAction.RETURN; // default value
+				this.action = CaughtAction.DEFAULT; // default value
 			}
-			org.objectweb.asm.Type exceptionTypeValue = ASMTreeUtils.getAnnotationValue(annotation, "exceptionType");
-			this.exceptionType = exceptionTypeValue != null ? exceptionTypeValue : RUNTIME_EXCEPTION;
+			Object exceptionTypeValue = ASMTreeUtils.getAnnotationValue(annotation, "exceptionType");
+			this.exceptionType = exceptionTypeValue instanceof org.objectweb.asm.Type ? (org.objectweb.asm.Type) exceptionTypeValue : RUNTIME_EXCEPTION;
 			this.returnType = ASMTreeUtils.getReturnType(methodNode);
 			if (this.action == CaughtAction.NOTHING && !this.returnType.equals(VOID)) {
 				throw CrashReport.create("Method annotated with @Caught(NOTHING) must return void", REPORT_CATEGORY).addDetail("Method", ASMTreeUtils.getDebugSignature(ownerType, methodNode)).exception();
