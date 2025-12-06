@@ -21,7 +21,7 @@ import static net.luis.agent.asm.Types.*;
 
 public class InvokerTransformer extends BaseClassTransformer {
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
+	private final Map</*Target Class*/String, /*Interfaces*/List<InterfaceTransformer.InterfaceInfo>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
 	
 	//region Type filtering
 	@Override
@@ -39,17 +39,17 @@ public class InvokerTransformer extends BaseClassTransformer {
 		
 		private static final String REPORT_CATEGORY = "Invoker Implementation Error";
 		
-		private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup;
+		private final Map</*Target Class*/String, /*Interfaces*/List<InterfaceTransformer.InterfaceInfo>> lookup;
 		
-		private InvokerVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<String>> lookup) {
+		private InvokerVisitor(@NotNull ClassWriter writer, @NotNull Type type, @NotNull Runnable markModified, @NotNull Map<String, List<InterfaceTransformer.InterfaceInfo>> lookup) {
 			super(writer, type, markModified);
 			this.lookup = lookup;
 		}
-		
+
 		private static @NotNull CrashReport createReport(@NotNull String message, @NotNull Type iface, @NotNull String methodSignature) {
 			return CrashReport.create(message, REPORT_CATEGORY).addDetail("Interface", iface).addDetail("Interface Method", methodSignature);
 		}
-		
+
 		@Override
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
@@ -59,11 +59,9 @@ public class InvokerTransformer extends BaseClassTransformer {
 				if (targetClass == null) {
 					return;
 				}
-				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					ClassNode ifaceClass = Agent.getClass(iface);
-					if (ifaceClass == null) {
-						continue;
-					}
+				for (InterfaceTransformer.InterfaceInfo ifaceInfo : this.lookup.get(name)) {
+					ClassNode ifaceClass = ifaceInfo.classNode;
+					Type iface = ifaceInfo.type;
 					for (MethodNode method : ifaceClass.methods) {
 						if (ASMTreeUtils.hasAnnotation(method, INVOKER)) {
 							this.validateMethod(method, targetClass);
@@ -188,7 +186,8 @@ public class InvokerTransformer extends BaseClassTransformer {
 
 		private @NotNull String getInvokerName(@NotNull MethodNode ifaceMethod) {
 			AnnotationNode annotation = ASMTreeUtils.getAnnotation(ifaceMethod, INVOKER);
-			String target = ASMTreeUtils.getAnnotationValue(annotation, "target");
+			Object targetValue = ASMTreeUtils.getAnnotationValue(annotation, "target");
+			String target = targetValue instanceof String ? (String) targetValue : null;
 			if (target != null) {
 				return target;
 			}

@@ -37,8 +37,16 @@ public class ModifyTransformer extends BaseClassTransformer {
 	
 	private static final String REPORT_CATEGORY = "Modify Implementation Error";
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
-	
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = convertLookup(InterfaceTransformer.createLookup(INJECT_INTERFACE));
+
+	private static Map<String, List<String>> convertLookup(Map<String, List<InterfaceTransformer.InterfaceInfo>> infoLookup) {
+		Map<String, List<String>> result = new HashMap<>();
+		for (Map.Entry<String, List<InterfaceTransformer.InterfaceInfo>> entry : infoLookup.entrySet()) {
+			result.put(entry.getKey(), entry.getValue().stream().map(info -> info.type.getInternalName()).toList());
+		}
+		return result;
+	}
+
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {

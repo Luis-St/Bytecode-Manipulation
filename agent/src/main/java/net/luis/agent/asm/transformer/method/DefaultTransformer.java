@@ -116,11 +116,12 @@ public class DefaultTransformer extends BaseClassTransformer {
 		//region Helper methods
 		private @NotNull Type getFactory(@NotNull ParameterInfo parameter) {
 			Object factoryValue = ASMTreeUtils.getAnnotationValue(parameter.annotation, "factory");
-			Type factory = factoryValue != null ? (org.objectweb.asm.Type) factoryValue : null;
-			if (factory == null) {
-				throw CrashReport.create("Missing factory in @Default annotation", REPORT_CATEGORY)
-					.addDetail("Method", ASMTreeUtils.getDebugSignature(this.ownerType, this.methodNode))
-					.addDetail("Parameter Index", parameter.index).exception();
+			Type factory;
+			if (factoryValue instanceof org.objectweb.asm.Type) {
+				factory = (org.objectweb.asm.Type) factoryValue;
+			} else {
+				// Use default value from annotation definition when not explicitly set
+				factory = org.objectweb.asm.Type.getType("Lnet/luis/agent/util/factory/StringFactoryRegistry;");
 			}
 
 			ClassNode factoryClass = Agent.getClass(factory);
