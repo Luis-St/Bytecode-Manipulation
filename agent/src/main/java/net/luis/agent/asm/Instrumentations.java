@@ -258,13 +258,48 @@ public class Instrumentations {
 			instrumentAnnotation(visitor.visitAnnotation(annotation.getType().getDescriptor(), true), annotation);
 		});
 	}
-	
+
 	public static void instrumentParameterAnnotations(@NotNull MethodVisitor visitor, @NotNull Method method) {
 		method.getParameters().values().forEach(parameter -> {
 			parameter.getAnnotations().values().forEach(annotation -> {
 				instrumentAnnotation(visitor.visitParameterAnnotation(parameter.getIndex(), annotation.getType().getDescriptor(), true), annotation);
 			});
 		});
+	}
+
+	// Overloaded methods for MethodNode (ASM Tree API)
+	public static void instrumentMethodAnnotations(@NotNull MethodVisitor visitor, @NotNull org.objectweb.asm.tree.MethodNode methodNode) {
+		if (methodNode.visibleAnnotations != null) {
+			for (org.objectweb.asm.tree.AnnotationNode annotation : methodNode.visibleAnnotations) {
+				visitor.visitAnnotation(annotation.desc, true);
+			}
+		}
+		if (methodNode.invisibleAnnotations != null) {
+			for (org.objectweb.asm.tree.AnnotationNode annotation : methodNode.invisibleAnnotations) {
+				visitor.visitAnnotation(annotation.desc, false);
+			}
+		}
+	}
+
+	public static void instrumentParameterAnnotations(@NotNull MethodVisitor visitor, @NotNull org.objectweb.asm.tree.MethodNode methodNode) {
+		if (methodNode.visibleParameterAnnotations != null) {
+			for (int i = 0; i < methodNode.visibleParameterAnnotations.length; i++) {
+				if (methodNode.visibleParameterAnnotations[i] != null) {
+					for (org.objectweb.asm.tree.AnnotationNode annotation : methodNode.visibleParameterAnnotations[i]) {
+						visitor.visitParameterAnnotation(i, annotation.desc, true);
+					}
+				}
+			}
+		}
+		if (methodNode.invisibleParameterAnnotations != null) {
+			for (int i = 0; i < methodNode.invisibleParameterAnnotations.length; i++) {
+				if (methodNode.invisibleParameterAnnotations[i] != null) {
+					for (org.objectweb.asm.tree.AnnotationNode annotation : methodNode.invisibleParameterAnnotations[i]) {
+						visitor.visitParameterAnnotation(i, annotation.desc, false);
+					}
+				}
+			}
+		}
 	}
 	//endregion
 	

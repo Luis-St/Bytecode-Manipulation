@@ -37,7 +37,29 @@ public class SignatureUtils {
 		ScopedStringReader inner = new ScopedStringReader(reader.readScope(ScopedStringReader.PARENTHESES).replace("[", "\\["));
 		inner.skip();
 		while (inner.canRead() && inner.peek() != ')') {
-			parameters.add(inner.readUntil(';') + ";");
+			char c = inner.peek();
+			// Handle primitive types (ZBCSIJFD) which don't end with ';'
+			if (c == 'Z' || c == 'B' || c == 'C' || c == 'S' || c == 'I' || c == 'J' || c == 'F' || c == 'D' || c == 'V') {
+				parameters.add(String.valueOf(inner.read()));
+			} else if (c == '[') {
+				// Handle arrays - read the '[' and then the component type
+				StringBuilder arrayParam = new StringBuilder();
+				while (inner.peek() == '[') {
+					arrayParam.append(inner.read());
+				}
+				char component = inner.peek();
+				if (component == 'Z' || component == 'B' || component == 'C' || component == 'S' || component == 'I' || component == 'J' || component == 'F' || component == 'D') {
+					arrayParam.append(inner.read());
+					parameters.add(arrayParam.toString());
+				} else {
+					// Reference type array
+					arrayParam.append(inner.readUntil(';')).append(';');
+					parameters.add(arrayParam.toString());
+				}
+			} else {
+				// Reference types end with ';'
+				parameters.add(inner.readUntil(';') + ";");
+			}
 		}
 		return parameters;
 	}
@@ -48,22 +70,26 @@ public class SignatureUtils {
 	
 	private static @NotNull ActualType parseSignatureParameter(@NotNull Map<String, GenericDeclaration> generics, @NotNull String parameter, boolean escaped) {
 		if (!parameter.contains("<") && !parameter.contains(">")) {
-			if (parameter.charAt(0) == '[') {
+			char first = parameter.charAt(0);
+			if (first == '[') {
 				int dimensions = 0;
 				while (parameter.charAt(dimensions) == '[') {
 					dimensions++;
 				}
 				return ActualType.flatDown("[".repeat(dimensions), parseSignatureParameter(generics, parameter.substring(dimensions), false));
-			} else if (parameter.charAt(0) == '-' || parameter.charAt(0) == '+') {
+			} else if (first == '-' || first == '+') {
 				return ActualType.flatDown(parseSignatureParameter(generics, parameter.substring(1), false));
-			} else if (parameter.charAt(0) == 'T') {
+			} else if (first == 'T') {
 				String name = parameter.substring(1, parameter.length() - 1);
 				GenericDeclaration generic = generics.get(name);
 				if (generic == null) {
 					throw new IllegalArgumentException("Found generic parameter which was not previously declared: '" + name + "'");
 				}
 				return parseGenericSignatureParameter(generic);
-			} else if (parameter.charAt(0) == 'L') {
+			} else if (first == 'L') {
+				return ActualType.of(Type.getType(parameter));
+			} else if (first == 'Z' || first == 'B' || first == 'C' || first == 'S' || first == 'I' || first == 'J' || first == 'F' || first == 'D' || first == 'V') {
+				// Handle primitive types
 				return ActualType.of(Type.getType(parameter));
 			}
 			throw new IllegalArgumentException("Unknown parameter declaration: '" + parameter + "'");

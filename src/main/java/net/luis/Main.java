@@ -68,7 +68,7 @@ public final class Main {
 		execute("ls", null, null, null);
 		parseUUID("550e8400-e29b-41d4-a716-446655440000");
 		validateIndex(1);
-		async(1, "Hello World!", Arrays.asList("Hello", "World", "!"));
+		async(1, "Hello World!", /*Arrays.asList("Hello", "World", "!")*/null);
 		caught();
 		System.out.println(StringUtils.levenshteinDistance("Hello", "World"));
 		LoggerConfiguration logger = new LoggerConfiguration("*");
@@ -137,7 +137,7 @@ public final class Main {
 		throw new RuntimeException("Caught Exception");
 	}
 	
-	@Scheduled(5000)
+	@Scheduled(100)
 	public static void scheduled(int count, @NotNull ScheduledFuture<?> future) {
 		System.out.println(count + " " + future);
 	}

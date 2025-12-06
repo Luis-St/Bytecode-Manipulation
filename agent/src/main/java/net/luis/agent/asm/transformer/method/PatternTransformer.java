@@ -1,9 +1,8 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
+import net.luis.agent.asm.ASMTreeUtils;
 import net.luis.agent.asm.base.*;
-import net.luis.agent.asm.data.Class;
-import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.report.ReportedException;
 import net.luis.agent.asm.type.*;
@@ -11,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
+import org.objectweb.asm.tree.*;
 
 import java.util.*;
 import java.util.function.UnaryOperator;
@@ -26,103 +26,172 @@ import static net.luis.agent.asm.Types.*;
  */
 
 public class PatternTransformer extends BaseClassTransformer {
-	
-	private final Map<Type, String> lookup = Agent.stream().filter(clazz -> clazz.is(ClassType.ANNOTATION) && clazz.isAnnotatedWith(PATTERN))
-		.collect(Collectors.toMap(Class::getType, clazz -> Objects.requireNonNull(clazz.getAnnotation(PATTERN).get("value"))));
-	
+
+	private final Map<Type, String> lookup;
+
 	public PatternTransformer() {
 		super(true);
+		// Build lookup map by scanning all annotation classes with @Pattern
+		this.lookup = Agent.stream()
+			.map(ASMTreeUtils::getType)
+			.map(Agent::getClass)
+			.filter(Objects::nonNull)
+			.filter(classNode -> ASMTreeUtils.is(classNode, ClassType.ANNOTATION) && ASMTreeUtils.hasAnnotation(classNode, PATTERN))
+			.collect(Collectors.toMap(ASMTreeUtils::getType, classNode -> {
+				AnnotationNode annotation = ASMTreeUtils.getAnnotation(classNode, PATTERN);
+				Object value = ASMTreeUtils.getAnnotationValue(annotation, "value");
+				return Objects.requireNonNull((String) value);
+			}));
 	}
-	
+
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		Class clazz = Agent.getClass(type);
+		ClassNode classNode = Agent.getClass(type);
+		if (classNode == null) {
+			return true;
+		}
 		Type[] annotations = this.lookup.keySet().toArray(Type[]::new);
-		return clazz.getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(PATTERN) || method.isAnnotatedWithAny(annotations)) &&
-			clazz.getParameters().stream().noneMatch(parameter -> parameter.isAnnotatedWith(PATTERN) || parameter.isAnnotatedWithAny(annotations));
+
+		// Check if any method has @Pattern or any pattern annotation
+		for (MethodNode method : classNode.methods) {
+			if (ASMTreeUtils.hasAnnotation(method, PATTERN)) {
+				return false;
+			}
+			for (Type annotationType : annotations) {
+				if (ASMTreeUtils.hasAnnotation(method, annotationType)) {
+					return false;
+				}
+			}
+			// Check parameters
+			if (ASMTreeUtils.hasAnyParameterWithAnnotation(method, PATTERN)) {
+				return false;
+			}
+			for (Type annotationType : annotations) {
+				if (ASMTreeUtils.hasAnyParameterWithAnnotation(method, annotationType)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	//endregion
-	
+
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new PatternClassVisitor(writer, type, this.lookup, () -> this.modified = true);
 	}
-	
+
 	private static class PatternClassVisitor extends MethodOnlyClassVisitor {
-		
+
 		private final Map<Type, String> lookup;
-		
+
 		private PatternClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Map<Type, String> lookup, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
 			this.lookup = lookup;
 		}
-		
+
 		@Override
-		protected boolean isMethodValid(@NotNull Method method) {
-			if (!super.isMethodValid(method)) {
+		protected boolean isMethodValid(@NotNull MethodNode methodNode) {
+			if (!super.isMethodValid(methodNode)) {
 				return false;
 			}
-			if (method.isAnnotatedWith(PATTERN) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWith(PATTERN))) {
+
+			// Check method annotation
+			if (ASMTreeUtils.hasAnnotation(methodNode, PATTERN)) {
 				return true;
 			}
 			Type[] annotations = this.lookup.keySet().toArray(Type[]::new);
-			return method.isAnnotatedWithAny(annotations) || method.getParameters().values().stream().anyMatch(parameter -> parameter.isAnnotatedWithAny(annotations));
+			for (Type annotationType : annotations) {
+				if (ASMTreeUtils.hasAnnotation(methodNode, annotationType)) {
+					return true;
+				}
+			}
+
+			// Check parameter annotations
+			if (ASMTreeUtils.hasAnyParameterWithAnnotation(methodNode, PATTERN)) {
+				return true;
+			}
+			for (Type annotationType : annotations) {
+				if (ASMTreeUtils.hasAnyParameterWithAnnotation(methodNode, annotationType)) {
+					return true;
+				}
+			}
+
+			return false;
 		}
-		
+
 		@Override
-		protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method) {
-			return new PatternMethodVisitor(visitor, method, this.lookup);
+		protected @NotNull MethodVisitor createMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull MethodNode methodNode) {
+			return new PatternMethodVisitor(visitor, this.type, methodNode, this.lookup);
 		}
 	}
-	
+
 	private static class PatternMethodVisitor extends LabelTrackingMethodVisitor {
-		
+
 		private static final String REPORT_CATEGORY = "Invalid Annotated Element";
-		
+
+		private final Type ownerType;
+		private final MethodNode methodNode;
 		private final Map<Type, String> lookup;
-		
-		private PatternMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Method method, @NotNull Map<Type, String> lookup) {
+		private final List<ParameterInfo> parameters = new ArrayList<>();
+
+		private PatternMethodVisitor(@NotNull LocalVariablesSorter visitor, @NotNull Type ownerType, @NotNull MethodNode methodNode, @NotNull Map<Type, String> lookup) {
 			super(visitor);
-			this.method = method;
+			this.ownerType = ownerType;
+			this.methodNode = methodNode;
 			this.lookup = lookup;
-			this.validate(method);
-			method.getParameters().values().forEach(this::validate);
+
+			// Validate method annotation
+			this.validateMethod();
+
+			// Collect and validate parameters
+			Type[] paramTypes = ASMTreeUtils.getParameterTypes(methodNode);
+			for (int i = 0; i < paramTypes.length; i++) {
+				AnnotationNode annotation = this.getParameterAnnotation(i);
+				if (annotation != null) {
+					this.validateParameter(i, paramTypes[i], annotation);
+					int loadIndex = ASMTreeUtils.getParameterLoadIndex(methodNode, i);
+					String paramName = getParameterName(i);
+					this.parameters.add(new ParameterInfo(i, loadIndex, paramTypes[i], paramName, annotation));
+				}
+			}
 		}
-		
+
+		private static @NotNull String getParameterName(int paramIndex) {
+			return "arg" + paramIndex;
+		}
+
 		@Override
 		public void visitCode() {
 			this.mv.visitCode();
-			for (Parameter parameter : this.method.getParameters().values()) {
-				Annotation annotation = this.getAnnotation(parameter);
-				if (annotation == null) {
-					continue;
-				}
+			for (ParameterInfo parameter : this.parameters) {
 				Label label = new Label();
-				String value = this.getPattern(annotation);
-				
-				instrumentPatternCheck(this.mv, value, parameter.getLoadIndex(), label);
+				String value = this.getPattern(parameter.annotation);
+
+				instrumentPatternCheck(this.mv, value, parameter.loadIndex, label);
 				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, parameter.getMessageName() + " must match pattern '" + value + "'");
-				
+
 				this.mv.visitJumpInsn(Opcodes.GOTO, label);
 				this.insertLabel(label);
 			}
 		}
-		
+
 		@Override
 		public void visitInsn(int opcode) {
-			Annotation annotation = this.getAnnotation(this.method);
-			if (opcode == Opcodes.ARETURN && this.method.is(MethodType.METHOD) && annotation != null) {
+			AnnotationNode annotation = this.getMethodAnnotation();
+			if (opcode == Opcodes.ARETURN && ASMTreeUtils.is(this.methodNode, MethodType.METHOD) && annotation != null) {
 				String value = this.getPattern(annotation);
 				Label start = new Label();
 				Label end = new Label();
-				int local = newLocal(this.mv, this.method.getReturnType());
+				Type returnType = ASMTreeUtils.getReturnType(this.methodNode);
+				int local = newLocal(this.mv, returnType);
 				this.mv.visitVarInsn(Opcodes.ASTORE, local);
 				this.insertLabel(start);
-				
+
 				instrumentPatternCheck(this.mv, value, local, end);
-				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "Method " + this.method.getOwner().getClassName() + "#" + this.method.getName() + " return value must match pattern '" + value + "'");
-				
+				instrumentThrownException(this.mv, ILLEGAL_ARGUMENT_EXCEPTION, "Method " + this.ownerType.getClassName() + "#" + this.methodNode.name + " return value must match pattern '" + value + "'");
+
 				this.mv.visitJumpInsn(Opcodes.GOTO, end);
 				this.insertLabel(end);
 				this.mv.visitVarInsn(Opcodes.ALOAD, local);
@@ -130,62 +199,146 @@ public class PatternTransformer extends BaseClassTransformer {
 			}
 			this.mv.visitInsn(opcode);
 		}
-		
+
 		//region Helper methods
-		private void validate(@NotNull ASMData data) {
-			long count = data.getAnnotations().keySet().stream().filter(this.lookup::containsKey).count();
-			if (data.getAnnotations().containsKey(PATTERN)) {
-				count++;
-			}
-			if (0 >= count) {
+		private void validateMethod() {
+			long count = this.countMethodAnnotations();
+			if (count == 0) {
 				return;
 			}
 			if (count > 1) {
-				throw this.createReport(data, type -> "A " + type + " can not be annotated with multiple pattern annotations");
+				throw this.createMethodReport("A method can not be annotated with multiple pattern annotations");
 			}
-			if (data instanceof Parameter parameter) {
-				if (!parameter.getType().equals(STRING)) {
-					throw this.createReport(parameter, type -> "Parameter annotated with pattern annotation must be of type string");
-				}
-			} else if (data instanceof Method method) {
-				if (!method.is(MethodType.METHOD)) {
-					throw CrashReport.create("Pattern annotation can not be applied to constructors and static initializers", REPORT_CATEGORY).addDetail("Method", this.method.getName()).exception();
-				}
-				if (!method.returns(STRING)) {
-					throw this.createReport(method, type -> "Method annotated with pattern annotation must return a string");
-				}
+
+			if (!ASMTreeUtils.is(this.methodNode, MethodType.METHOD)) {
+				throw CrashReport.create("Pattern annotation can not be applied to constructors and static initializers", REPORT_CATEGORY)
+					.addDetail("Method", this.methodNode.name).exception();
+			}
+			if (!ASMTreeUtils.returns(this.methodNode, STRING)) {
+				throw this.createMethodReport("Method annotated with pattern annotation must return a string");
 			}
 		}
-		
-		private @Nullable Annotation getAnnotation(@NotNull ASMData data) {
-			if (data.getAnnotations().containsKey(PATTERN)) {
-				return data.getAnnotation(PATTERN);
+
+		private void validateParameter(int index, @NotNull Type paramType, @NotNull AnnotationNode annotation) {
+			long count = this.countParameterAnnotations(index);
+			if (count > 1) {
+				throw this.createParameterReport(index, paramType, "A parameter can not be annotated with multiple pattern annotations");
+			}
+			if (!paramType.equals(STRING)) {
+				throw this.createParameterReport(index, paramType, "Parameter annotated with pattern annotation must be of type string");
+			}
+		}
+
+		private long countMethodAnnotations() {
+			long count = ASMTreeUtils.hasAnnotation(this.methodNode, PATTERN) ? 1 : 0;
+			for (Type annotationType : this.lookup.keySet()) {
+				if (ASMTreeUtils.hasAnnotation(this.methodNode, annotationType)) {
+					count++;
+				}
+			}
+			return count;
+		}
+
+		private long countParameterAnnotations(int paramIndex) {
+			long count = ASMTreeUtils.hasParameterAnnotation(this.methodNode, paramIndex, PATTERN) ? 1 : 0;
+			for (Type annotationType : this.lookup.keySet()) {
+				if (ASMTreeUtils.hasParameterAnnotation(this.methodNode, paramIndex, annotationType)) {
+					count++;
+				}
+			}
+			return count;
+		}
+
+		private @Nullable AnnotationNode getMethodAnnotation() {
+			AnnotationNode annotation = ASMTreeUtils.getAnnotation(this.methodNode, PATTERN);
+			if (annotation != null) {
+				return annotation;
+			}
+			for (Type annotationType : this.lookup.keySet()) {
+				annotation = ASMTreeUtils.getAnnotation(this.methodNode, annotationType);
+				if (annotation != null) {
+					return annotation;
+				}
+			}
+			return null;
+		}
+
+		private @Nullable AnnotationNode getParameterAnnotation(int paramIndex) {
+			AnnotationNode annotation = ASMTreeUtils.getParameterAnnotation(this.methodNode, paramIndex, PATTERN);
+			if (annotation != null) {
+				return annotation;
+			}
+			for (Type annotationType : this.lookup.keySet()) {
+				annotation = ASMTreeUtils.getParameterAnnotation(this.methodNode, paramIndex, annotationType);
+				if (annotation != null) {
+					return annotation;
+				}
+			}
+			return null;
+		}
+
+		private @NotNull String getPattern(@NotNull AnnotationNode annotation) {
+			Type annotationType = Type.getType(annotation.desc);
+			if (annotationType.equals(PATTERN)) {
+				Object value = ASMTreeUtils.getAnnotationValue(annotation, "value");
+				return Objects.requireNonNull((String) value);
 			} else {
-				return data.getAnnotations().values().stream().filter(annotation -> this.lookup.containsKey(annotation.getType())).findFirst().orElse(null);
+				return Objects.requireNonNull(this.lookup.get(annotationType));
 			}
 		}
-		
-		private @NotNull String getPattern(@NotNull Annotation annotation) {
-			if (annotation.getType().equals(PATTERN)) {
-				return Objects.requireNonNull(annotation.get("value"));
-			} else {
-				return Objects.requireNonNull(this.lookup.get(annotation.getType()));
+
+		private @NotNull ReportedException createMethodReport(@NotNull String message) {
+			List<Type> annotations = new ArrayList<>();
+			if (ASMTreeUtils.hasAnnotation(this.methodNode, PATTERN)) {
+				annotations.add(PATTERN);
 			}
+			for (Type annotationType : this.lookup.keySet()) {
+				if (ASMTreeUtils.hasAnnotation(this.methodNode, annotationType)) {
+					annotations.add(annotationType);
+				}
+			}
+			return CrashReport.create(message, REPORT_CATEGORY)
+				.addDetail("Method", ASMTreeUtils.getDebugSignature(this.ownerType, this.methodNode))
+				.addDetail("Pattern Annotations", annotations).exception();
 		}
-		
-		private @NotNull ReportedException createReport(@NotNull ASMData data, UnaryOperator<String> message) {
-			List<Type> annotations = data.getAnnotations().keySet().stream().filter(this.lookup::containsKey).collect(Collectors.toList());
-			if (data.getAnnotations().containsKey(PATTERN)) {
-				annotations.addFirst(PATTERN);
+
+		private @NotNull ReportedException createParameterReport(int paramIndex, @NotNull Type paramType, @NotNull String message) {
+			List<Type> annotations = new ArrayList<>();
+			if (ASMTreeUtils.hasParameterAnnotation(this.methodNode, paramIndex, PATTERN)) {
+				annotations.add(PATTERN);
 			}
-			if (data instanceof Method) {
-				return CrashReport.create(message.apply("method"), REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Pattern Annotations", annotations).exception();
-			} else if (data instanceof Parameter parameter) {
-				return CrashReport.create(message.apply("parameter"), REPORT_CATEGORY).addDetail("Method", this.method.getSignature(SignatureType.DEBUG)).addDetail("Parameter Index", parameter.getIndex())
-					.addDetail("Parameter Type", parameter.getType()).addDetail("Parameter Name", parameter.getName()).addDetail("Pattern Annotations", annotations).exception();
+			for (Type annotationType : this.lookup.keySet()) {
+				if (ASMTreeUtils.hasParameterAnnotation(this.methodNode, paramIndex, annotationType)) {
+					annotations.add(annotationType);
+				}
 			}
-			throw new IllegalArgumentException("Invalid data type, expected Method or Parameter but got " + data.getClass().getSimpleName());
+			return CrashReport.create(message, REPORT_CATEGORY)
+				.addDetail("Method", ASMTreeUtils.getDebugSignature(this.ownerType, this.methodNode))
+				.addDetail("Parameter Index", paramIndex)
+				.addDetail("Parameter Type", paramType)
+				.addDetail("Parameter Name", getParameterName(paramIndex))
+				.addDetail("Pattern Annotations", annotations).exception();
 		}
 		//endregion
+
+		private static class ParameterInfo {
+			private final int index;
+			private final int loadIndex;
+			private final Type type;
+			private final String name;
+			private final AnnotationNode annotation;
+
+			private ParameterInfo(int index, int loadIndex, @NotNull Type type, @NotNull String name, @NotNull AnnotationNode annotation) {
+				this.index = index;
+				this.loadIndex = loadIndex;
+				this.type = type;
+				this.name = name;
+				this.annotation = annotation;
+			}
+
+			private @NotNull String getMessageName() {
+				return this.name.equals("arg" + this.index) ? "Parameter " + this.index : this.name;
+			}
+		}
 	}
 }

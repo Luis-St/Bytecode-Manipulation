@@ -7,6 +7,7 @@ import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.scanner.ClassFileScanner;
+import net.luis.agent.asm.scanner.ClassScanner;
 import net.luis.agent.asm.scanner.TargetClassScanner;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.Utils;
@@ -14,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.*;
 
@@ -30,8 +32,16 @@ public class InjectTransformer extends BaseClassTransformer {
 	
 	private static final String IMPLEMENTATION_ERROR = "Inject Implementation Error";
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
-	
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = convertLookup(InterfaceTransformer.createLookup(INJECT_INTERFACE));
+
+	private static Map<String, List<String>> convertLookup(Map<String, List<InterfaceTransformer.InterfaceInfo>> infoLookup) {
+		Map<String, List<String>> result = new HashMap<>();
+		for (Map.Entry<String, List<InterfaceTransformer.InterfaceInfo>> entry : infoLookup.entrySet()) {
+			result.put(entry.getKey(), entry.getValue().stream().map(info -> info.type.getInternalName()).toList());
+		}
+		return result;
+	}
+
 	public InjectTransformer() {
 		super(true);
 	}
@@ -66,9 +76,13 @@ public class InjectTransformer extends BaseClassTransformer {
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
-				Class targetClass = Agent.getClass(Type.getObjectType(name));
+				ClassScanner targetScanner = new ClassScanner();
+				ClassFileScanner.scanClass(Type.getObjectType(name), targetScanner);
+				Class targetClass = targetScanner.get();
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = Agent.getClass(iface);
+					ClassScanner ifaceScanner = new ClassScanner();
+					ClassFileScanner.scanClass(iface, ifaceScanner);
+					Class ifaceClass = ifaceScanner.get();
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(INJECT)) {
 							this.validateMethod(method, targetClass);
@@ -102,7 +116,8 @@ public class InjectTransformer extends BaseClassTransformer {
 					.addDetail("Existing Method", existingMethod.getSignature(SignatureType.DEBUG)).exception();
 			}
 			String injectName = this.getInjectName(ifaceMethod);
-			List<Method> possibleMethod = ASMUtils.getBySignature(injectName, targetClass);
+			List<MethodNode> possibleMethodNodes = ASMUtils.getBySignature(injectName, Agent.getClass(targetClass.getType()));
+			List<Method> possibleMethod = possibleMethodNodes.stream().map(mn -> targetClass.getMethod(mn.name + mn.desc)).toList();
 			if (possibleMethod.isEmpty()) {
 				throw CrashReport.create("Could not find method specified in inject", IMPLEMENTATION_ERROR).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Inject", signature).addDetail("Method", injectName)
 					.addDetail("Possible Methods", targetClass.getMethods(this.getRawInjectName(injectName)).stream().map(Method::toString).toList()).exception();

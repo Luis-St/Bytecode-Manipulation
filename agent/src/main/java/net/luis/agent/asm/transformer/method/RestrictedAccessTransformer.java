@@ -1,15 +1,18 @@
 package net.luis.agent.asm.transformer.method;
 
 import net.luis.agent.Agent;
+import net.luis.agent.asm.ASMTreeUtils;
 import net.luis.agent.asm.base.*;
-import net.luis.agent.asm.data.Annotation;
-import net.luis.agent.asm.data.Method;
 import net.luis.agent.asm.type.TypeModifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.LocalVariablesSorter;
+import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,64 +26,67 @@ import static net.luis.agent.asm.Types.*;
  */
 
 public class RestrictedAccessTransformer extends BaseClassTransformer {
-	
+
 	public RestrictedAccessTransformer() {
 		super(true);
 	}
-	
+
 	//region Type filtering
 	@Override
 	protected boolean shouldIgnoreClass(@NotNull Type type) {
-		return Agent.getClass(type).getMethods().values().stream().noneMatch(method -> method.isAnnotatedWith(RESTRICTED_ACCESS));
+		ClassNode classNode = Agent.getClass(type);
+		return classNode.methods.stream().noneMatch(method -> ASMTreeUtils.hasAnnotation(method, RESTRICTED_ACCESS));
 	}
 	//endregion
-	
+
 	@Override
 	protected @NotNull ClassVisitor visit(@NotNull Type type, @NotNull ClassWriter writer) {
 		return new RestrictedAccessClassVisitor(writer, type, () -> this.modified = true);
 	}
-	
+
 	private static class RestrictedAccessClassVisitor extends ContextBasedClassVisitor {
-		
+
 		private RestrictedAccessClassVisitor(@NotNull ClassVisitor visitor, @NotNull Type type, @NotNull Runnable markModified) {
 			super(visitor, type, markModified);
 		}
-		
+
 		@Override
 		public @NotNull MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
-			Method method = Agent.getClass(this.type).getMethod(name + descriptor);
+			ClassNode classNode = Agent.getClass(this.type);
+			MethodNode method = ASMTreeUtils.getMethod(classNode, name + descriptor);
 			MethodVisitor visitor = this.cv.visitMethod(access, name, descriptor, signature, exceptions);
-			if (method == null || method.is(TypeModifier.ABSTRACT) || !method.isAnnotatedWith(RESTRICTED_ACCESS)) {
+			if (method == null || ASMTreeUtils.is(method, TypeModifier.ABSTRACT) || !ASMTreeUtils.hasAnnotation(method, RESTRICTED_ACCESS)) {
 				return visitor;
 			}
-			
-			return new RestrictedAccessMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), method);
+
+			return new RestrictedAccessMethodVisitor(new LocalVariablesSorter(access, descriptor, visitor), this.type, method);
 		}
-		
+
 		@Override
 		public void visitEnd() {
 			this.markModified();
 			this.cv.visitEnd();
 		}
 	}
-	
+
 	private static class RestrictedAccessMethodVisitor extends LabelTrackingMethodVisitor {
-		
+
 		private static final Type STACK_TRACE_ARRAY = Type.getType("[Ljava/lang/StackTraceElement;");
 		private static final Type RUNTIME_EXCEPTION = Type.getType("Ljava/lang/RuntimeException;");
-		
+
 		private final Type type;
-		private final Method method;
+		private final String methodName;
 		private final List<String> values;
 		private final boolean pattern;
-		
-		private RestrictedAccessMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Method method) {
+
+		private RestrictedAccessMethodVisitor(@NotNull MethodVisitor visitor, @NotNull Type ownerType, @NotNull MethodNode methodNode) {
 			super(visitor);
-			this.method = method;
-			this.type = method.getOwner();
-			Annotation annotation = method.getAnnotation(RESTRICTED_ACCESS);
-			this.values = Objects.requireNonNull(annotation.get("value"));
-			this.pattern = Boolean.TRUE.equals(annotation.get("pattern"));
+			this.method = methodNode;
+			this.type = ownerType;
+			this.methodName = methodNode.name;
+			AnnotationNode annotation = ASMTreeUtils.getAnnotation(methodNode, RESTRICTED_ACCESS);
+			this.values = Objects.requireNonNull(ASMTreeUtils.getAnnotationValue(annotation, "value", Collections.<String>emptyList()));
+			this.pattern = ASMTreeUtils.getAnnotationValue(annotation, "pattern", Boolean.FALSE);
 		}
 		
 		@Override
@@ -144,9 +150,9 @@ public class RestrictedAccessTransformer extends BaseClassTransformer {
 		//region Helper methods
 		private @NotNull String getMessage() {
 			if (this.values.isEmpty()) {
-				return "Method '" + this.type.getClassName() + "#" + this.method.getName() + "' is not callable";
+				return "Method '" + this.type.getClassName() + "#" + this.methodName + "' is not callable";
 			}
-			String base = "Method '" + this.type.getClassName() + "#" + this.method.getName() + "' has restricted access, ";
+			String base = "Method '" + this.type.getClassName() + "#" + this.methodName + "' has restricted access, ";
 			if (this.pattern) {
 				return base + "the caller must match one of the following patterns: '" + String.join("', '", this.values) + "'";
 			}

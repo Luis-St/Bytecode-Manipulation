@@ -7,6 +7,7 @@ import net.luis.agent.asm.data.Class;
 import net.luis.agent.asm.data.*;
 import net.luis.agent.asm.report.CrashReport;
 import net.luis.agent.asm.scanner.ClassFileScanner;
+import net.luis.agent.asm.scanner.ClassScanner;
 import net.luis.agent.asm.scanner.TargetClassScanner;
 import net.luis.agent.asm.type.*;
 import net.luis.agent.util.TargetType;
@@ -14,6 +15,7 @@ import net.luis.agent.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.*;
 
@@ -28,8 +30,16 @@ public class RedirectTransformer extends BaseClassTransformer {
 	
 	private static final String REPORT_CATEGORY = "Redirect Implementation Error";
 	
-	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = InterfaceTransformer.createLookup(INJECT_INTERFACE);
-	
+	private final Map</*Target Class*/String, /*Interfaces*/List<String>> lookup = convertLookup(InterfaceTransformer.createLookup(INJECT_INTERFACE));
+
+	private static Map<String, List<String>> convertLookup(Map<String, List<InterfaceTransformer.InterfaceInfo>> infoLookup) {
+		Map<String, List<String>> result = new HashMap<>();
+		for (Map.Entry<String, List<InterfaceTransformer.InterfaceInfo>> entry : infoLookup.entrySet()) {
+			result.put(entry.getKey(), entry.getValue().stream().map(info -> info.type.getInternalName()).toList());
+		}
+		return result;
+	}
+
 	public RedirectTransformer() {
 		super(true);
 	}
@@ -64,9 +74,13 @@ public class RedirectTransformer extends BaseClassTransformer {
 		public void visit(int version, int access, @NotNull String name, @Nullable String signature, @Nullable String superClass, String @Nullable [] interfaces) {
 			super.visit(version, access, name, signature, superClass, interfaces);
 			if (this.lookup.containsKey(name)) {
-				Class targetClass = Agent.getClass(Type.getObjectType(name));
+				ClassScanner targetScanner = new ClassScanner();
+				ClassFileScanner.scanClass(Type.getObjectType(name), targetScanner);
+				Class targetClass = targetScanner.get();
 				for (Type iface : this.lookup.get(name).stream().map(Type::getObjectType).toList()) {
-					Class ifaceClass = Agent.getClass(iface);
+					ClassScanner ifaceScanner = new ClassScanner();
+					ClassFileScanner.scanClass(iface, ifaceScanner);
+					Class ifaceClass = ifaceScanner.get();
 					for (Method method : ifaceClass.getMethods().values()) {
 						if (method.isAnnotatedWith(REDIRECT)) {
 							this.validateMethod(method, targetClass);
@@ -102,16 +116,17 @@ public class RedirectTransformer extends BaseClassTransformer {
 					.addDetail("Existing Method", existingMethod.getSignature(SignatureType.DEBUG)).exception();
 			}
 			String redirectName = this.getRedirectName(ifaceMethod);
-			List<Method> possibleMethod = ASMUtils.getBySignature(redirectName, targetClass);
-			if (possibleMethod.isEmpty()) {
+			List<MethodNode> possibleMethodNodes = ASMUtils.getBySignature(redirectName, Agent.getClass(targetClass.getType()));
+			if (possibleMethodNodes.isEmpty()) {
 				throw CrashReport.create("Could not find method specified in redirect", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature).addDetail("Method", redirectName)
 					.addDetail("Possible Methods", targetClass.getMethods(this.getRawRedirectName(redirectName)).stream().map(Method::toString).toList()).exception();
 			}
-			if (possibleMethod.size() > 1) {
+			if (possibleMethodNodes.size() > 1) {
 				throw CrashReport.create("Found multiple possible methods for redirect", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature).addDetail("Method", redirectName)
-					.addDetail("Possible Methods", possibleMethod.stream().map(Method::toString).toList()).exception();
+					.addDetail("Possible Methods", possibleMethodNodes.stream().map(mn -> mn.name + mn.desc).toList()).exception();
 			}
-			Method method = possibleMethod.getFirst();
+			MethodNode methodNode = possibleMethodNodes.getFirst();
+			Method method = targetClass.getMethod(methodNode.name + methodNode.desc);
 			if (!ifaceMethod.is(TypeModifier.STATIC) && method.is(TypeModifier.STATIC)) {
 				throw CrashReport.create("Method annotated with @Redirect is declared none-static, but specified a static method", REPORT_CATEGORY).addDetail("Interface", ifaceMethod.getOwner()).addDetail("Redirect", signature)
 					.addDetail("Method", method.getSignature(SignatureType.DEBUG)).exception();
@@ -160,10 +175,14 @@ public class RedirectTransformer extends BaseClassTransformer {
 		public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String descriptor, @Nullable String signature, String @Nullable [] exceptions) {
 			MethodVisitor visitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 			String fullSignature = name + descriptor;
-			Method method = Agent.getClass(this.type).getMethod(fullSignature);
-			if (this.redirects.containsKey(fullSignature) && method != null) {
-				this.markModified();
-				return new RedirectMethodVisitor(visitor, method, this.redirects.get(fullSignature));
+			if (this.redirects.containsKey(fullSignature)) {
+				ClassScanner scanner = new ClassScanner();
+				ClassFileScanner.scanClass(this.type, scanner);
+				Method method = scanner.get().getMethod(fullSignature);
+				if (method != null) {
+					this.markModified();
+					return new RedirectMethodVisitor(visitor, method, this.redirects.get(fullSignature));
+				}
 			}
 			return visitor;
 		}
